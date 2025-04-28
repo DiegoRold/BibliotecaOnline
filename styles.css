@@ -1,0 +1,213 @@
+/* Estilos generales */
+:root {
+    /* Colores principales */
+    --primary-color: #2c3e50;    /* Azul oscuro elegante */
+    --secondary-color: #e74c3c;  /* Rojo para acentos */
+    --accent-color: #f39c12;     /* Naranja para destacar */
+    
+    /* Colores de fondo */
+    --bg-light: #f8f9fa;
+    --bg-dark: #1a1a1a;
+    
+    /* Colores de texto */
+    --text-light: #2c3e50;
+    --text-dark: #ecf0f1;
+    
+    /* Colores de elementos */
+    --card-bg-light: #ffffff;
+    --card-bg-dark: #2c3e50;
+    --border-color: #e0e0e0;
+}
+
+.dark {
+    --primary-color: #3498db;
+    --secondary-color: #e74c3c;
+    --accent-color: #f39c12;
+    --bg-light: #1a1a1a;
+    --bg-dark: #121212;
+    --text-light: #ecf0f1;
+    --text-dark: #bdc3c7;
+    --card-bg-light: #2c3e50;
+    --card-bg-dark: #1a1a1a;
+    --border-color: #34495e;
+}
+
+/* Transiciones suaves */
+* {
+    transition: background-color 0.3s, color 0.3s, transform 0.3s;
+}
+
+/* Estilos para el popover */
+.popover {
+    display: none;
+    position: absolute;
+    background: var(--card-bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.popover[open] {
+    display: block;
+}
+
+/* Estilos para el modo oscuro */
+.dark .popover {
+    background: var(--card-bg-dark);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
+/* Estilos para el grid de libros */
+.books-grid {
+    display: grid;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.books-grid.grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.books-grid.flex-view {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Estilos para el modal */
+dialog {
+    border: none;
+    background: var(--bg-light);
+    color: var(--text-light);
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 90%;
+    width: 600px;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+/* Estilos para los botones */
+button {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+}
+
+/* Estilos para las tarjetas de libro */
+.book-card {
+    background: var(--card-bg-light);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.dark .book-card {
+    background: var(--card-bg-dark);
+}
+
+/* Estilos para el banner */
+.banner {
+    position: relative;
+    height: 500px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.banner-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+}
+
+/* Estilos para el formulario de contacto */
+.contact-form {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: var(--card-bg-light);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--bg-light);
+    color: var(--text-light);
+}
+
+.dark .contact-form input,
+.dark .contact-form textarea {
+    background: var(--bg-dark);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
+/* Estilos para el header */
+header {
+    background: var(--primary-color);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilos para los botones de acción */
+.action-button {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    font-weight: 600;
+}
+
+.action-button:hover {
+    background: var(--secondary-color);
+}
+
+/* Estilos para la barra de búsqueda */
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.5rem;
+    background: var(--bg-light);
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+}
+
+.dark .search-input {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+    border-color: var(--border-color);
+} 

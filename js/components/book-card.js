@@ -5,7 +5,7 @@ class BookCard extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['title', 'author', 'cover', 'id'];
+        return ['title', 'author', 'cover', 'id', 'year', 'category', 'rating', 'pages', 'language'];
     }
 
     connectedCallback() {
@@ -23,125 +23,191 @@ class BookCard extends HTMLElement {
         const title = this.getAttribute('title') || '';
         const author = this.getAttribute('author') || '';
         const cover = this.getAttribute('cover') || '';
-        const id = this.getAttribute('id') || '';
+        const year = this.getAttribute('year') || '';
+        const category = this.getAttribute('category') || '';
+        const rating = this.getAttribute('rating') || '';
+        const pages = this.getAttribute('pages') || '';
+        const language = this.getAttribute('language') || '';
 
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
                     display: block;
-                    margin: 1rem;
-                }
-                .card {
                     background: white;
                     border-radius: 0.5rem;
                     overflow: hidden;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    transition: transform 0.3s;
+                    transition: transform 0.2s;
                 }
-                .card:hover {
-                    transform: translateY(-5px);
+
+                :host(:hover) {
+                    transform: translateY(-4px);
                 }
-                .cover {
+
+                .dark :host {
+                    background: #1f2937;
+                }
+
+                .book-cover {
                     width: 100%;
                     height: 300px;
                     object-fit: cover;
                 }
-                .content {
+
+                .book-info {
                     padding: 1rem;
                 }
-                .title {
+
+                .book-title {
                     font-size: 1.25rem;
                     font-weight: bold;
                     margin-bottom: 0.5rem;
+                    color: #1f2937;
                 }
-                .author {
-                    color: #666;
+
+                .dark .book-title {
+                    color: #f3f4f6;
+                }
+
+                .book-author {
+                    color: #6b7280;
+                    margin-bottom: 0.5rem;
+                }
+
+                .dark .book-author {
+                    color: #9ca3af;
+                }
+
+                .book-meta {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.5rem;
+                    font-size: 0.875rem;
+                    color: #6b7280;
                     margin-bottom: 1rem;
                 }
+
+                .dark .book-meta {
+                    color: #9ca3af;
+                }
+
+                .meta-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.25rem;
+                }
+
+                .rating {
+                    color: #f59e0b;
+                }
+
                 .actions {
                     display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                    gap: 0.5rem;
                 }
+
                 button {
-                    padding: 0.5rem 1rem;
+                    flex: 1;
+                    padding: 0.5rem;
                     border: none;
                     border-radius: 0.25rem;
                     cursor: pointer;
-                    transition: background-color 0.3s;
+                    font-weight: 500;
+                    transition: background-color 0.2s;
                 }
+
                 .read-btn {
                     background-color: #3b82f6;
                     color: white;
                 }
-                .wishlist-btn {
-                    background-color: #f3f4f6;
+
+                .read-btn:hover {
+                    background-color: #2563eb;
                 }
+
+                .wishlist-btn {
+                    background-color: #e5e7eb;
+                    color: #4b5563;
+                }
+
+                .dark .wishlist-btn {
+                    background-color: #374151;
+                    color: #d1d5db;
+                }
+
+                .wishlist-btn:hover {
+                    background-color: #d1d5db;
+                }
+
+                .dark .wishlist-btn:hover {
+                    background-color: #4b5563;
+                }
+
                 .wishlist-btn.active {
                     background-color: #ef4444;
                     color: white;
                 }
+
+                .wishlist-btn.active:hover {
+                    background-color: #dc2626;
+                }
             </style>
-            <div class="card">
-                <img class="cover" src="${cover}" alt="${title}">
-                <div class="content">
-                    <h3 class="title">${title}</h3>
-                    <p class="author">${author}</p>
-                    <div class="actions">
-                        <button class="read-btn">Leer</button>
-                        <button class="wishlist-btn" data-id="${id}">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
-                        </button>
+
+            <img class="book-cover" src="${cover}" alt="${title}">
+            <div class="book-info">
+                <h3 class="book-title">${title}</h3>
+                <p class="book-author">${author}</p>
+                <div class="book-meta">
+                    <div class="meta-item">
+                        <span>📅</span>
+                        <span>${year}</span>
                     </div>
+                    <div class="meta-item">
+                        <span>📚</span>
+                        <span>${category}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>⭐</span>
+                        <span class="rating">${rating}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>📖</span>
+                        <span>${pages} págs</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>🌍</span>
+                        <span>${language}</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="read-btn">Leer</button>
+                    <button class="wishlist-btn">Lista de deseos</button>
                 </div>
             </div>
         `;
     }
 
     setupEventListeners() {
-        const wishlistBtn = this.shadowRoot.querySelector('.wishlist-btn');
         const readBtn = this.shadowRoot.querySelector('.read-btn');
-
-        wishlistBtn.addEventListener('click', () => {
-            const bookId = wishlistBtn.getAttribute('data-id');
-            const isInWishlist = wishlistBtn.classList.contains('active');
-            
-            if (isInWishlist) {
-                this.removeFromWishlist(bookId);
-                wishlistBtn.classList.remove('active');
-            } else {
-                this.addToWishlist(bookId);
-                wishlistBtn.classList.add('active');
-            }
-        });
+        const wishlistBtn = this.shadowRoot.querySelector('.wishlist-btn');
 
         readBtn.addEventListener('click', () => {
             const bookId = this.getAttribute('id');
             this.dispatchEvent(new CustomEvent('read-book', {
-                detail: { bookId },
                 bubbles: true,
-                composed: true
+                composed: true,
+                detail: { bookId }
             }));
         });
-    }
 
-    addToWishlist(bookId) {
-        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-        if (!wishlist.includes(bookId)) {
-            wishlist.push(bookId);
-            localStorage.setItem('wishlist', JSON.stringify(wishlist));
-        }
-    }
-
-    removeFromWishlist(bookId) {
-        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-        const index = wishlist.indexOf(bookId);
-        if (index > -1) {
-            wishlist.splice(index, 1);
-            localStorage.setItem('wishlist', JSON.stringify(wishlist));
-        }
+        wishlistBtn.addEventListener('click', () => {
+            const bookId = this.getAttribute('id');
+            this.dispatchEvent(new CustomEvent('toggle-wishlist', {
+                bubbles: true,
+                composed: true,
+                detail: { bookId }
+            }));
+        });
     }
 }
 

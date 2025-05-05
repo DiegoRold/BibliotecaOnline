@@ -61,153 +61,135 @@
     color: var(--text-dark);
 }
 
-/* Estilos para el grid de libros */
-.books-grid {
-    display: grid;
-    gap: 2rem;
-    padding: 1rem;
-}
-
-.books-grid.grid-view {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-}
-
-.books-grid.flex-view {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-/* Estilos para el modal */
+/* Estilos para los modales (Wishlist y Contacto) */
 dialog {
     border: none;
-    background: var(--bg-light);
-    color: var(--text-light);
-    border-radius: 1rem;
-    padding: 2rem;
-    max-width: 90%;
-    width: 600px;
+    background-color: transparent; /* Fondo transparente, el color lo da el div interno */
+    border-radius: 0.5rem; /* Redondeado por defecto */
+    padding: 0; /* Sin padding exterior */
+    max-width: 90%; /* Ancho máximo relativo */
+}
+
+#wishlist-modal,
+#contact-modal {
+    /* Estilos específicos si son necesarios, heredan de dialog */
+    width: 600px; /* Ancho fijo para wishlist */
+}
+
+#contact-modal {
+     width: 450px; /* Ancho un poco más pequeño para contacto */
+     max-width: 90%; /* Sobreescribir si es necesario */
 }
 
 dialog::backdrop {
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
+    background: rgba(0, 0, 0, 0.6); /* Fondo oscurecido */
+    backdrop-filter: blur(4px); /* Efecto blur */
 }
 
-/* Estilos para los botones */
-button {
-    cursor: pointer;
-    transition: all 0.3s ease;
+/* Estilos internos del modal de contacto */
+#contact-modal img {
+    /* Los iconos ya tienen w-6 h-6 desde el HTML */
+    /* Podríamos añadir filter aquí si hiciera falta para dark mode */
 }
 
-button:hover {
-    transform: translateY(-2px);
+.dark #contact-modal .dark\:border-gray-600 {
+    border-color: var(--border-color); /* Asegurar borde con variable */
 }
 
-/* Estilos para las tarjetas de libro */
-.book-card {
-    background: var(--card-bg-light);
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.book-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-}
-
-.dark .book-card {
-    background: var(--card-bg-dark);
-}
-
-/* Estilos para el banner */
-.banner {
-    position: relative;
-    height: 500px;
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.banner-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
-}
-
-/* Estilos para el formulario de contacto */
-.contact-form {
-    max-width: 600px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: var(--card-bg-light);
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.contact-form input,
-.contact-form textarea {
-    width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    background: var(--bg-light);
-    color: var(--text-light);
-}
-
-.dark .contact-form input,
-.dark .contact-form textarea {
-    background: var(--bg-dark);
-    border-color: var(--border-color);
+.dark #contact-modal .dark\:text-white {
     color: var(--text-dark);
 }
 
-/* Estilos para el header */
+.dark #contact-modal .dark\:text-gray-300 {
+    color: var(--text-dark); 
+}
+
+.dark #contact-modal .dark\:hover\:bg-gray-700:hover {
+     background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #contact-modal .dark\:text-blue-400 {
+    color: #60a5fa; /* Un azul claro para enlaces en modo oscuro */
+}
+
+/* Estilos para el logo en header (se mantiene) */
+header img {
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+/* Estilo para el título del header (se mantiene) */
+header h1 {
+    font-style: italic;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.1);
+}
+
+header img:hover {
+    transform: scale(1.05);
+}
+
+.dark header img {
+    filter: brightness(0.9) saturate(1.2);
+}
+
+/* Estilos para el header y menús desplegables (se mantiene) */
 header {
-    background: var(--primary-color);
-    color: white;
-    padding: 1rem 0;
+    background-color: var(--card-bg-light); /* Fondo claro por defecto */
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 50;
+    transition: background-color 0.3s;
 }
 
-/* Estilos para los botones de acción */
-.action-button {
-    background: var(--primary-color);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    border: none;
-    font-weight: 600;
+.dark header {
+    background-color: var(--card-bg-dark); /* Fondo oscuro */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 
-.action-button:hover {
-    background: var(--secondary-color);
+/* Iconos del header */
+header button svg {
+    color: var(--text-light); /* Color icono claro */
+    transition: color 0.3s;
+}
+.dark header button svg {
+    color: var(--text-dark); /* Color icono oscuro */
 }
 
-/* Estilos para la barra de búsqueda */
-.search-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 0.5rem;
-    background: var(--bg-light);
+header button:hover {
+    background-color: rgba(0, 0, 0, 0.05); /* Hover suave claro */
+}
+.dark header button:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Hover suave oscuro */
+}
+
+/* Ajuste para imagen de toggle de tema */
+#theme-toggle img {
+    /* Podríamos añadir ajustes específicos si es necesario */
+    transition: filter 0.3s ease;
+}
+
+.dark #theme-toggle img {
+    /* Ejemplo: reducir brillo si la imagen es clara */
+    /* filter: brightness(0.8); */
+}
+
+/* Ajuste para imagen de icono de contacto */
+#contact-icon img {
+    transition: filter 0.3s ease;
+}
+.dark #contact-icon img {
+    /* Ejemplo: reducir brillo si la imagen es clara */
+    /* filter: brightness(0.8); */
+}
+
+/* Aplicar colores base al body usando variables */
+body {
+    background-color: var(--bg-light);
     color: var(--text-light);
-    font-size: 1rem;
+    transition: background-color 0.3s, color 0.3s; /* Asegurar transición suave */
 }
 
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
-}
-
-.dark .search-input {
-    background: var(--bg-dark);
-    color: var(--text-dark);
-    border-color: var(--border-color);
-} 
+/* --- FIN DE ESTILOS --- */ 

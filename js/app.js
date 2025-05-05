@@ -1,43 +1,40 @@
-// Datos de ejemplo para los libros
-const books = [
-    {
-        id: '1',
-        title: 'El Señor de los Anillos',
-        author: 'J.R.R. Tolkien',
-        cover: 'assets/books/lotr.jpg',
-        description: 'Una épica historia de fantasía que sigue las aventuras de Frodo Bolsón y la Comunidad del Anillo.'
-    },
-    {
-        id: '2',
-        title: 'Cien años de soledad',
-        author: 'Gabriel García Márquez',
-        cover: 'assets/books/cien-anos.jpg',
-        description: 'La historia de la familia Buendía en el pueblo ficticio de Macondo.'
-    },
-    // Añadir más libros según sea necesario
-];
-
-// Estado de la aplicación
+// Estado de la aplicación (simplificado)
 const state = {
     isDarkMode: localStorage.getItem('darkMode') === 'true',
-    isGridView: true,
-    wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]')
+    wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
+    // isLoggedIn: false // Eliminado estado de login
+    // currentCategory: 'all',
+    // currentBook: null,
+    // currentPage: 1,
+    // booksPerPage: 8,
+    // sortBy: 'title',
+    // sortOrder: 'asc',
+    // reviews: JSON.parse(localStorage.getItem('reviews') || '{}'),
+    // bookmarks: JSON.parse(localStorage.getItem('bookmarks') || '{}'),
+    // recommendations: JSON.parse(localStorage.getItem('recommendations') || '{}')
 };
 
-// Elementos del DOM
-const themeToggle = document.getElementById('theme-toggle');
-const viewToggle = document.getElementById('view-toggle');
-const wishlistToggle = document.getElementById('wishlist-toggle');
-const wishlistModal = document.getElementById('wishlist-modal');
-const closeWishlist = document.getElementById('close-wishlist');
-const booksGrid = document.getElementById('books-grid');
-const searchInput = document.querySelector('input[type="text"]');
+// Elementos del DOM relacionados al Header y Wishlist Modal
+let themeToggle, wishlistModal, closeWishlist;
+let contactIcon, contactModal, closeContactModal; // Añadidas variables para contacto
+// Eliminadas variables: optionsIcon, optionsMenuContainer, favoritesLink
 
 // Inicialización
 function init() {
-    applyTheme();
-    renderBooks();
-    setupEventListeners();
+    // Seleccionar elementos del DOM para Header y Wishlist Modal
+    themeToggle = document.getElementById('theme-toggle');
+    wishlistModal = document.getElementById('wishlist-modal');
+    closeWishlist = document.getElementById('close-wishlist');
+    contactIcon = document.getElementById('contact-icon'); // Selección icono contacto
+    contactModal = document.getElementById('contact-modal'); // Selección modal contacto
+    closeContactModal = document.getElementById('close-contact-modal'); // Selección botón cerrar contacto
+    // Eliminadas selecciones: optionsIcon, optionsMenuContainer, favoritesLink
+    
+    console.log('INIT: Header/Modal Elements Selected:', { themeToggle, wishlistModal, contactIcon, contactModal });
+
+    applyTheme(); // Aplicar tema inicial
+    setupEventListeners(); // Configurar listeners restantes
+    console.log('INIT: Basic initialization complete (Header only).');
 }
 
 // Aplicar tema
@@ -45,107 +42,103 @@ function applyTheme() {
     document.body.classList.toggle('dark', state.isDarkMode);
 }
 
-// Renderizar libros
-function renderBooks() {
-    booksGrid.innerHTML = '';
-    books.forEach(book => {
-        const card = document.createElement('book-card');
-        card.setAttribute('title', book.title);
-        card.setAttribute('author', book.author);
-        card.setAttribute('cover', book.cover);
-        card.setAttribute('id', book.id);
-        
-        if (state.wishlist.includes(book.id)) {
-            card.shadowRoot.querySelector('.wishlist-btn').classList.add('active');
-        }
-        
-        booksGrid.appendChild(card);
-    });
-}
-
 // Configurar event listeners
 function setupEventListeners() {
     // Toggle tema oscuro
-    themeToggle.addEventListener('click', () => {
-        state.isDarkMode = !state.isDarkMode;
-        localStorage.setItem('darkMode', state.isDarkMode);
-        applyTheme();
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            state.isDarkMode = !state.isDarkMode;
+            localStorage.setItem('darkMode', state.isDarkMode);
+            applyTheme();
+        });
+    } else {
+        console.error('Theme toggle button not found!');
+    }
+
+    // Cerrar wishlist modal
+    if (closeWishlist && wishlistModal) {
+        closeWishlist.addEventListener('click', () => {
+            wishlistModal.close();
+        });
+    } else {
+        console.error('Close wishlist button or wishlist modal not found!');
+    }
+
+    // Abrir Modal Contacto
+    if (contactIcon && contactModal) {
+        contactIcon.addEventListener('click', () => {
+            console.log('Contact icon clicked - Showing contact modal');
+            contactModal.showModal();
+        });
+    } else {
+        console.error('Contact icon or contact modal not found!');
+    }
+
+    // Cerrar Modal Contacto
+    if (closeContactModal && contactModal) {
+        closeContactModal.addEventListener('click', () => {
+            contactModal.close();
+        });
+    } else {
+        console.error('Close contact button or contact modal not found!');
+    }
+
+    // Cerrar modal haciendo clic en el backdrop (opcional, para ambos modales)
+    [wishlistModal, contactModal].forEach(modal => {
+        if (modal) {
+            modal.addEventListener("click", e => {
+                if (e.target === modal) { // Si el clic es directamente en el dialog (backdrop)
+                    modal.close();
+                }
+            });
+        }
     });
 
-    // Toggle vista grid/flex
-    viewToggle.addEventListener('click', () => {
-        state.isGridView = !state.isGridView;
-        booksGrid.classList.toggle('grid-view', state.isGridView);
-        booksGrid.classList.toggle('flex-view', !state.isGridView);
-    });
+    // Prevenir que el click dentro de los formularios cierre el menú
+    // Eliminada línea para optionsMenuContainer
 
-    // Toggle wishlist modal
-    wishlistToggle.addEventListener('click', () => {
-        wishlistModal.showModal();
-        renderWishlist();
-    });
-
-    closeWishlist.addEventListener('click', () => {
-        wishlistModal.close();
-    });
-
-    // Búsqueda
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredBooks = books.filter(book => 
-            book.title.toLowerCase().includes(searchTerm) ||
-            book.author.toLowerCase().includes(searchTerm)
-        );
-        renderFilteredBooks(filteredBooks);
-    });
-
-    // Evento para leer libro
-    document.addEventListener('read-book', (e) => {
+    // Listener para añadir/quitar de wishlist desde la tarjeta (COMENTADO temporalmente)
+    /*
+    document.addEventListener('toggle-wishlist', (e) => {
         const bookId = e.detail.bookId;
-        const book = books.find(b => b.id === bookId);
-        if (book) {
-            // Aquí implementaremos la lógica para abrir el libro
-            console.log(`Abriendo libro: ${book.title}`);
-        }
+        toggleWishlistItem(bookId);
+        // Actualizar botón en la tarjeta específica (no hay tarjetas ahora)
     });
+    */
 }
 
-// Renderizar libros filtrados
-function renderFilteredBooks(filteredBooks) {
-    booksGrid.innerHTML = '';
-    filteredBooks.forEach(book => {
-        const card = document.createElement('book-card');
-        card.setAttribute('title', book.title);
-        card.setAttribute('author', book.author);
-        card.setAttribute('cover', book.cover);
-        card.setAttribute('id', book.id);
-        
-        if (state.wishlist.includes(book.id)) {
-            card.shadowRoot.querySelector('.wishlist-btn').classList.add('active');
-        }
-        
-        booksGrid.appendChild(card);
-    });
+// Función para añadir/quitar de la lista de deseos (se mantiene)
+function toggleWishlistItem(bookId) {
+    const index = state.wishlist.indexOf(bookId);
+    if (index === -1) {
+        state.wishlist.push(bookId);
+    } else {
+        state.wishlist.splice(index, 1);
+    }
+    localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
+    renderWishlist(); // Actualizar modal si está abierto
 }
 
-// Renderizar wishlist
+// Renderizar wishlist (versión mínima)
 function renderWishlist() {
     const wishlistContent = document.getElementById('wishlist-content');
-    wishlistContent.innerHTML = '';
-    
-    state.wishlist.forEach(bookId => {
-        const book = books.find(b => b.id === bookId);
-        if (book) {
-            const card = document.createElement('book-card');
-            card.setAttribute('title', book.title);
-            card.setAttribute('author', book.author);
-            card.setAttribute('cover', book.cover);
-            card.setAttribute('id', book.id);
-            card.shadowRoot.querySelector('.wishlist-btn').classList.add('active');
-            wishlistContent.appendChild(card);
-        }
-    });
+    if (wishlistContent) {
+        wishlistContent.innerHTML = '<p class="col-span-full text-center text-gray-500 dark:text-gray-400">Tu lista de deseos está vacía.</p>';
+        // Aquí iría la lógica para renderizar los items cuando los restauremos
+        console.log('Rendering wishlist (currently empty).');
+    } else {
+        console.error('Wishlist content container not found!');
+    }
 }
 
-// Inicializar la aplicación
-init(); 
+// --- FUNCIONES ELIMINADAS O COMENTADAS --- 
+// - setupFilters
+// - renderBooks (la original)
+// - renderPagination
+// - addReview, deleteReview, renderBookReviews, showReviewForm
+// - saveBookmark, updateBookmarkUI, saveBookmarkNotes, openBookReader
+// - calculateBookScore, updateUserPreferences, generateRecommendations, renderRecommendations
+// - Datos: categories, books
+
+// Inicializar la aplicación DESPUÉS de que el DOM esté cargado
+document.addEventListener('DOMContentLoaded', init); 

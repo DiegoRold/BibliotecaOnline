@@ -5,7 +5,7 @@ class BookCard extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['title', 'author', 'cover', 'id', 'year', 'category', 'rating', 'pages', 'language', 'price', 'stock'];
+        return ['title', 'author', 'cover', 'id', 'year', 'category', 'rating', 'pages', 'language', 'price', 'stock', 'in-wishlist'];
     }
 
     connectedCallback() {
@@ -32,6 +32,7 @@ class BookCard extends HTMLElement {
         const language = this.getAttribute('language') || '';
         const price = parseFloat(this.getAttribute('price')) || 0;
         const stock = parseInt(this.getAttribute('stock')) || 0;
+        const isInWishlist = this.getAttribute('in-wishlist') === 'true';
 
         let stockMessage = '';
         let stockMessageClass = '';
@@ -44,6 +45,10 @@ class BookCard extends HTMLElement {
         }
 
         const isOutOfStock = stock === 0;
+
+        const wishlistIconSrc = isInWishlist ? 'assets/wishlist-filled.png' : 'assets/wishlist.png';
+        const wishlistIconAlt = isInWishlist ? 'Quitar de lista de deseos' : 'Añadir a lista de deseos';
+        const wishlistButtonTitle = isInWishlist ? 'Quitar de lista de deseos' : 'Añadir a lista de deseos';
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -202,8 +207,8 @@ class BookCard extends HTMLElement {
                 </div>
                 <div class="actions">
                     <button class="details-btn">Ver Detalles</button>
-                    <button class="icon-btn wishlist-btn" title="Añadir a lista de deseos">
-                        <img src="assets/wishlist.png" alt="Lista de deseos">
+                    <button class="icon-btn wishlist-btn" title="${wishlistButtonTitle}">
+                        <img src="${wishlistIconSrc}" alt="${wishlistIconAlt}">
                     </button>
                     <button class="icon-btn add-to-cart-btn" title="Añadir al carrito" ${isOutOfStock ? 'disabled' : ''}>
                         <img src="assets/add-to-cart.png" alt="Añadir al carrito">

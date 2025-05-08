@@ -84,20 +84,50 @@
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Image Slider -->
+    <section id="image-slider" class="relative w-full container mx-auto overflow-hidden my-8">
+        <div id="slider-track" class="flex transition-transform duration-500 ease-in-out">
+            <!-- Las imágenes se añadirán aquí dinámicamente por JS -->
+            <!-- Ejemplo de estructura por imagen:
+            <div class="w-1/3 flex-shrink-0 px-2">
+                <img src="URL_IMAGEN" alt="Portada libro" class="w-full h-64 object-contain">
+            </div>
+            -->
+        </div>
+        <!-- Podríamos añadir botones prev/next aquí si quisiéramos control manual -->
+    </section>
+
+    <!-- Blog Promotion Section -->
+    <section id="blog-promo" class="container mx-auto my-12">
+        <div class="md:flex md:items-center bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+            <div class="md:w-3/5">
+                <img src="assets/book-convention.jpg" alt="Convención de Libros" class="w-full h-64 md:h-full object-cover">
+            </div>
+            <div class="md:w-2/5 p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-3">Descubre Nuestro Rincón Literario</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-4 text-justify">
+                    Sumérgete en artículos fascinantes, reseñas honestas y debates apasionantes sobre tus libros favoritos. Exploramos géneros, autores y las últimas novedades del mundo editorial. ¡Un espacio creado por y para amantes de la lectura como tú! ¿Te unes a la conversación?
+                </p>
+                <a href="#" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    ACCEDER AL BLOG
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content (Recomendaciones ahora con scroll horizontal) -->
     <main class="container mx-auto px-4 py-8">
         <section id="recomendaciones" class="mb-12">
             <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Nuestras recomendaciones</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <!-- Aquí irán las book-card -->
-                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 1</div>
-                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 2</div>
-                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 3</div>
-                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 4</div>
-                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 5</div>
+            <div class="relative">
+                 <!-- Contenedor actualizado a grid -->
+                 <div id="recommendations-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                     <!-- Aquí irán las book-card -->
+                 </div>
+                 <!-- Botones de Scroll ELIMINADOS -->
             </div>
         </section>
-        <!-- Aquí podríamos añadir más secciones como "Lo + leído", "Novedades por categoría", etc. -->
+        <!-- Aquí podríamos añadir más secciones -->
     </main>
 
     <!-- Wishlist Modal (Lo mantenemos porque está ligado al header) -->

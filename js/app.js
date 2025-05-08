@@ -2,339 +2,232 @@
 const state = {
     isDarkMode: localStorage.getItem('darkMode') === 'true',
     wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
-    // isLoggedIn: false // Eliminado estado de login
-    // currentCategory: 'all',
-    // currentBook: null,
-    // currentPage: 1,
-    // booksPerPage: 8,
-    // sortBy: 'title',
-    // sortOrder: 'asc',
-    // reviews: JSON.parse(localStorage.getItem('reviews') || '{}'),
-    // bookmarks: JSON.parse(localStorage.getItem('bookmarks') || '{}'),
-    // recommendations: JSON.parse(localStorage.getItem('recommendations') || '{}'),
-    // Cart (nuevo estado para el carrito, se guardará en localStorage)
-    cart: JSON.parse(localStorage.getItem('cart') || '[]'), 
+    cart: JSON.parse(localStorage.getItem('cart') || '[]'),
 };
 
-// Elementos del DOM relacionados al Header y Wishlist Modal
-let themeToggle, wishlistModal, closeWishlist;
-let contactIcon, contactModal, closeContactModal; // Añadidas variables para contacto
-let cartIcon; // Icono del carrito en el header
-let wishlistHeaderIcon; // Nuevo icono para la lista de deseos en el header
-let cartModal, closeCartModalBtn, cartItemsContainer, goToCheckoutBtn, cartCountBadge, cartTotalPrice;
-let emptyCartBtn; // Nuevo botón
-// Eliminadas variables: optionsIcon, optionsMenuContainer, favoritesLink
+// Variable global para almacenar los libros de la API
+let allBooks = [];
 
-// Datos de ejemplo para libros
-const sampleBooks = [
-    {
-        id: '1',
-        title: 'Cien Años de Soledad',
-        author: 'Gabriel García Márquez',
-        cover: 'https://covers.openlibrary.org/b/id/8267140-L.jpg',
-        price: 19.99,
-        stock: 150,
-        year: '1967',
-        category: 'Realismo Mágico',
-        rating: '4.5',
-        pages: '417',
-        language: 'Español'
-    },
-    {
-        id: '2',
-        title: 'Don Quijote de la Mancha',
-        author: 'Miguel de Cervantes',
-        cover: 'https://covers.openlibrary.org/b/id/7986247-L.jpg',
-        price: 22.50,
-        stock: 75, // Para probar "¡ÚLTIMAS UNIDADES!"
-        year: '1605',
-        category: 'Clásico',
-        rating: '4.7',
-        pages: '863',
-        language: 'Español'
-    },
-    {
-        id: '3',
-        title: 'El Principito',
-        author: 'Antoine de Saint-Exupéry',
-        cover: 'https://covers.openlibrary.org/b/id/10064702-L.jpg',
-        price: 12.00,
-        stock: 0, // Para probar "NO QUEDAN UNIDADES"
-        year: '1943',
-        category: 'Infantil',
-        rating: '4.8',
-        pages: '96',
-        language: 'Francés'
-    },
-    {
-        id: '4',
-        title: '1984',
-        author: 'George Orwell',
-        cover: 'https://covers.openlibrary.org/b/id/8274540-L.jpg',
-        price: 15.75,
-        stock: 5,
-        year: '1949',
-        category: 'Distopía',
-        rating: '4.6',
-        pages: '328',
-        language: 'Inglés'
-    },
-    {
-        id: '5',
-        title: 'Matar un Ruiseñor',
-        author: 'Harper Lee',
-        cover: 'https://covers.openlibrary.org/b/id/8362311-L.jpg',
-        price: 18.20,
-        stock: 30, // Para probar "¡ÚLTIMAS UNIDADES!"
-        year: '1960',
-        category: 'Ficción Clásica',
-        rating: '4.4',
-        pages: '281',
-        language: 'Inglés'
-    }
-];
+// --- SELECCIÓN DOM --- (Asegúrate de que todas las selecciones estén aquí)
+let themeToggle, wishlistModal, closeWishlist, contactIcon, contactModal, closeContactModal;
+let cartIcon, wishlistHeaderIcon, cartCountBadge;
+let cartModal, closeCartModalBtn, cartItemsContainer, goToCheckoutBtn, cartTotalPrice, emptyCartBtn;
+let wishlistContent; // Asegurar que se define
+let recommendationsContainer, sliderTrack; 
 
-// Inicialización
-function init() {
-    // Seleccionar elementos del DOM para Header y Wishlist Modal
+// --- INICIALIZACIÓN ---
+async function init() {
+    // Seleccionar elementos del DOM
     themeToggle = document.getElementById('theme-toggle');
     wishlistModal = document.getElementById('wishlist-modal');
     closeWishlist = document.getElementById('close-wishlist');
-    contactIcon = document.getElementById('contact-icon'); // Selección icono contacto
-    contactModal = document.getElementById('contact-modal'); // Selección modal contacto
-    closeContactModal = document.getElementById('close-contact-modal'); // Selección botón cerrar contacto
+    wishlistContent = document.getElementById('wishlist-content');
+    contactIcon = document.getElementById('contact-icon');
+    contactModal = document.getElementById('contact-modal');
+    closeContactModal = document.getElementById('close-contact-modal');
     cartIcon = document.getElementById('cart-icon');
-    wishlistHeaderIcon = document.getElementById('wishlist-header-icon'); // Seleccionar nuevo icono
-    
-    // Elementos del nuevo modal del carrito
+    wishlistHeaderIcon = document.getElementById('wishlist-header-icon');
+    cartCountBadge = document.getElementById('cart-count-badge');
     cartModal = document.getElementById('cart-modal');
     closeCartModalBtn = document.getElementById('close-cart-modal');
     cartItemsContainer = document.getElementById('cart-items-container');
     goToCheckoutBtn = document.getElementById('go-to-checkout-btn');
-    cartCountBadge = document.getElementById('cart-count-badge');
     cartTotalPrice = document.getElementById('cart-total-price');
-    emptyCartBtn = document.getElementById('empty-cart-btn'); // Seleccionar botón
+    emptyCartBtn = document.getElementById('empty-cart-btn');
+    sliderTrack = document.getElementById('slider-track');
+    recommendationsContainer = document.getElementById('recommendations-container');
 
-    console.log('INIT: Header/Modal Elements Selected:', { themeToggle, wishlistModal, contactIcon, contactModal, wishlistHeaderIcon });
+    applyTheme(); // Aplicar tema lo antes posible
 
-    applyTheme(); // Aplicar tema inicial
-    setupEventListeners(); // Configurar listeners restantes
-    renderRecommendedBooks(sampleBooks);
-    renderWishlist(); // Para inicializar el modal de wishlist vacío si es necesario
-    updateCartIcon(); // Para mostrar el contador de items en el carrito al cargar
-    renderCartModal(); // Inicializar el contenido del modal del carrito (estará vacío al inicio)
-    console.log('INIT: Basic initialization complete (Header only).');
-}
+    try {
+        allBooks = await fetchBooks(); // Cargar libros de la API
+        console.log(`Fetched ${allBooks.length} books from API.`);
+        // Añadir log para ver los datos obtenidos
+        console.log('Datos de allBooks (primeros 5):', allBooks.slice(0, 5)); 
 
-// Aplicar tema
-function applyTheme() {
-    document.body.classList.toggle('dark', state.isDarkMode);
-}
+        renderSliderImages(allBooks); // Renderizar slider
+        renderRecommendedBooks(allBooks); // Renderizar recomendaciones
 
-// Configurar event listeners
-function setupEventListeners() {
-    // Toggle tema oscuro
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            state.isDarkMode = !state.isDarkMode;
-            localStorage.setItem('darkMode', state.isDarkMode);
-            applyTheme();
-        });
-    } else {
-        console.error('Theme toggle button not found!');
-    }
+        setupEventListeners(); // Configurar listeners después de cargar datos y renderizar
+        updateCartIcon(); // Actualizar UI inicial del carrito
+        renderWishlist(); // Renderizar UI inicial de wishlist
+        renderCartModal(); // Renderizar UI inicial del modal carrito
 
-    // Abrir modal de lista de deseos desde el icono del header (NUEVO)
-    if (wishlistHeaderIcon && wishlistModal) {
-        wishlistHeaderIcon.addEventListener('click', () => {
-            console.log('Wishlist header icon clicked - Showing wishlist modal');
-            renderWishlist(); // Asegurarse que el contenido está actualizado antes de mostrar
-            wishlistModal.showModal();
-        });
-    }
+        console.log('Aplicación inicializada con datos de la API.');
 
-    // Cerrar wishlist modal
-    if (closeWishlist && wishlistModal) {
-        closeWishlist.addEventListener('click', () => {
-            wishlistModal.close();
-        });
-    } else {
-        console.error('Close wishlist button or wishlist modal not found!');
-    }
-
-    // Abrir Modal Contacto
-    if (contactIcon && contactModal) {
-        contactIcon.addEventListener('click', () => {
-            console.log('Contact icon clicked - Showing contact modal');
-            contactModal.showModal();
-        });
-    } else {
-        console.error('Contact icon or contact modal not found!');
-    }
-
-    // Cerrar Modal Contacto
-    if (closeContactModal && contactModal) {
-        closeContactModal.addEventListener('click', () => {
-            contactModal.close();
-        });
-    } else {
-        console.error('Close contact button or contact modal not found!');
-    }
-
-    // Cerrar modal haciendo clic en el backdrop (opcional, para ambos modales)
-    [wishlistModal, contactModal, cartModal].forEach(modal => {
-        if (modal) {
-            modal.addEventListener("click", e => {
-                if (e.target === modal) { // Si el clic es directamente en el dialog (backdrop)
-                    modal.close();
-                }
-            });
+    } catch (error) {
+        console.error('Error inicializando la aplicación:', error);
+        // Mostrar mensaje de error al usuario si falla la carga de libros
+        if (recommendationsContainer) {
+            recommendationsContainer.innerHTML = '<p class="text-red-500 text-center col-span-full">Error al cargar los libros. Por favor, inténtalo de nuevo más tarde.</p>';
         }
-    });
-
-    // Event listeners para las tarjetas de libro
-    document.addEventListener('view-book-details', (e) => {
-        console.log('Evento view-book-details:', e.detail);
-        // Aquí iría la lógica para mostrar una vista detallada del libro
-        alert(`Ver detalles del libro ID: ${e.detail.bookId}`); 
-    });
-
-    document.addEventListener('toggle-wishlist', (e) => {
-        console.log('Evento toggle-wishlist:', e.detail);
-        toggleWishlistItem(e.detail.bookId);
-        // TODO: Actualizar el estado visual del icono wishlist en la tarjeta específica si es necesario
-    });
-
-    document.addEventListener('add-to-cart', (e) => {
-        console.log('Evento add-to-cart:', e.detail);
-        addBookToCart(e.detail.bookId, e.detail.title, parseFloat(e.detail.price), e.detail.cover, parseInt(e.detail.stock));
-    });
-    
-    // Listener para el icono del carrito en el header (para abrir el modal del carrito)
-    if (cartIcon && cartModal) {
-        cartIcon.addEventListener('click', () => {
-            renderCartModal(); // Asegurar que el contenido esté actualizado
-            cartModal.showModal();
-        });
+         if (sliderTrack) {
+             sliderTrack.innerHTML = '<p class="text-red-500 text-center w-full">Error al cargar imágenes.</p>';
+         }
     }
-
-    // Listeners para el nuevo modal del carrito
-    if (closeCartModalBtn && cartModal) {
-        closeCartModalBtn.addEventListener('click', () => cartModal.close());
-    }
-    if (goToCheckoutBtn) {
-        goToCheckoutBtn.addEventListener('click', () => {
-            cartModal.close(); // Cerrar modal antes de redirigir
-            window.location.href = 'checkout.html'; // Redirigir a la página de checkout
-        });
-    }
-
-    if (emptyCartBtn) {
-        emptyCartBtn.addEventListener('click', () => emptyCart()); // Listener para vaciar carrito
-    }
-
-    // Prevenir que el click dentro de los formularios cierre el menú
-    // Eliminada línea para optionsMenuContainer
 }
 
-// Función para añadir/quitar de la lista de deseos (se mantiene)
-function toggleWishlistItem(bookId) {
-    const index = state.wishlist.indexOf(bookId);
-    if (index === -1) {
-        state.wishlist.push(bookId);
-        console.log(`Libro ID ${bookId} añadido a la wishlist.`);
+// --- OBTENER DATOS ---
+async function fetchBooks() {
+    const apiUrl = 'https://books-foniuhqsba-uc.a.run.app/';
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let data = await response.json();
+
+        // Filtrar "Cien años de soledad" de los datos ANTES de mapear
+        data = data.filter(book => 
+            !book.title || book.title.toLowerCase() !== 'cien años de soledad'
+        );
+
+        // Mapear datos y construir la URL de la portada localmente
+        return data.map((book, index) => {
+            const bookId = `book-${index}`;
+            const rawTitle = book.title || 'untitled'; // title ya debería existir por el filtro, pero por seguridad.
+
+            // Normalizar el título para el nombre del archivo
+            const filename = rawTitle
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Quitar acentos y diacríticos
+                .replace(/ñ/g, 'n') // Asegurar que la ñ se convierte a n
+                .replace(/\s+/g, '-') // Reemplazar espacios con guiones
+                .replace(/[^a-z0-9-()]/g, ''); // Eliminar caracteres no alfanuméricos excepto guiones y paréntesis
+            
+            return {
+                ...book,
+                id: bookId,
+                cover: `assets/books/${filename}.jpg` // Ruta local a la imagen
+            };
+        });
+    } catch (error) {
+        console.error("Error fetching books:", error);
+        // Considerar si mostrar un mensaje más amigable al usuario aquí también
+        throw error; // Re-lanzar error para que init() lo maneje
+    }
+}
+
+
+// --- RENDERIZADO ---
+function applyTheme() { document.body.classList.toggle('dark', state.isDarkMode); }
+
+function renderSliderImages(books) {
+    if (!sliderTrack) return;
+    sliderTrack.innerHTML = ''; 
+    const placeholderUrl = 'assets/placeholder-cover.png';
+
+    // Filtrar "Cien años de soledad" de la lista de libros para el slider
+    const booksWithoutCienAnos = books.filter(book => 
+        !book.title || book.title.toLowerCase() !== 'cien años de soledad'
+    );
+
+    const booksForSlider = booksWithoutCienAnos.slice(0, 12); // Tomar los primeros 12 de la lista filtrada
+
+    if (booksForSlider.length === 0 && TOTAL_IMAGES_IN_SLIDER > 0) {
+        // Si no hay libros pero esperamos imágenes, mostrar placeholders
+        for (let i = 0; i < TOTAL_IMAGES_IN_SLIDER; i++) {
+            const div = document.createElement('div');
+            div.className = 'w-1/3 flex-shrink-0 px-2 flex items-center justify-center';
+            div.innerHTML = `<img src="${placeholderUrl}" alt="Placeholder Portada libro ${i + 1}" class="w-auto h-56 object-contain border dark:border-gray-700">`;
+            sliderTrack.appendChild(div);
+        }
     } else {
-        state.wishlist.splice(index, 1);
-        console.log(`Libro ID ${bookId} eliminado de la wishlist.`);
+        // Usar imágenes de los libros, o placeholder si falta la portada
+        for (let i = 0; i < TOTAL_IMAGES_IN_SLIDER; i++) {
+            const book = booksForSlider[i % booksForSlider.length]; // Repetir libros si hay menos de 12
+            const div = document.createElement('div');
+            div.className = 'w-1/3 flex-shrink-0 px-2 flex items-center justify-center';
+            const coverUrl = (book && book.cover) ? book.cover : placeholderUrl;
+            const altText = (book && book.title) ? book.title : `Portada libro ${i + 1}`;
+            // Añadir un manejador de error para cada imagen
+            div.innerHTML = `<img src="${coverUrl}" alt="${altText}" class="w-auto h-56 object-contain border dark:border-gray-700" onerror="this.onerror=null;this.src='${placeholderUrl}';">`; 
+            sliderTrack.appendChild(div);
+        }
     }
-    localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
-    renderWishlist(); // Actualizar modal si está abierto
+
+    const actualTotalSlides = Math.ceil(Math.min(booksForSlider.length, TOTAL_IMAGES_IN_SLIDER) / SLIDES_TO_SHOW);
+    if(actualTotalSlides > 1) {
+        startSliderAnimation();
+    } else {
+        if (sliderInterval) clearInterval(sliderInterval); // Detener si no hay suficientes slides
+    }
 }
 
-// Renderizar wishlist (versión mínima)
+function renderRecommendedBooks(books) {
+    if (!recommendationsContainer) return;
+    recommendationsContainer.innerHTML = ''; 
+
+    // Barajar una copia de los libros para obtener una selección aleatoria
+    const shuffledBooks = [...books].sort(() => 0.5 - Math.random());
+    const booksToShow = shuffledBooks.slice(0, 4); // Mostrar 4 libros aleatorios
+
+    if (booksToShow.length === 0) {
+        recommendationsContainer.innerHTML = '<p class="text-gray-500 text-center w-full">No hay libros para mostrar.</p>';
+        return;
+    }
+
+    booksToShow.forEach(book => {
+        const cardContainer = document.createElement('div');
+        const card = document.createElement('book-card');
+        card.setAttribute('id', book.id);
+        card.setAttribute('title', book.title);
+        card.setAttribute('author', book.author || 'Desconocido');
+        card.setAttribute('cover', book.cover || 'assets/placeholder-cover.png');
+        card.setAttribute('price', book.price || 0);
+        card.setAttribute('stock', book.stock || 0);
+        if (book.year) card.setAttribute('year', book.year);
+        if (book.category) card.setAttribute('category', book.category);
+        if (book.rating) card.setAttribute('rating', book.rating); 
+        if (book.pages) card.setAttribute('pages', book.pages);
+        if (book.language) card.setAttribute('language', book.language);
+
+        // Establecer si está en la lista de deseos
+        if (state.wishlist.includes(book.id)) {
+            card.setAttribute('in-wishlist', 'true');
+        }
+
+        cardContainer.appendChild(card);
+        recommendationsContainer.appendChild(cardContainer);
+    });
+}
+
 function renderWishlist() {
-    const wishlistContent = document.getElementById('wishlist-content');
-    if (wishlistContent) {
-        if (state.wishlist.length === 0) {
-            wishlistContent.innerHTML = '<p class="col-span-full text-center text-gray-500 dark:text-gray-400">Tu lista de deseos está vacía.</p>';
-            return;
-        }
-
-        wishlistContent.innerHTML = ''; // Limpiar contenido anterior
-        // Crear y añadir elementos para cada libro en la wishlist (simplificado)
+    if (!wishlistContent) return;
+    wishlistContent.innerHTML = state.wishlist.length === 0 ? '<p class="col-span-full text-center text-gray-500 dark:text-gray-400">Tu lista de deseos está vacía.</p>' : '';
+    if (state.wishlist.length > 0) {
         state.wishlist.forEach(bookId => {
-            const book = sampleBooks.find(b => b.id === bookId); // Encontrar el libro en nuestros datos de ejemplo
+            const book = allBooks.find(b => b.id === bookId); // Buscar en allBooks
             if (book) {
                 const item = document.createElement('div');
                 item.className = 'p-2 border rounded flex items-center justify-between dark:text-gray-200 dark:border-gray-600';
                 item.innerHTML = `<span>${book.title}</span> <button data-book-id="${bookId}" class="remove-wishlist-item text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600 p-1">X</button>`;
                 wishlistContent.appendChild(item);
+            } else {
+                 // Opcional: manejar caso si el libro ya no existe en allBooks
+                 console.warn(`Libro con ID ${bookId} en wishlist pero no encontrado en allBooks.`);
             }
         });
-        // Añadir listeners para los botones de eliminar de la wishlist modal
-        wishlistContent.querySelectorAll('.remove-wishlist-item').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const bookIdToRemove = e.target.dataset.bookId;
-                toggleWishlistItem(bookIdToRemove);
-            });
-        });
-    } else {
-        console.error('Wishlist content container not found!');
+        wishlistContent.querySelectorAll('.remove-wishlist-item').forEach(button => button.addEventListener('click', e => toggleWishlistItem(e.target.dataset.bookId)));
     }
-}
-
-// Funciones del Carrito (nuevas)
-function addBookToCart(bookId, title, price, cover, stock) {
-    const existingBook = state.cart.find(item => item.id === bookId);
-    if (existingBook) {
-        if (existingBook.quantity < stock) {
-           existingBook.quantity += 1;
-        } else {
-            alert(`No puedes añadir más de ${title}, ¡stock agotado!`);
-            return;
-        }
-    } else {
-        state.cart.push({ id: bookId, title, price, cover, stock, quantity: 1 });
-    }
-    localStorage.setItem('cart', JSON.stringify(state.cart));
-    updateCartIcon();
-    renderCartModal();
-}
-
-function updateCartIcon() {
-    const cartItemCount = state.cart.reduce((total, item) => total + item.quantity, 0);
-    if (cartIcon) {
-        cartIcon.title = `Mi Compra (${cartItemCount} items)`;
-    }
-    if (cartCountBadge) {
-        cartCountBadge.textContent = cartItemCount;
-        cartCountBadge.style.display = cartItemCount > 0 ? 'flex' : 'none';
-    }
-    console.log("Cart icon updated, count: ", cartItemCount);
 }
 
 function renderCartModal() {
     if (!cartItemsContainer || !cartTotalPrice) return;
-
     let totalPrice = 0;
-    cartItemsContainer.innerHTML = ''; // Limpiar items anteriores
-
+    cartItemsContainer.innerHTML = '';
     if (state.cart.length === 0) {
         cartItemsContainer.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 py-4">Tu carrito está vacío.</p>';
         cartTotalPrice.textContent = '0.00 €';
         return;
     }
-
     state.cart.forEach(item => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'flex items-center space-x-2 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
-        
         const itemTotal = item.price * item.quantity;
         totalPrice += itemTotal;
-
-        // Usar una portada más pequeña para el carrito, si está disponible (ej. Open Library -S.jpg)
+        // Asegurarse que item.cover exista o usar placeholder
         const cartCover = item.cover ? item.cover.replace('-L.jpg', '-S.jpg') : 'assets/placeholder-cover-small.png';
-
         itemDiv.innerHTML = `
             <img src="${cartCover}" alt="${item.title}" class="w-12 h-16 object-cover rounded shadow">
             <div class="flex-grow">
@@ -361,68 +254,107 @@ function renderCartModal() {
         `;
         cartItemsContainer.appendChild(itemDiv);
     });
-
     cartTotalPrice.textContent = `${totalPrice.toFixed(2)} €`;
-
-    // Añadir listeners para los botones de eliminar items del carrito modal
+    // Adjuntar listeners a los botones dentro del modal
     cartItemsContainer.querySelectorAll('.minus-qty-btn').forEach(b => b.addEventListener('click', e => decreaseCartItemQuantity(e.currentTarget.dataset.bookId)));
     cartItemsContainer.querySelectorAll('.plus-qty-btn').forEach(b => b.addEventListener('click', e => increaseCartItemQuantity(e.currentTarget.dataset.bookId)));
-    cartItemsContainer.querySelectorAll('.remove-cart-item-btn').forEach(b => b.addEventListener('click', e => removeBookFromCart(e.currentTarget.dataset.bookId, true)));
+    cartItemsContainer.querySelectorAll('.remove-cart-item-btn').forEach(b => b.addEventListener('click', e => removeBookFromCart(e.currentTarget.dataset.bookId, true))); // True para eliminar todas las unidades
     cartItemsContainer.querySelectorAll('.move-to-wishlist-btn').forEach(b => b.addEventListener('click', e => moveCartItemToWishlist(e.currentTarget.dataset.bookId)));
 }
 
-function increaseCartItemQuantity(bookId) {
-    const item = state.cart.find(i => i.id === bookId);
-    if (item && item.quantity < item.stock) {
-        item.quantity++;
-        localStorage.setItem('cart', JSON.stringify(state.cart));
-        updateCartIcon();
-        renderCartModal();
-    } else if (item && item.quantity >= item.stock) {
-        alert(`No puedes añadir más unidades de "${item.title}". Stock máximo alcanzado.`);
+
+// --- MANEJO DE ESTADO (CARRITO / WISHLIST) ---
+function toggleWishlistItem(bookId) {
+    const index = state.wishlist.indexOf(bookId);
+    if (index === -1) {
+        state.wishlist.push(bookId);
+    } else {
+        state.wishlist.splice(index, 1);
     }
+    localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
+    renderWishlist();
+
+    // Actualizar el estado visual de todas las tarjetas de libro correspondientes
+    const isInWishlist = state.wishlist.includes(bookId);
+    document.querySelectorAll(`book-card[id="${bookId}"]`).forEach(cardElement => {
+        cardElement.setAttribute('in-wishlist', isInWishlist.toString());
+    });
 }
 
-function decreaseCartItemQuantity(bookId) {
-    const item = state.cart.find(i => i.id === bookId);
-    if (item && item.quantity > 1) {
-        item.quantity--;
-    } else if (item && item.quantity === 1) {
-        removeBookFromCart(bookId, true);
-        return;
+function addBookToCart(bookId, title, price, cover, stock) {
+    const existingBook = state.cart.find(item => item.id === bookId);
+    const currentStock = stock || 0; // Asegurar que stock es un número
+
+    if (existingBook) {
+        // Usa el stock original guardado en el carrito para comparar
+        if (existingBook.quantity < existingBook.stock) {
+           existingBook.quantity += 1;
+        } else {
+            alert(`No puedes añadir más unidades de "${title}". Stock máximo (${existingBook.stock}) alcanzado.`);
+            return;
+        }
+    } else {
+        // Solo añadir si hay stock inicial
+        if (currentStock > 0) {
+             // Guardar stock original al añadir por primera vez
+             state.cart.push({ id: bookId, title, price, cover, stock: currentStock, quantity: 1 });
+        } else {
+            alert(`"${title}" no está disponible actualmente.`);
+            return;
+        }
     }
     localStorage.setItem('cart', JSON.stringify(state.cart));
     updateCartIcon();
     renderCartModal();
 }
 
-function removeBookFromCart(bookId, removeAll = false) {
-    const bookIndex = state.cart.findIndex(item => item.id === bookId);
-    if (bookIndex > -1) {
-        if (removeAll || state.cart[bookIndex].quantity === 1) {
-            state.cart.splice(bookIndex, 1);
-        } else {
-            state.cart[bookIndex].quantity -= 1;
-        }
+function increaseCartItemQuantity(bookId) {
+    const item = state.cart.find(i => i.id === bookId);
+    // Usar item.stock (stock original guardado) para validar
+    if (item && item.quantity < item.stock) {
+        item.quantity++;
         localStorage.setItem('cart', JSON.stringify(state.cart));
         updateCartIcon();
         renderCartModal();
+    } else if (item) {
+        alert(`No puedes añadir más unidades de "${item.title}". Stock máximo (${item.stock}) alcanzado.`);
     }
+}
+
+function decreaseCartItemQuantity(bookId) {
+    const itemIndex = state.cart.findIndex(i => i.id === bookId); // Necesitamos index para splice
+    if (itemIndex > -1) {
+        if (state.cart[itemIndex].quantity > 1) {
+            state.cart[itemIndex].quantity--;
+             localStorage.setItem('cart', JSON.stringify(state.cart));
+             updateCartIcon();
+             renderCartModal();
+        } else {
+            // Si la cantidad es 1, eliminar completamente
+            removeBookFromCart(bookId, true);
+        }
+    }
+}
+
+function removeBookFromCart(bookId, removeAll = false) { // removeAll siempre será true aquí
+    state.cart = state.cart.filter(item => item.id !== bookId);
+    localStorage.setItem('cart', JSON.stringify(state.cart));
+    updateCartIcon();
+    renderCartModal();
 }
 
 function moveCartItemToWishlist(bookId) {
     const itemInCart = state.cart.find(i => i.id === bookId);
     if (!itemInCart) return;
-
-    // Añadir a wishlist (toggleWishlistItem maneja duplicados)
-    toggleWishlistItem(bookId);
-    // Eliminar todas las unidades del carrito
-    removeBookFromCart(bookId, true);
+    if (!state.wishlist.includes(bookId)) { // Añadir solo si no está ya
+       toggleWishlistItem(bookId); // Esto ya actualiza localStorage y renderWishlist
+    }
+    removeBookFromCart(bookId, true); // Esto actualiza localStorage, cart icon y cart modal
     console.log(`Libro ID ${bookId} movido del carrito a la lista de deseos.`);
 }
 
 function emptyCart() {
-    if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+    if (state.cart.length > 0 && confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
         state.cart = [];
         localStorage.setItem('cart', JSON.stringify(state.cart));
         updateCartIcon();
@@ -430,39 +362,70 @@ function emptyCart() {
     }
 }
 
-// --- FUNCIONES ELIMINADAS O COMENTADAS --- 
-// - setupFilters
-// - renderBooks (la original)
-// - renderPagination
-// - addReview, deleteReview, renderBookReviews, showReviewForm
-// - saveBookmark, updateBookmarkUI, saveBookmarkNotes, openBookReader
-// - calculateBookScore, updateUserPreferences, generateRecommendations, renderRecommendations
-// - Datos: categories, books
-
-// Inicializar la aplicación DESPUÉS de que el DOM esté cargado
-document.addEventListener('DOMContentLoaded', init); 
-
-function renderRecommendedBooks(books) {
-    const recommendationsContainer = document.querySelector('#recomendaciones .grid');
-    if (!recommendationsContainer) {
-        console.error('Contenedor de recomendaciones no encontrado.');
-        return;
+function updateCartIcon() {
+    const cartItemCount = state.cart.reduce((total, item) => total + item.quantity, 0);
+    if (cartCountBadge) { // Renombrar a cartBadge
+        cartCountBadge.textContent = cartItemCount;
+        cartCountBadge.style.display = cartItemCount > 0 ? 'flex' : 'none';
     }
-    recommendationsContainer.innerHTML = ''; // Limpiar placeholders
+     if (cartIcon) cartIcon.title = `Mi Compra (${cartItemCount} items)`;
+}
 
-    books.forEach(book => {
-        const card = document.createElement('book-card');
-        card.setAttribute('id', book.id);
-        card.setAttribute('title', book.title);
-        card.setAttribute('author', book.author);
-        card.setAttribute('cover', book.cover);
-        card.setAttribute('price', book.price);
-        card.setAttribute('stock', book.stock);
-        if (book.year) card.setAttribute('year', book.year);
-        if (book.category) card.setAttribute('category', book.category);
-        if (book.rating) card.setAttribute('rating', book.rating);
-        if (book.pages) card.setAttribute('pages', book.pages);
-        if (book.language) card.setAttribute('language', book.language);
-        recommendationsContainer.appendChild(card);
+
+// --- LÓGICA SLIDER Y SCROLL ---
+let currentSlide = 0;
+let sliderInterval;
+const SLIDES_TO_SHOW = 3;
+const TOTAL_IMAGES_IN_SLIDER = 12;
+
+function startSliderAnimation() {
+    if (!sliderTrack) return;
+    if (sliderInterval) clearInterval(sliderInterval);
+    const actualTotalSlides = Math.ceil(TOTAL_IMAGES_IN_SLIDER / SLIDES_TO_SHOW);
+    if (actualTotalSlides <= 1) return;
+
+    sliderInterval = setInterval(() => {
+        currentSlide = (currentSlide + 1) % actualTotalSlides;
+        updateSliderPosition();
+    }, 4000);
+}
+
+function updateSliderPosition() {
+    if (!sliderTrack) return;
+    sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+}
+
+// --- EVENT LISTENERS GENERALES ---
+function setupEventListeners() {
+    // Listeners del header y modales generales
+    if (themeToggle) themeToggle.addEventListener('click', () => { state.isDarkMode = !state.isDarkMode; localStorage.setItem('darkMode', state.isDarkMode); applyTheme(); });
+    if (wishlistHeaderIcon && wishlistModal) wishlistHeaderIcon.addEventListener('click', () => { renderWishlist(); wishlistModal.showModal(); });
+    if (closeWishlist && wishlistModal) closeWishlist.addEventListener('click', () => wishlistModal.close());
+    if (contactIcon && contactModal) contactIcon.addEventListener('click', () => contactModal.showModal());
+    if (closeContactModal && contactModal) closeContactModal.addEventListener('click', () => contactModal.close());
+    if (cartIcon && cartModal) cartIcon.addEventListener('click', () => { renderCartModal(); cartModal.showModal(); });
+    if (closeCartModalBtn && cartModal) closeCartModalBtn.addEventListener('click', () => cartModal.close());
+    if (goToCheckoutBtn && cartModal) goToCheckoutBtn.addEventListener('click', () => { cartModal.close(); window.location.href = 'checkout.html'; });
+    if (emptyCartBtn) emptyCartBtn.addEventListener('click', () => emptyCart());
+
+    // Cerrar modales con click en backdrop
+    [wishlistModal, contactModal, cartModal].forEach(modal => { if (modal) modal.addEventListener("click", e => { if (e.target === modal) modal.close(); }); });
+
+    // Listeners para eventos de book-card
+    document.addEventListener('view-book-details', e => alert(`Ver detalles del libro ID: ${e.detail.bookId}`));
+    document.addEventListener('add-to-cart', e => {
+        addBookToCart(
+            e.detail.bookId,
+            e.detail.title,
+            parseFloat(e.detail.price || 0),
+            e.detail.cover,
+            parseInt(e.detail.stock || 0)
+        );
     });
-} 
+    document.addEventListener('toggle-wishlist', e => {
+        toggleWishlistItem(e.detail.bookId);
+    });
+}
+
+// --- INICIALIZAR ---
+document.addEventListener('DOMContentLoaded', init);

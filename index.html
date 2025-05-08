@@ -9,41 +9,95 @@
     <!-- <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet"> -->
     <link href="styles.css" rel="stylesheet">
 </head>
-<body class="">
+<body class="bg-gray-100 dark:bg-gray-900">
     <!-- Header -->
-    <header class="bg-white shadow-md relative z-10">
-        <nav class="container mx-auto px-4 py-1">
-            <div class="flex justify-between items-center">
-                <!-- Izquierda: Logo -->
-                <div class="flex-shrink-0 ml-8">
-                    <img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-20 w-auto">
+    <header class="bg-gray-800 shadow-md relative z-10">
+        <div class="container mx-auto px-4 pt-2 pb-0">
+            <!-- Nivel Superior: Logo, Título, Búsqueda, Iconos -->
+            <div class="flex justify-between items-center border-b pb-2 border-gray-700">
+                <!-- Izquierda: Logo y Título -->
+                <div class="flex items-center space-x-3">
+                    <a href="index.html"><img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-16 md:h-20 w-auto"></a>
+                    <a href="index.html"><h1 class="text-3xl font-bold hidden sm:block text-white">ENTRE HOJAS</h1></a>
                 </div>
 
-                <!-- Centro: Título (oculto en pantallas pequeñas) -->
-                <div class="flex-1 text-center hidden sm:block">
-                    <h1 class="text-3xl font-bold">ENTRE HOJAS</h1>
+                <!-- Centro: Barra de Búsqueda -->
+                <div class="flex-grow mx-4 hidden md:flex justify-center">
+                    <div class="relative w-full max-w-md">
+                        <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button class="absolute right-0 top-0 mt-2 mr-3">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Derecha: Iconos y Menús -->
-                <div class="flex items-center space-x-4 md:space-x-6 flex-shrink-0">
-                    <!-- Botón Contacto (Nuevo) -->
-                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-200" title="Contacto">
-                        <img src="assets/contacto.png" alt="Contacto" class="w-10 h-10">
+                <!-- Derecha: Iconos -->
+                <div class="flex items-center space-x-2 md:space-x-3">
+                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Cuenta">
+                        <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
                     </button>
-                    
-                    <!-- Botón Tema -->
-                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-200" title="Cambiar tema">
-                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-10 h-10">
+                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
+                        <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema">
+                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos">
+                        <img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="cart-icon" class="relative p-2 rounded-lg hover:bg-gray-700" title="Mi Compra">
+                        <img src="assets/carrito.png" alt="Mi Compra" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span>
                     </button>
                 </div>
             </div>
-        </nav>
+            <!-- Barra de búsqueda para móviles -->
+            <div class="mt-2 md:hidden">
+                 <div class="relative w-full">
+                    <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button class="absolute right-0 top-0 mt-2 mr-3">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nivel Inferior: Navegación -->
+            <nav class="flex justify-center py-2">
+                <ul class="flex space-x-4 md:space-x-8">
+                    <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
+                    <li class="relative group">
+                        <a href="#" class="text-gray-300 hover:text-white flex items-center">
+                            Libros 
+                            <svg class="w-4 h-4 ml-1 fill-current text-gray-500 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </a>
+                        <!-- Submenú (funcionalidad a implementar) -->
+                        <!-- <ul class="absolute hidden group-hover:block bg-white shadow-lg rounded mt-1 py-1 w-48 z-20">
+                            <li><a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Novedades</a></li>
+                            <li><a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Materias</a></li>
+                        </ul> -->
+                    </li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Blog</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Horario</a></li> 
+                </ul>
+            </nav>
+        </div>
     </header>
 
-    <!-- Main Content (Vaciado Temporalmente) -->
+    <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
-        <!-- El contenido (buscador, filtros, libros, recomendaciones) se reconstruirá aquí -->
-        <p class="text-center text-gray-500">Cargando contenido...</p> 
+        <section id="recomendaciones" class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Nuestras recomendaciones</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Aquí irán las book-card -->
+                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 1</div>
+                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 2</div>
+                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 3</div>
+                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 4</div>
+                <div class="border p-4 rounded shadow text-center text-gray-500">Libro Recomendado 5</div>
+            </div>
+        </section>
+        <!-- Aquí podríamos añadir más secciones como "Lo + leído", "Novedades por categoría", etc. -->
     </main>
 
     <!-- Wishlist Modal (Lo mantenemos porque está ligado al header) -->
@@ -104,8 +158,74 @@
         customElements.define('book-card', BookCard);
     </script>
     -->
-
+    <script src="js/components/book-card.js"></script>
     <!-- Main Application Script -->
     <script src="js/app.js"></script>
+
+    <!-- Cart Modal -->
+    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-lg">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Mi Compra</h2>
+                <button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body: Cart Items -->
+            <div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto">
+                <!-- Los items del carrito se renderizarán aquí -->
+                <!-- Ejemplo de item (se generará con JS):
+                <div class="flex items-center space-x-3">
+                    <img src="https://covers.openlibrary.org/b/id/8267140-S.jpg" alt="Portada" class="w-12 h-16 object-cover rounded">
+                    <div class="flex-grow">
+                        <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">Título del Libro</h4>
+                        <div class="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <span>Cantidad:</span>
+                            <button class="qty-btn minus-qty-btn">-</button> 
+                            <span>1</span> 
+                            <button class="qty-btn plus-qty-btn">+</button> 
+                        </div>
+                    </div>
+                    <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">19.99 €</div>
+                    <div class="flex flex-col space-y-1">
+                         <button class="icon-action-btn remove-cart-item-btn" title="Eliminar del carrito">X</button>
+                         <button class="icon-action-btn move-to-wishlist-btn" title="Mover a lista de deseos">WL</button> 
+                    </div>
+                </div>
+                -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t dark:border-gray-700">
+                 <div class="flex justify-between items-center mb-3">
+                    <span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span>
+                    <span id="cart-total-price" class="text-lg font-semibold text-gray-800 dark:text-white">0.00 €</span>
+                </div>
+                <button id="go-to-checkout-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-2">
+                    Ver Mi Compra
+                </button>
+                <button id="empty-cart-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md">
+                    Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Footer (Reutilizado de checkout.html) -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; <span id="current-year-index"></span> ENTRE HOJAS - Tu Tienda de Libros Online. Todos los derechos reservados.</p>
+            <p class="text-sm mt-2">Proyecto de demostración.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Pequeño script para el año en el footer de index
+        document.getElementById('current-year-index').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html> 

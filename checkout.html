@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Compra - ENTRE HOJAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+    <!-- Header (Reutilizado de index.html) -->
+    <header class="bg-gray-800 shadow-md relative z-10">
+        <div class="container mx-auto px-4 pt-2 pb-0">
+            <!-- Nivel Superior: Logo, Título, Búsqueda, Iconos -->
+            <div class="flex justify-between items-center border-b pb-2 border-gray-700">
+                <!-- Izquierda: Logo y Título -->
+                <div class="flex items-center space-x-3">
+                    <a href="index.html"><img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-16 md:h-20 w-auto"></a>
+                    <a href="index.html"><h1 class="text-3xl font-bold hidden sm:block text-white">ENTRE HOJAS</h1></a>
+                </div>
+
+                <!-- Centro: Barra de Búsqueda -->
+                <div class="flex-grow mx-4 hidden md:flex justify-center">
+                    <div class="relative w-full max-w-md">
+                        <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button class="absolute right-0 top-0 mt-2 mr-3">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Derecha: Iconos -->
+                <div class="flex items-center space-x-2 md:space-x-3">
+                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Cuenta">
+                        <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
+                        <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema">
+                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos">
+                        <img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="cart-icon" class="relative p-2 rounded-lg hover:bg-gray-700" title="Mi Compra">
+                        <img src="assets/carrito.png" alt="Mi Compra" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Barra de búsqueda para móviles -->
+            <div class="mt-2 md:hidden">
+                 <div class="relative w-full">
+                    <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button class="absolute right-0 top-0 mt-2 mr-3">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nivel Inferior: Navegación -->
+            <nav class="flex justify-center py-2">
+                <ul class="flex space-x-4 md:space-x-8">
+                    <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
+                    <li class="relative group">
+                        <a href="#" class="text-gray-300 hover:text-white flex items-center">
+                            Libros 
+                            <svg class="w-4 h-4 ml-1 fill-current text-gray-500 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </a>
+                    </li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Blog</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Horario</a></li> 
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 md:p-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-6">Resumen de tu Compra</h1>
+            
+            <div id="checkout-cart-summary">
+                <!-- Los items del carrito se renderizarán aquí por js/checkout.js -->
+                <div class="border-b dark:border-gray-700 pb-4 mb-4">
+                    <p class="text-gray-600 dark:text-gray-400">Cargando resumen del carrito...</p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <!-- Sección de Totales -->
+                <div class="border-t dark:border-gray-700 pt-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-lg text-gray-700 dark:text-gray-300">Subtotal:</span>
+                        <span id="checkout-subtotal" class="text-lg font-semibold text-gray-800 dark:text-white">0.00 €</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-700 dark:text-gray-300">Gastos de Envío:</span>
+                        <span class="text-gray-800 dark:text-white">A calcular</span> <!-- Placeholder -->
+                    </div>
+                    <div class="flex justify-between items-center text-xl font-bold text-gray-800 dark:text-white mt-4 pt-4 border-t dark:border-gray-600">
+                        <span>Total General:</span>
+                        <span id="checkout-grand-total">0.00 €</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button id="proceed-to-payment-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                    Proceder al Pago (Simulado)
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer (similar al de index.html) -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; <span id="current-year"></span> ENTRE HOJAS - Tu Tienda de Libros Online. Todos los derechos reservados.</p>
+            <p class="text-sm mt-2">Proyecto de demostración.</p>
+        </div>
+    </footer>
+
+    <script src="js/checkout.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pequeño script para el año en el footer
+            const currentYearSpan = document.getElementById('current-year');
+            if (currentYearSpan) currentYearSpan.textContent = new Date().getFullYear();
+            
+            // Lógica duplicada/adaptada de app.js para funcionalidad del header en checkout.html
+            
+            // --- DATOS (Duplicados de app.js para demo) ---
+            const sampleBooksCheckout = [
+                { id: '1', title: 'Cien Años de Soledad', author: 'Gabriel García Márquez', cover: 'https://covers.openlibrary.org/b/id/8267140-L.jpg', price: 19.99, stock: 150, year: '1967', category: 'Realismo Mágico', rating: '4.5', pages: '417', language: 'Español' },
+                { id: '2', title: 'Don Quijote de la Mancha', author: 'Miguel de Cervantes', cover: 'https://covers.openlibrary.org/b/id/7986247-L.jpg', price: 22.50, stock: 75, year: '1605', category: 'Clásico', rating: '4.7', pages: '863', language: 'Español' },
+                { id: '3', title: 'El Principito', author: 'Antoine de Saint-Exupéry', cover: 'https://covers.openlibrary.org/b/id/10064702-L.jpg', price: 12.00, stock: 0, year: '1943', category: 'Infantil', rating: '4.8', pages: '96', language: 'Francés' },
+                { id: '4', title: '1984', author: 'George Orwell', cover: 'https://covers.openlibrary.org/b/id/8274540-L.jpg', price: 15.75, stock: 5, year: '1949', category: 'Distopía', rating: '4.6', pages: '328', language: 'Inglés' },
+                { id: '5', title: 'Matar un Ruiseñor', author: 'Harper Lee', cover: 'https://covers.openlibrary.org/b/id/8362311-L.jpg', price: 18.20, stock: 30, year: '1960', category: 'Ficción Clásica', rating: '4.4', pages: '281', language: 'Inglés' }
+            ];
+
+            // --- ESTADO (Leído de localStorage) ---
+            let isDarkModeCheckout = localStorage.getItem('darkMode') === 'true';
+            let wishlistCheckout = JSON.parse(localStorage.getItem('wishlist') || '[]');
+            let cartCheckout = JSON.parse(localStorage.getItem('cart') || '[]'); // Leer carrito para todas las funciones
+
+            // --- SELECCIÓN DOM HEADER & MODALES ---
+            const themeToggleButtonCheckout = document.getElementById('theme-toggle');
+            const cartIconCheckout = document.getElementById('cart-icon'); // Icono carrito header
+            const cartBadgeCheckout = document.getElementById('cart-count-badge');
+            const contactIconCheckout = document.getElementById('contact-icon');
+            const contactModalCheckout = document.getElementById('contact-modal');
+            const closeContactModalCheckout = document.getElementById('close-contact-modal');
+            const wishlistHeaderIconCheckout = document.getElementById('wishlist-header-icon');
+            const wishlistModalCheckout = document.getElementById('wishlist-modal');
+            const closeWishlistCheckout = document.getElementById('close-wishlist');
+            const wishlistContentContainerCheckout = document.getElementById('wishlist-content-checkout');
+            const cartModalCheckout = document.getElementById('cart-modal'); // Seleccionar cart modal
+            const closeCartModalBtnCheckout = document.getElementById('close-cart-modal'); // Seleccionar botón cerrar cart modal
+            const cartItemsContainerCheckout = document.getElementById('cart-items-container-checkout'); // ID único para contenido cart modal en checkout
+            const cartTotalPriceCheckout = document.getElementById('cart-total-price-checkout'); // ID único para total cart modal en checkout
+            const goToCheckoutBtnCheckout = document.getElementById('go-to-checkout-btn-checkout'); // ID único para botón checkout en cart modal
+
+            // --- FUNCIONES ---
+            function applyThemeCheckout() {
+                document.body.classList.toggle('dark', isDarkModeCheckout);
+                const searchInputs = document.querySelectorAll('header input[type="search"]');
+                searchInputs.forEach(input => {
+                     if (!input) return;
+                    if (isDarkModeCheckout) {
+                        input.classList.add('dark:bg-gray-700', 'dark:border-gray-600', 'dark:text-white');
+                    } else {
+                        input.classList.remove('dark:bg-gray-700', 'dark:border-gray-600', 'dark:text-white');
+                    }
+                });
+                // Aplicar tema a todos los modales copiados 
+                [contactModalCheckout, wishlistModalCheckout, cartModalCheckout].forEach(modal => {
+                     if (!modal) return;
+                     const modalContent = modal.querySelector('div:first-child');
+                     if (!modalContent) return;
+                     if (isDarkModeCheckout) {
+                        modalContent.classList.add('dark:bg-gray-800');
+                     } else {
+                        modalContent.classList.remove('dark:bg-gray-800');
+                     }
+                });
+            }
+
+            function updateCartIconCheckout() {
+                const cartItemCount = cartCheckout.reduce((total, item) => total + item.quantity, 0);
+                if (cartBadgeCheckout) {
+                    cartBadgeCheckout.textContent = cartItemCount;
+                    cartBadgeCheckout.style.display = cartItemCount > 0 ? 'flex' : 'none';
+                }
+                if (cartIconCheckout) {
+                     cartIconCheckout.title = `Mi Compra (${cartItemCount} items)`;
+                }
+            }
+            
+            function toggleWishlistItemCheckout(bookId) {
+                const index = wishlistCheckout.indexOf(bookId);
+                if (index === -1) wishlistCheckout.push(bookId); else wishlistCheckout.splice(index, 1);
+                localStorage.setItem('wishlist', JSON.stringify(wishlistCheckout));
+                renderWishlistCheckout();
+            }
+
+            function renderWishlistCheckout() {
+                 if (!wishlistContentContainerCheckout) return;
+                 wishlistContentContainerCheckout.innerHTML = wishlistCheckout.length === 0 ? '<p class="col-span-full text-center text-gray-500 dark:text-gray-400">Tu lista de deseos está vacía.</p>' : '';
+                 if (wishlistCheckout.length > 0) {
+                     wishlistCheckout.forEach(bookId => {
+                         const book = sampleBooksCheckout.find(b => b.id === bookId); 
+                         if (book) {
+                             const item = document.createElement('div');
+                             item.className = 'p-2 border rounded flex items-center justify-between dark:text-gray-200 dark:border-gray-600';
+                             item.innerHTML = `<span>${book.title}</span> <button data-book-id="${bookId}" class="remove-wishlist-item-checkout text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600 p-1">X</button>`;
+                             wishlistContentContainerCheckout.appendChild(item);
+                         }
+                     });
+                     wishlistContentContainerCheckout.querySelectorAll('.remove-wishlist-item-checkout').forEach(button => button.addEventListener('click', e => toggleWishlistItemCheckout(e.target.dataset.bookId)));
+                 }
+             }
+
+            function renderCartModalCheckout() { // Función para renderizar el modal del carrito
+                 if (!cartItemsContainerCheckout || !cartTotalPriceCheckout) return;
+                 let totalPrice = 0;
+                 cartItemsContainerCheckout.innerHTML = '';
+                 if (cartCheckout.length === 0) {
+                     cartItemsContainerCheckout.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 py-4">Tu carrito está vacío.</p>';
+                     cartTotalPriceCheckout.textContent = '0.00 €';
+                     return;
+                 }
+                 cartCheckout.forEach(item => {
+                     const itemDiv = document.createElement('div');
+                     itemDiv.className = 'flex items-center space-x-2 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
+                     const itemTotal = item.price * item.quantity;
+                     totalPrice += itemTotal;
+                     const cartCover = item.cover ? item.cover.replace('-L.jpg', '-S.jpg') : 'assets/placeholder-cover-small.png';
+                     itemDiv.innerHTML = `
+                         <img src="${cartCover}" alt="${item.title}" class="w-10 h-14 object-cover rounded shadow">
+                         <div class="flex-grow">
+                             <h4 class="text-xs font-medium text-gray-800 dark:text-gray-200">${item.title}</h4>
+                             <p class="text-xs text-gray-500 dark:text-gray-400">Cantidad: ${item.quantity}</p>
+                         </div>
+                         <div class="text-xs font-semibold text-gray-700 dark:text-gray-300">${itemTotal.toFixed(2)} €</div>
+                     `;
+                     cartItemsContainerCheckout.appendChild(itemDiv);
+                 });
+                 cartTotalPriceCheckout.textContent = `${totalPrice.toFixed(2)} €`;
+             }
+
+            // --- LISTENERS ---
+            if (themeToggleButtonCheckout) {
+                themeToggleButtonCheckout.addEventListener('click', () => {
+                    isDarkModeCheckout = !isDarkModeCheckout;
+                    localStorage.setItem('darkMode', isDarkModeCheckout);
+                    applyThemeCheckout();
+                });
+            }
+            
+            if (contactIconCheckout && contactModalCheckout) {
+                contactIconCheckout.addEventListener('click', () => contactModalCheckout.showModal());
+            }
+            if (closeContactModalCheckout && contactModalCheckout) {
+                closeContactModalCheckout.addEventListener('click', () => contactModalCheckout.close());
+            }
+
+            if (wishlistHeaderIconCheckout && wishlistModalCheckout) {
+                wishlistHeaderIconCheckout.addEventListener('click', () => {
+                     renderWishlistCheckout(); 
+                     wishlistModalCheckout.showModal();
+                 });
+             }
+            if (closeWishlistCheckout && wishlistModalCheckout) {
+                closeWishlistCheckout.addEventListener('click', () => wishlistModalCheckout.close());
+            }
+
+            // Listener para icono del carrito (nuevo)
+            if (cartIconCheckout && cartModalCheckout) {
+                 cartIconCheckout.addEventListener('click', () => {
+                     renderCartModalCheckout(); // Renderizar antes de mostrar
+                     cartModalCheckout.showModal();
+                 });
+             }
+             // Listener para cerrar modal del carrito (nuevo)
+            if (closeCartModalBtnCheckout && cartModalCheckout) {
+                closeCartModalBtnCheckout.addEventListener('click', () => cartModalCheckout.close());
+            }
+            // Listener para botón "Ver mi compra" dentro del modal del carrito (nuevo)
+            if (goToCheckoutBtnCheckout && cartModalCheckout) {
+                 goToCheckoutBtnCheckout.addEventListener('click', () => {
+                     cartModalCheckout.close(); // Solo cierra el modal, ya estamos en checkout
+                     console.log('Botón Ver Mi Compra (en modal) clickeado en página checkout.');
+                 });
+             }
+            
+            // Cerrar modales con click en backdrop (incluye cartModalCheckout)
+            [contactModalCheckout, wishlistModalCheckout, cartModalCheckout].forEach(modal => {
+                 if (modal) {
+                     modal.addEventListener("click", e => {
+                         if (e.target === modal) modal.close();
+                     });
+                 }
+             });
+
+            // --- INICIALIZACIÓN VISUAL --- 
+            applyThemeCheckout();
+            updateCartIconCheckout();
+            renderWishlistCheckout(); 
+            renderCartModalCheckout(); // Renderizar carrito una vez al cargar por si se abre el modal
+        });
+    </script>
+
+    <!-- Contact Modal (Copiado de index.html) -->
+    <dialog id="contact-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Información de Contacto</h2>
+                <button id="close-contact-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-5">
+                <div class="flex items-center space-x-3">
+                    <img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0">
+                    <span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0">
+                    <a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1">
+                    <span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Wishlist Modal (Copiado de index.html) -->
+    <dialog id="wishlist-modal" class="wishlist-modal p-4 rounded-lg shadow-xl max-w-lg w-full bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2>
+            <button id="close-wishlist" class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="wishlist-content-checkout" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Los libros de la lista de deseos se renderizarán aquí -->
+        </div>
+    </dialog>
+
+    <!-- Cart Modal (Copiado de index.html y adaptado para checkout.html) -->
+    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-sm bg-white dark:bg-gray-800">
+        <div class="rounded-lg">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Mi Compra</h2>
+                <button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body: Cart Items -->
+            <div id="cart-items-container-checkout" class="p-4 space-y-3 max-h-60 overflow-y-auto">
+                <!-- Contenido generado por renderCartModalCheckout() -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t dark:border-gray-700">
+                 <div class="flex justify-between items-center mb-3">
+                    <span class="text-md font-semibold text-gray-800 dark:text-white">Total:</span>
+                    <span id="cart-total-price-checkout" class="text-md font-semibold text-gray-800 dark:text-white">0.00 €</span>
+                </div>
+                 <!-- El botón "Ver Mi Compra" en este modal solo lo cierra, ya que estamos en checkout -->
+                <button id="go-to-checkout-btn-checkout" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md">
+                    Cerrar Resumen
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+</body>
+</html> 

@@ -1,33 +1,68 @@
 # Documentación Técnica - ENTRE HOJAS
 
-## Descripción General
-ENTRE HOJAS es una aplicación web que permite a los usuarios explorar, buscar y leer libros digitales. La aplicación está construida utilizando tecnologías web modernas y sigue un diseño modular y escalable.
+## Nombre del proyecto
+ENTRE HOJAS
+
+## Descripción
+ENTRE HOJAS es una tienda de libros online que permite a los usuarios explorar, buscar y comprar libros. La aplicación está construida utilizando tecnologías web modernas para el frontend y un backend robusto para la gestión de datos y transacciones.
+
+## Motivación
+El proyecto nació con la idea de crear una biblioteca personal online, pero evolucionó hacia una tienda de libros completa. La motivación principal es explorar y aprender sobre el desarrollo de aplicaciones web full-stack, abarcando desde el diseño de la interfaz de usuario (frontend) hasta la lógica de servidor (backend), la gestión de bases de datos y la integración de servicios externos como APIs de libros y pasarelas de pago.
+
+## Justificación
+La creación de una tienda de libros online como "ENTRE HOJAS" permite aplicar conocimientos en diversas tecnologías y arquitecturas de software. Este proyecto sirve como un caso práctico para:
+*   Desarrollar una interfaz de usuario interactiva y amigable.
+*   Implementar un backend con Node.js y Express.js.
+*   Diseñar y gestionar una base de datos relacional con MySQL.
+*   Consumir APIs externas para obtener datos de productos.
+*   Entender el flujo de una transacción de comercio electrónico, incluyendo la futura integración de una pasarela de pago.
+*   Aprender sobre la gestión de inventario (simulado inicialmente) y precios.
+*   Reforzar buenas prácticas de desarrollo, documentación y control de versiones.
 
 ## Estructura del Proyecto
 ```
 ENTRE HOJAS/
-├── index.html              # Página principal
-├── css/
-│   └── styles.css         # Estilos globales
-├── js/
-│   ├── app.js            # Lógica principal de la aplicación
-│   └── components/
-│       └── book-card.js  # Componente personalizado para tarjetas de libros
-├── assets/
-│   └── logo.png          # Logo de la aplicación
-└── DOCUMENT.md           # Documentación técnica
+├── frontend/                 # Código del cliente (HTML, CSS, JS)
+│   ├── index.html
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   ├── app.js
+│   │   └── components/
+│   │       └── book-card.js
+│   └── assets/
+│       └── logo.png
+├── backend/                  # Código del servidor (Node.js)
+│   ├── server.js             # Archivo principal del servidor
+│   ├── routes/               # Definición de rutas de la API
+│   ├── controllers/          # Lógica de negocio
+│   ├── models/               # Modelos de datos (interacción con BD)
+│   └── config/               # Archivos de configuración (BD, etc.)
+└── DOCUMENT.md               # Documentación técnica
 ```
 
 ## Tecnologías Utilizadas
+
+### Frontend
 - HTML5
 - CSS3 (con Tailwind CSS)
 - JavaScript (ES6+)
-- Web Components
-- LocalStorage para persistencia de datos
+- Web Components (para `book-card.js` y potencialmente otros elementos reutilizables)
+- LocalStorage (para funcionalidades del lado del cliente como la lista de deseos y el modo oscuro)
+
+### Backend
+- Node.js (con Express.js como framework)
+- MySQL (gestionado con MySQL Workbench)
+
+### APIs Externas
+- API de Libros: `https://books-foniuhqsba-uc.a.run.app/` (para poblar la base de datos inicial con información de libros, incluyendo precios y stock simulado).
+- Pasarela de Pago: (A definir, ej: Stripe, PayPal)
 
 ## Componentes Principales
 
-### 1. BookCard (book-card.js)
+### 1. Frontend
+
+#### 1.1. BookCard (frontend/js/components/book-card.js)
 Componente personalizado que representa una tarjeta de libro.
 
 #### Atributos
@@ -42,58 +77,57 @@ Componente personalizado que representa una tarjeta de libro.
 - `language`: Idioma
 
 #### Eventos
-- `read-book`: Se dispara al hacer clic en el botón "Leer"
-- `toggle-wishlist`: Se dispara al hacer clic en el botón "Lista de deseos"
+- `view-details`: Se dispara al hacer clic para ver más detalles del libro (lleva a una página de producto o abre un modal más detallado).
+- `add-to-cart`: Se dispara al hacer clic en el botón "Añadir al carrito".
+- `toggle-wishlist`: Se dispara al hacer clic en el botón "Lista de deseos".
 
-### 2. Aplicación Principal (app.js)
+#### 1.2. Aplicación Principal (frontend/js/app.js)
 
-#### Estado de la Aplicación
+##### Estado de la Aplicación (Cliente)
 ```javascript
 const state = {
     isDarkMode: boolean,
-    isGridView: boolean,
-    wishlist: string[],
-    currentCategory: string,
-    currentBook: object|null,
-    currentPage: number,
-    booksPerPage: number,
-    sortBy: string,
-    sortOrder: string
+    wishlist: string[], // Array de IDs de libros en la lista de deseos
+    cart: object[],     // Array de objetos representando ítems en el carrito (idLibro, cantidad, precio)
+    // ... otros estados relevantes para la UI ...
 }
 ```
 
-#### Funcionalidades Principales
-1. **Gestión de Tema**
-   - Cambio entre modo claro y oscuro
-   - Persistencia de preferencia en localStorage
+##### Funcionalidades Principales (Cliente)
+1.  **Gestión de Tema (Modo Oscuro/Claro)**
+    *   Cambio entre modo claro y oscuro.
+    *   Persistencia de preferencia en localStorage.
+2.  **Catálogo de Libros**
+    *   Visualización de libros (grid/lista).
+    *   Paginación.
+    *   Búsqueda y filtrado (por género, autor, precio, etc.).
+    *   Ordenamiento (por precio, popularidad, fecha de publicación, etc.).
+3.  **Página de Detalles del Libro**
+    *   Información completa del libro (descripción, autor, editorial, año, ISBN si disponible, precio, stock).
+    *   Imágenes del libro.
+    *   Botón para añadir al carrito.
+    *   Botón para añadir/quitar de la lista de deseos.
+4.  **Lista de Deseos**
+    *   Agregar/eliminar libros.
+    *   Persistencia en localStorage (y sincronización con backend si el usuario está logueado).
+    *   Visualización en una sección dedicada o modal.
+5.  **Carrito de Compras**
+    *   Añadir/eliminar libros del carrito.
+    *   Modificar cantidades.
+    *   Cálculo del subtotal y total.
+    *   Persistencia (localStorage para invitados, BD para usuarios logueados).
+6.  **Proceso de Checkout**
+    *   Formulario de información de envío y facturación.
+    *   Integración con pasarela de pago.
+    *   Confirmación de pedido.
+7.  **Gestión de Cuenta de Usuario (Futuro)**
+    *   Registro e inicio de sesión.
+    *   Historial de pedidos.
+    *   Gestión de direcciones.
+8.  **Modal de Contacto**
+    *   Muestra información de contacto (teléfono, email, dirección).
 
-2. **Gestión de Vista**
-   - Vista en cuadrícula
-   - Vista en lista
-   - Persistencia de preferencia
-
-3. **Sistema de Filtrado y Ordenamiento**
-   - Filtrado por categorías
-   - Búsqueda por título, autor y descripción
-   - Ordenamiento por:
-     - Título
-     - Autor
-     - Año
-     - Rating
-   - Orden ascendente/descendente
-   - Paginación de resultados
-
-4. **Lista de Deseos**
-   - Agregar/eliminar libros
-   - Persistencia en localStorage
-   - Visualización en modal
-
-5. **Lector de Libros**
-   - Visualización de contenido en modal
-   - Diseño responsivo
-   - Soporte para modo oscuro
-
-### 3. Estilos (styles.css)
+#### 1.3. Estilos (frontend/css/styles.css)
 
 #### Variables CSS
 ```css
@@ -116,6 +150,48 @@ const state = {
 - Estilos personalizados para scrollbar
 - Diseño adaptativo para diferentes tamaños de pantalla
 
+### 2. Backend
+
+#### 2.1. API Endpoints (ejemplos)
+*   `GET /api/books`: Obtener listado de libros (con filtros y paginación).
+*   `GET /api/books/:id`: Obtener detalles de un libro específico.
+*   `GET /api/categories`: Obtener listado de categorías.
+*   `POST /api/cart`: Añadir libro al carrito (para usuarios logueados).
+*   `GET /api/cart`: Obtener contenido del carrito (para usuarios logueados).
+*   `PUT /api/cart/:itemId`: Actualizar cantidad de un ítem en el carrito.
+*   `DELETE /api/cart/:itemId`: Eliminar ítem del carrito.
+*   `POST /api/orders`: Crear un nuevo pedido.
+*   `GET /api/orders`: Obtener historial de pedidos del usuario (requiere autenticación).
+*   `POST /api/wishlist`: Añadir libro a la lista de deseos (para usuarios logueados).
+*   `GET /api/wishlist`: Obtener lista de deseos (para usuarios logueados).
+
+#### 2.2. Base de Datos (MySQL)
+
+##### Esquema de la Tabla `libros`
+```sql
+CREATE TABLE libros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    autor VARCHAR(255),
+    editorial VARCHAR(255),
+    fecha_publicacion DATE,
+    genero VARCHAR(100),
+    descripcion TEXT,
+    idioma VARCHAR(50),
+    paginas INT,
+    portada_url VARCHAR(512),
+    precio DECIMAL(10, 2) NOT NULL,
+    stock INT DEFAULT 0,
+    isbn VARCHAR(20) NULL, -- Aunque la API actual no lo provee, es importante para el futuro
+    rating_promedio DECIMAL(3,2) DEFAULT 0.00, -- Calculado o importado
+    numero_reviews INT DEFAULT 0,
+    -- Campos adicionales que puedan surgir de la API o necesidad
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+*Otras tablas a considerar para el futuro:* `usuarios`, `pedidos`, `items_pedido`, `direcciones`, `categorias`, `reviews`, `wishlist_items`.
+
 ## Categorías de Libros
 1. Fantasía
 2. Ciencia Ficción
@@ -124,28 +200,15 @@ const state = {
 5. Infantil
 6. Histórica
 
-## Funcionalidades Implementadas
+## Funcionalidades Implementadas (Hasta el momento del cambio de enfoque)
 
-### 1. Interfaz de Usuario
-- Barra de navegación con controles de tema y vista
-- Barra de búsqueda avanzada
-- Sistema de filtros y ordenamiento
-- Paginación de resultados
-- Grid/Lista de libros
-- Modal de lista de deseos
-- Lector de libros
-
-### 2. Gestión de Datos
-- Almacenamiento local de preferencias
-- Gestión de lista de deseos
-- Filtrado y búsqueda avanzada de libros
-- Ordenamiento y paginación de resultados
-
-### 3. Características de Accesibilidad
-- Soporte para modo oscuro
-- Diseño responsivo
-- Navegación por teclado
-- Contraste adecuado
+### 1. Interfaz de Usuario (Frontend - Prototipo inicial como Biblioteca)
+*   Header con:
+    *   Logo y título "ENTRE HOJAS".
+    *   Botón de modo oscuro funcional.
+    *   Botón de contacto con modal mostrando información (teléfono, email, dirección).
+*   Estructura básica HTML y CSS con Tailwind.
+*   Componente `book-card.js` básico.
 
 ## Sistema de Marcadores de Lectura
 
@@ -306,17 +369,31 @@ const recommendations = {
    - `recommendation-clicked`: Se dispara al seleccionar una recomendación
    - `feedback-submitted`: Se dispara al dar feedback
 
-## Próximas Mejoras Planificadas
-1. Implementación de sistema de usuarios
-2. Añadir más categorías de libros
-3. Implementar sistema de reseñas y comentarios
-4. Añadir sistema de marcadores de lectura
-5. Implementar sistema de recomendaciones
+## Próximas Mejoras Planificadas (Nuevo Enfoque Tienda Online)
+1.  **Desarrollo del Backend (Node.js + Express)**
+    *   Configuración del servidor.
+    *   Definición de modelos y conexión a MySQL.
+    *   Implementación de rutas y controladores para la API de libros.
+2.  **Población de la Base de Datos**
+    *   Crear script para importar datos desde la API `https://books-foniuhqsba-uc.a.run.app/` a la tabla `libros`.
+3.  **Desarrollo del Frontend (Tienda)**
+    *   Adaptar el catálogo de libros para mostrar precios y botón "Añadir al carrito".
+    *   Implementar la página de detalles del producto.
+    *   Desarrollar la funcionalidad del carrito de compras.
+    *   Implementar el proceso de checkout (inicialmente simulado, luego con pasarela de pago).
+    *   Mejorar la búsqueda y filtros para una tienda.
+4.  **Sistema de Usuarios (Básico)**
+    *   Registro e inicio de sesión (puede ser simplificado inicialmente).
+    *   Asociación de carritos y listas de deseos a usuarios.
+5.  **Pasarela de Pago**
+    *   Investigar e integrar una pasarela de pago.
+6.  **Gestión de Órdenes (Básico en Admin)**
+    *   Interfaz simple para ver pedidos (si el tiempo lo permite).
 
 ## Notas de Desarrollo
-- La aplicación utiliza Web Components para una mejor modularidad
-- Se implementa el patrón de diseño Observer para la gestión de eventos
-- Se utiliza localStorage para persistencia de datos del lado del cliente
-- La interfaz está construida con Tailwind CSS para un diseño consistente y responsivo
-- Se implementa paginación del lado del cliente para mejor rendimiento
-- El sistema de búsqueda incluye búsqueda en títulos, autores y descripciones
+- El proyecto ha pivotado de una biblioteca digital a una tienda de libros online.
+- Se priorizará la creación de la base de datos MySQL y la configuración inicial del backend Node.js.
+- La API `https://books-foniuhqsba-uc.a.run.app/` se usará para la carga inicial de datos de libros. Aunque carece de ISBN y su origen es desconocido, es útil por incluir precios y stock (simulado).
+- El frontend se reutilizará y adaptará desde el prototipo de biblioteca.
+- Tailwind CSS seguirá siendo la librería principal para estilos en el frontend.
+- Los Web Components se mantendrán para elementos reutilizables como las tarjetas de libro.

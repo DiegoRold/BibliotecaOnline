@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos - ENTRE HOJAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex flex-col min-h-screen">
+    <!-- Header (se podría modularizar si se usa en muchas páginas) -->
+    <header class="bg-gray-800 shadow-md relative z-10">
+        <div class="container mx-auto px-4 pt-2 pb-0">
+            <!-- Nivel Superior: Logo, Título, Búsqueda, Iconos -->
+            <div class="flex justify-between items-center border-b pb-2 border-gray-700">
+                <!-- Izquierda: Logo y Título -->
+                <div class="flex items-center space-x-3">
+                    <a href="index.html"><img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-16 md:h-20 w-auto"></a>
+                    <a href="index.html"><h1 class="text-3xl font-bold hidden sm:block text-white">ENTRE HOJAS</h1></a>
+                </div>
+
+                <!-- Derecha: Iconos -->
+                <div class="flex items-center space-x-2 md:space-x-3">
+                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700 relative" title="Mi Cuenta">
+                        <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                         <!-- Menú Desplegable Usuario -->
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden">
+                            <div id="user-greeting" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hidden"></div>
+                            <a href="login.html" id="login-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Iniciar Sesión</a>
+                            <a href="register.html" id="register-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Registrarse</a>
+                            <a href="#" id="profile-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mi Perfil</a>
+                            <a href="orders.html" id="orders-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mis Pedidos</a>
+                            <a href="#" id="logout-link-menu" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Cerrar Sesión</a>
+                        </div>
+                    </button>
+                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
+                        <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema">
+                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos">
+                        <img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="cart-icon" class="relative p-2 rounded-lg hover:bg-gray-700" title="Mi Compra">
+                        <img src="assets/carrito.png" alt="Mi Compra" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Navegación (simplificada o igual a index.html) -->
+            <nav class="flex justify-center py-2">
+                <ul class="flex space-x-4 md:space-x-8">
+                    <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Libros</a></li> 
+                    <li><a href="#" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
+                    <li><a href="#" class="text-gray-300 hover:text-white">Blog</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-8">Mis Pedidos</h2>
+        
+        <div id="orders-list-container" class="space-y-6">
+            <!-- Ejemplo de cómo podría lucir un pedido (se generará con JS) -->
+            <!-- 
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-800 dark:text-white">Pedido #PED123456</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Fecha: 01/01/2024</p>
+                    </div>
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100">Entregado</span>
+                </div>
+                <div class="mb-4">
+                    <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Artículos:</h4>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <li>Libro Título Uno (x1) - 19.99 €</li>
+                        <li>Otro Libro Más (x2) - 25.00 €</li>
+                    </ul>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold text-gray-800 dark:text-white">Total: 44.99 €</p>
+                    <a href="#" class="text-blue-600 hover:underline dark:text-blue-400 text-sm mt-1 inline-block">Ver Detalles del Pedido</a>
+                </div>
+            </div>
+            -->
+            <p id="loading-orders-message" class="text-center text-gray-500 dark:text-gray-400">Cargando tus pedidos...</p>
+            <p id="no-orders-message" class="text-center text-gray-500 dark:text-gray-400 hidden">No tienes pedidos realizados aún.</p>
+        </div>
+    </main>
+
+    <!-- Footer (reutilizado de index.html) -->
+    <footer class="bg-gray-800 text-white py-8 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; <span id="current-year-orders"></span> ENTRE HOJAS - Tu Tienda de Libros Online. Todos los derechos reservados.</p>
+            <p class="text-sm mt-2">Proyecto de demostración.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script src="js/orders.js"></script> 
+    <script>
+        // Script para el año en el footer de orders.html
+        if(document.getElementById('current-year-orders')){
+            document.getElementById('current-year-orders').textContent = new Date().getFullYear();
+        }
+        // Inicializar app.js (o partes de él) si es necesario para esta página
+        // La función init() de app.js se llama con DOMContentLoaded, lo que debería ser suficiente
+        // para el header y el manejo del modo oscuro.
+    </script>
+</body>
+</html> 

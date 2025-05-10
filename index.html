@@ -33,8 +33,17 @@
 
                 <!-- Derecha: Iconos -->
                 <div class="flex items-center space-x-2 md:space-x-3">
-                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Cuenta">
+                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700 relative" title="Mi Cuenta">
                         <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                         <!-- Menú Desplegable Usuario -->
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden">
+                            <div id="user-greeting" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hidden"></div>
+                            <a href="login.html" id="login-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Iniciar Sesión</a>
+                            <a href="register.html" id="register-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Registrarse</a>
+                            <a href="#" id="profile-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mi Perfil</a>
+                            <a href="orders.html" id="orders-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mis Pedidos</a>
+                            <a href="#" id="logout-link-menu" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Cerrar Sesión</a>
+                        </div>
                     </button>
                     <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
                         <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
@@ -85,7 +94,7 @@
     </header>
 
     <!-- Image Slider -->
-    <section id="image-slider" class="relative w-full container mx-auto overflow-hidden my-8">
+    <section id="image-slider" class="relative w-full container mx-auto overflow-hidden my-16">
         <div id="slider-track" class="flex transition-transform duration-500 ease-in-out">
             <!-- Las imágenes se añadirán aquí dinámicamente por JS -->
             <!-- Ejemplo de estructura por imagen:
@@ -101,7 +110,7 @@
     <section id="blog-promo" class="container mx-auto my-12">
         <div class="md:flex md:items-center bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
             <div class="md:w-3/5">
-                <img src="assets/book-convention.jpg" alt="Convención de Libros" class="w-full h-64 md:h-full object-cover">
+                <img src="assets/images/blog.jpeg" alt="Promoción del Blog Entre Hojas" class="w-full h-64 md:h-full object-cover">
             </div>
             <div class="md:w-2/5 p-6 md:p-8">
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-3">Descubre Nuestro Rincón Literario</h2>
@@ -113,6 +122,11 @@
                 </a>
             </div>
         </div>
+    </section>
+
+    <!-- Nueva Sección Imagen Gastos de Envío -->
+    <section class="container mx-auto my-8 flex justify-center">
+        <img src="assets/images/gastos-envio.png" alt="Información sobre gastos de envío" class="max-w-full h-auto">
     </section>
 
     <!-- Main Content (Recomendaciones ahora con scroll horizontal) -->
@@ -131,18 +145,18 @@
     </main>
 
     <!-- Wishlist Modal (Lo mantenemos porque está ligado al header) -->
-    <dialog id="wishlist-modal" class="wishlist-modal">
-        <div class="p-4">
+    <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold">Mi Lista de Deseos</h2>
-                <button id="close-wishlist" class="p-2 rounded-lg hover:bg-gray-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2>
+                <button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
-            <div id="wishlist-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Los libros de la lista de deseos se renderizarán aquí (cuando la restauremos) -->
+            <div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto">
+                <!-- Los libros de la lista de deseos se renderizarán aquí -->
             </div>
         </div>
     </dialog>
@@ -177,6 +191,22 @@
                     <img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1">
                     <span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span>
                 </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal de Confirmación para Vaciar Carrito -->
+    <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+                    Cancelar
+                </button>
+                <button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800">
+                    Sí, Vaciar Carrito
+                </button>
             </div>
         </div>
     </dialog>

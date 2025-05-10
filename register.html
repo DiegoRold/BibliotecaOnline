@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - ENTRE HOJAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex flex-col min-h-screen">
+
+    <!-- Header Simplificado -->
+    <header class="bg-gray-800 shadow-md">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <a href="index.html"><img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-12 md:h-16 w-auto"></a>
+                    <a href="index.html"><h1 class="text-2xl font-bold text-white">ENTRE HOJAS</h1></a>
+                </div>
+                <a href="index.html" class="text-gray-300 hover:text-white">Volver a la tienda</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 p-8 sm:p-10 md:p-12 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-full max-w-md">
+            <h2 class="text-2xl md:text-3xl font-bold text-center text-gray-800 dark:text-white mb-10">Crear una cuenta</h2>
+            
+            <!-- Contenedor para mensajes -->
+            <div id="message-container" class="mb-4"></div>
+
+            <form id="register-form" class="space-y-6">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre completo</label>
+                    <input type="text" name="name" id="name" required class="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Correo electrónico</label>
+                    <input type="email" name="email" id="email" required autocomplete="email" class="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contraseña</label>
+                    <input type="password" name="password" id="password" required autocomplete="new-password" class="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300" placeholder="Mínimo 8 caracteres">
+                </div>
+
+                <div>
+                    <label for="confirm-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirmar contraseña</label>
+                    <input type="password" name="confirm-password" id="confirm-password" required autocomplete="new-password" class="mt-1 block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-300" placeholder="Repite la contraseña">
+                </div>
+                
+                <div class="flex items-center pt-2">
+                    <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="terms" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                        Acepto los <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Términos y Condiciones</a>
+                    </label>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors duration-300">
+                        Crear cuenta
+                    </button>
+                </div>
+            </form>
+
+            <p class="mt-10 text-center text-sm text-gray-600 dark:text-gray-400">
+                ¿Ya tienes una cuenta? 
+                <a href="#" id="login-link" class="font-medium text-blue-600 hover:text-blue-500">
+                    Inicia sesión aquí
+                </a>
+            </p>
+        </div>
+    </main>
+
+    <!-- Footer Simplificado -->
+    <footer class="bg-gray-800 text-white py-6 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; <span id="current-year-register"></span> ENTRE HOJAS. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+    <script>
+        // Pequeño script para el año en el footer de register
+        document.getElementById('current-year-register').textContent = new Date().getFullYear();
+        
+        const registerForm = document.getElementById('register-form');
+        const messageContainer = document.getElementById('message-container');
+
+        if (registerForm) {
+            registerForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                messageContainer.innerHTML = ''; // Limpiar mensajes anteriores
+
+                const nameInput = document.getElementById('name');
+                const emailInput = document.getElementById('email');
+                const passwordInput = document.getElementById('password');
+                const confirmPasswordInput = document.getElementById('confirm-password');
+
+                const nombre = nameInput.value.trim();
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                if (password !== confirmPassword) {
+                    displayMessage('Las contraseñas no coinciden.', 'error');
+                    return;
+                }
+                if (password.length < 6) {
+                     displayMessage('La contraseña debe tener al menos 6 caracteres.', 'error');
+                     return;
+                }
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ nombre, email, password }),
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        displayMessage(data.message || '¡Usuario registrado exitosamente!', 'success');
+                        registerForm.reset();
+                        setTimeout(() => {
+                            window.location.href = 'index.html'; // Redirigir a la página principal después de 3 segundos
+                        }, 3000); // 3000 milisegundos = 3 segundos
+                    } else {
+                        displayMessage(data.message || 'Error al registrar el usuario. Inténtalo de nuevo.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error en el fetch:', error);
+                    displayMessage('Error de conexión. Por favor, verifica tu conexión a internet e inténtalo de nuevo.', 'error');
+                }
+            });
+        }
+
+        function displayMessage(message, type) {
+            messageContainer.innerHTML = ''; // Limpiar mensajes anteriores antes de mostrar uno nuevo
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            if (type === 'success') {
+                messageDiv.className = 'p-3 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800';
+            } else if (type === 'error') {
+                messageDiv.className = 'p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800';
+            }
+            messageContainer.appendChild(messageDiv);
+        }
+
+        // Enlace a login (simulado por ahora, podría llevar a login.html)
+        const loginLink = document.getElementById('login-link');
+        if(loginLink) {
+            loginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                alert('Redirigiendo a la página de inicio de sesión (simulación)...');
+                // window.location.href = 'login.html'; // Cuando exista login.html
+            });
+        }
+    </script>
+</body>
+</html> 

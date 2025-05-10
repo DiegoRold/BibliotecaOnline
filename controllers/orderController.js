@@ -83,6 +83,100 @@ export const getOrderById = async (req, res) => {
     }
 };
 
+// Crear un nuevo pedido
+export const createOrder = async (req, res) => {
+    const connection = getConnection();
+    if (!connection || connection.connection._closing === true) {
+        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
+    }
+
+    let transactionStarted = false;
+    try {
+        const userId = req.user.userId; // Obtenido del middleware (asegúrate que el middleware añade userId y no id)
+        const { items, totalAmount } = req.body;
+
+        // Validaciones básicas
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: 'El carrito está vacío. No se puede crear un pedido.' });
+        }
+        if (typeof totalAmount !== 'number' || totalAmount <= 0) {
+            return res.status(400).json({ message: 'El monto total del pedido no es válido.' });
+        }
+
+        // Iniciar transacción
+        await connection.beginTransaction();
+        transactionStarted = true;
+
+        // 1. Insertar en la tabla 'pedidos'
+        const pedidoResult = await connection.query(
+            'INSERT INTO pedidos (usuario_id, monto_total, moneda, estado_pago, estado_pedido, fecha_pedido) VALUES (?, ?, ?, ?, ?, NOW())',
+            [userId, totalAmount, 'EUR', 'Pagado', 'Procesando'] // Asumiendo moneda y estados iniciales
+        );
+        const newOrderId = pedidoResult[0].insertId;
+
+        if (!newOrderId) {
+            throw new Error('No se pudo obtener el ID del nuevo pedido.');
+        }
+
+        // 2. Insertar en 'pedido_items' y actualizar stock en 'libros'
+        for (const item of items) {
+            if (!item.book_id || typeof item.quantity !== 'number' || item.quantity <= 0 || typeof item.price !== 'number' || item.price < 0 || !item.title) {
+                throw new Error(`Datos inválidos para el item del pedido: ${JSON.stringify(item)}`);
+            }
+
+            // Verificar stock antes de reducirlo
+            const [bookRows] = await connection.query('SELECT stock FROM libros WHERE id = ?', [item.book_id]);
+            if (bookRows.length === 0) {
+                throw new Error(`Libro con ID ${item.book_id} no encontrado.`);
+            }
+            const currentStock = bookRows[0].stock;
+            if (currentStock < item.quantity) {
+                throw new Error(`Stock insuficiente para el libro "${item.title}" (ID: ${item.book_id}). Solicitado: ${item.quantity}, Disponible: ${currentStock}`);
+            }
+
+            // Insertar item del pedido
+            await connection.query(
+                'INSERT INTO pedido_items (pedido_id, libro_id, cantidad, precio_unitario_en_compra, titulo_en_compra) VALUES (?, ?, ?, ?, ?)',
+                [newOrderId, item.book_id, item.quantity, item.price, item.title]
+            );
+
+            // Actualizar stock del libro
+            const newStock = currentStock - item.quantity;
+            await connection.query(
+                'UPDATE libros SET stock = ? WHERE id = ?',
+                [newStock, item.book_id]
+            );
+        }
+
+        // Si todo fue bien, commit la transacción
+        await connection.commit();
+        transactionStarted = false;
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Pedido creado con éxito.', 
+            orderId: newOrderId 
+        });
+
+    } catch (error) {
+        console.error('Error en createOrder:', error);
+        if (transactionStarted) {
+            try {
+                await connection.rollback();
+            } catch (rollbackError) {
+                console.error('Error al hacer rollback de la transacción:', rollbackError);
+            }
+        }
+        // Determinar el código de estado basado en el tipo de error
+        if (error.message.includes('Stock insuficiente') || error.message.includes('Libro con ID') || error.message.includes('Datos inválidos para el item')) {
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Error interno del servidor al crear el pedido.', error: error.message });
+    } finally {
+        // No cerramos la conexión aquí si se obtiene del pool y se gestiona globalmente
+    }
+};
+
 // --- Funciones para Administradores ---
 
 // Obtener todos los pedidos (para administradores, con paginación)

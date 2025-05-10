@@ -6,7 +6,7 @@ import {
     updateBook,
     deleteBook
 } from '../controllers/bookController.js';
-import { protect, authorize } from '../middlewares/authMiddleware.js';
+import authMiddleware, { authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -15,8 +15,8 @@ router.get('/', getAllBooks);
 router.get('/:id', getBookById);
 
 // Rutas protegidas solo para administradores
-router.post('/', protect, authorize('admin'), createBook);
-router.put('/:id', protect, authorize('admin'), updateBook);
-router.delete('/:id', protect, authorize('admin'), deleteBook);
+router.post('/', authMiddleware, authorize('admin'), createBook);
+router.put('/:id', authMiddleware, authorize('admin'), updateBook);
+router.delete('/:id', authMiddleware, authorize('admin'), deleteBook);
 
 export default router; 

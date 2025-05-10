@@ -1,169 +1,135 @@
 import { getConnection } from '../config/db.js';
 
-// Obtener todos los libros (con paginación, filtros y ordenamiento)
+// Obtener todos los libros (público)
 export const getAllBooks = async (req, res) => {
     const connection = getConnection();
     if (!connection || connection.connection._closing === true) {
         return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
     }
     try {
-        // Paginación
-        let page = parseInt(req.query.page, 10);
-        let limit = parseInt(req.query.limit, 10);
-        page = (isNaN(page) || page < 1) ? 1 : page;
-        limit = (isNaN(limit) || limit < 1) ? 10 : limit;
-        const offset = (page - 1) * limit;
-
-        // Filtros y Ordenamiento
-        const { autor, categoria, q, ordenarPor, direccion } = req.query;
-        let whereClauses = [];
-        let queryParams = [];
-
-        if (q) {
-            const searchTerm = `%${q}%`;
-            whereClauses.push('(title LIKE ? OR author LIKE ? OR description LIKE ?)');
-            queryParams.push(searchTerm, searchTerm, searchTerm);
-        }
-        if (autor) {
-            whereClauses.push('author LIKE ?');
-            queryParams.push(`%${autor}%`);
-        }
-        if (categoria) {
-            whereClauses.push('JSON_CONTAINS(categories, JSON_QUOTE(?))');
-            queryParams.push(categoria);
-        }
-
-        let whereSql = '';
-        if (whereClauses.length > 0) {
-            whereSql = `WHERE ${whereClauses.join(' AND ')}`;
-        }
-
-        const allowedOrderByFields = { 
-            'title': 'title', 'price': 'price', 'publication_date': 'publication_date', 'id': 'id'
-        };
-        const sortField = allowedOrderByFields[ordenarPor] || 'id';
-        const sortDirection = (direccion && direccion.toLowerCase() === 'desc') ? 'DESC' : 'ASC';
-        const orderBySql = `ORDER BY ${sortField} ${sortDirection}`;
-
-        const countQuery = `SELECT COUNT(*) as totalItems FROM libros ${whereSql}`;
-        const [totalRows] = await connection.query(countQuery, queryParams);
-        const totalItems = totalRows[0].totalItems;
-        const totalPages = Math.ceil(totalItems / limit);
-
-        if (page > totalPages && totalItems > 0) {
-            return res.status(404).json({ 
-                message: `Página solicitada (${req.query.page || 1}) excede el total de páginas (${totalPages}) para los filtros aplicados.`,
-                pagination: { totalItems, totalPages, currentPage: parseInt(req.query.page, 10) || 1, itemsPerPage: limit, filtersApplied: { q: q || null, autor: autor || null, categoria: categoria || null }, sortApplied: { field: sortField, direction: sortDirection } }
-            });
-        }
-        
-        const booksQueryParams = [...queryParams, limit, offset];
-        const booksQuery = `SELECT * FROM libros ${whereSql} ${orderBySql} LIMIT ? OFFSET ?`;
-        const [books] = await connection.query(booksQuery, booksQueryParams);
-        
-        res.json({ data: books, pagination: { totalItems, totalPages, currentPage: page, itemsPerPage: limit, filtersApplied: { q: q || null, autor: autor || null, categoria: categoria || null }, sortApplied: { field: sortField, direction: sortDirection } } });
+        // Considerar añadir filtros (género, precio, etc.) y paginación en el futuro
+        // Por ahora, seleccionamos campos clave para la vista de catálogo
+        const query = 'SELECT id, title, author, cover_image_url, price, stock FROM libros WHERE stock > 0 ORDER BY title';
+        const [books] = await connection.query(query);
+        res.json(books);
     } catch (error) {
         console.error('Error en getAllBooks:', error);
-        res.status(500).json({ message: 'Error interno del servidor al obtener libros.', error: error.message });
+        res.status(500).json({ message: 'Error interno del servidor al obtener los libros.', error: error.message });
     }
 };
 
-// Obtener un libro específico por su ID
+// Obtener un libro por su ID (público)
 export const getBookById = async (req, res) => {
+    const { id } = req.params;
     const connection = getConnection();
     if (!connection || connection.connection._closing === true) {
         return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
     }
     try {
-        const { id } = req.params;
-        if (isNaN(parseInt(id))) {
-            return res.status(400).json({ message: 'El ID del libro debe ser un número.'});
-        }
-        const [rows] = await connection.query('SELECT * FROM libros WHERE id = ?', [id]);
-        if (rows.length === 0) {
+        // Seleccionar todos los campos para la vista de detalle del libro
+        const [books] = await connection.query('SELECT * FROM libros WHERE id = ?', [id]);
+        if (books.length === 0) {
             return res.status(404).json({ message: 'Libro no encontrado.' });
         }
-        res.json(rows[0]);
+        res.json(books[0]);
     } catch (error) {
-        console.error(`Error en getBookById (ID: ${req.params.id}):`, error);
-        res.status(500).json({ message: 'Error interno del servidor al obtener el libro.' });
+        console.error('Error en getBookById:', error);
+        res.status(500).json({ message: 'Error interno del servidor al obtener el libro.', error: error.message });
     }
 };
 
-// Crear un nuevo libro
+// --- Funciones solo para Administradores ---
+
+// Crear un nuevo libro (solo admin)
 export const createBook = async (req, res) => {
     const connection = getConnection();
     if (!connection || connection.connection._closing === true) {
         return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
     }
+    // Extraer todos los campos necesarios y opcionales del body
+    const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
+
+    // Validación básica (puedes expandirla)
+    if (!title || !price || stock === undefined) {
+        return res.status(400).json({ message: 'Título, precio y stock son requeridos.' });
+    }
+
     try {
-        const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
-        if (!title || !author || price === undefined || stock === undefined) {
-            return res.status(400).json({ message: 'Los campos obligatorios son: title, author, price, stock.' });
-        }
-        const insertQuery = `INSERT INTO libros (title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`;
-        const params = [ title, author, publication_date || null, cover_image_url || null, rating !== undefined ? parseFloat(rating) : null, parseFloat(price), description || null, tags ? (typeof tags === 'string' ? tags : JSON.stringify(tags)) : null, pages !== undefined ? parseInt(pages) : null, publisher || null, parseInt(stock), categories ? (typeof categories === 'string' ? categories : JSON.stringify(categories)) : null, isbn || null ];
-        const [result] = await connection.execute(insertQuery, params);
-        if (result.insertId) {
-            const [newBookRows] = await connection.query('SELECT * FROM libros WHERE id = ?', [result.insertId]);
-            res.status(201).json(newBookRows[0] || { message: 'Libro creado, pero no encontrado después.', id: result.insertId });
-        } else {
-            res.status(500).json({ message: 'Error al crear el libro, no se generó ID.' });
-        }
+        const query = `INSERT INTO libros (title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const [result] = await connection.execute(query, [
+            title, author || null, publication_date || null, cover_image_url || null, rating || 0,
+            price, description || null, tags || null, pages || 0, publisher || null, stock || 0,
+            categories || null, isbn || null
+        ]);
+        res.status(201).json({ message: 'Libro creado exitosamente.', bookId: result.insertId });
     } catch (error) {
         console.error('Error en createBook:', error);
         res.status(500).json({ message: 'Error interno del servidor al crear el libro.', error: error.message });
     }
 };
 
-// Actualizar un libro existente por ID (PUT)
+// Actualizar un libro existente (solo admin)
 export const updateBook = async (req, res) => {
+    const { id } = req.params;
     const connection = getConnection();
     if (!connection || connection.connection._closing === true) {
         return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
     }
+    // Extraer campos del body (solo los que se pueden actualizar)
+    // Es importante decidir qué campos son actualizables
+    const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
+
+    // Crear una lista de campos a actualizar dinámicamente
+    let fieldsToUpdate = [];
+    let values = [];
+    if (title !== undefined) { fieldsToUpdate.push('title = ?'); values.push(title); }
+    if (author !== undefined) { fieldsToUpdate.push('author = ?'); values.push(author); }
+    if (publication_date !== undefined) { fieldsToUpdate.push('publication_date = ?'); values.push(publication_date); }
+    if (cover_image_url !== undefined) { fieldsToUpdate.push('cover_image_url = ?'); values.push(cover_image_url); }
+    if (rating !== undefined) { fieldsToUpdate.push('rating = ?'); values.push(rating); }
+    if (price !== undefined) { fieldsToUpdate.push('price = ?'); values.push(price); }
+    if (description !== undefined) { fieldsToUpdate.push('description = ?'); values.push(description); }
+    if (tags !== undefined) { fieldsToUpdate.push('tags = ?'); values.push(tags); }
+    if (pages !== undefined) { fieldsToUpdate.push('pages = ?'); values.push(pages); }
+    if (publisher !== undefined) { fieldsToUpdate.push('publisher = ?'); values.push(publisher); }
+    if (stock !== undefined) { fieldsToUpdate.push('stock = ?'); values.push(stock); }
+    if (categories !== undefined) { fieldsToUpdate.push('categories = ?'); values.push(categories); }
+    if (isbn !== undefined) { fieldsToUpdate.push('isbn = ?'); values.push(isbn); }
+
+    if (fieldsToUpdate.length === 0) {
+        return res.status(400).json({ message: 'No se proporcionaron campos para actualizar.' });
+    }
+    values.push(id); // Añadir el ID al final para la cláusula WHERE
+
     try {
-        const { id } = req.params;
-        if (isNaN(parseInt(id))) {
-            return res.status(400).json({ message: 'El ID del libro debe ser un número.'});
-        }
-        const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
-        if (title === undefined || author === undefined || price === undefined || stock === undefined) {
-             return res.status(400).json({ message: 'Los campos obligatorios son: title, author, price, stock.' });
-        }
-        const updateQuery = `UPDATE libros SET title = ?, author = ?, publication_date = ?, cover_image_url = ?, rating = ?, price = ?, description = ?, tags = ?, pages = ?, publisher = ?, stock = ?, categories = ?, isbn = ? WHERE id = ?;`;
-        const params = [ title, author, publication_date || null, cover_image_url || null, rating !== undefined ? parseFloat(rating) : null, parseFloat(price), description || null, tags ? (typeof tags === 'string' ? tags : JSON.stringify(tags)) : null, pages !== undefined ? parseInt(pages) : null, publisher || null, parseInt(stock), categories ? (typeof categories === 'string' ? categories : JSON.stringify(categories)) : null, isbn || null, id ];
-        const [result] = await connection.execute(updateQuery, params);
+        const query = `UPDATE libros SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
+        const [result] = await connection.execute(query, values);
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Libro no encontrado o datos sin cambios.' });
+            return res.status(404).json({ message: 'Libro no encontrado para actualizar.' });
         }
-        const [updatedBookRows] = await connection.query('SELECT * FROM libros WHERE id = ?', [id]);
-        res.status(200).json(updatedBookRows[0] || { message: 'Libro actualizado, pero no encontrado después.'});
+        res.json({ message: 'Libro actualizado exitosamente.' });
     } catch (error) {
-        console.error(`Error en updateBook (ID: ${req.params.id}):`, error);
+        console.error('Error en updateBook:', error);
         res.status(500).json({ message: 'Error interno del servidor al actualizar el libro.', error: error.message });
     }
 };
 
-// Eliminar un libro por ID (DELETE)
+// Eliminar un libro (solo admin)
 export const deleteBook = async (req, res) => {
+    const { id } = req.params;
     const connection = getConnection();
     if (!connection || connection.connection._closing === true) {
         return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
     }
     try {
-        const { id } = req.params;
-        if (isNaN(parseInt(id))) {
-            return res.status(400).json({ message: 'El ID del libro debe ser un número.'});
-        }
-        const deleteQuery = 'DELETE FROM libros WHERE id = ?';
-        const [result] = await connection.execute(deleteQuery, [id]);
+        const [result] = await connection.execute('DELETE FROM libros WHERE id = ?', [id]);
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Libro no encontrado.' });
+            return res.status(404).json({ message: 'Libro no encontrado para eliminar.' });
         }
-        res.status(200).json({ message: 'Libro eliminado exitosamente.' });
+        res.json({ message: 'Libro eliminado exitosamente.' });
     } catch (error) {
-        console.error(`Error en deleteBook (ID: ${req.params.id}):`, error);
+        console.error('Error en deleteBook:', error);
         res.status(500).json({ message: 'Error interno del servidor al eliminar el libro.', error: error.message });
     }
 }; 

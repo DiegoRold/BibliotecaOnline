@@ -1,14 +1,9 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { getConnection } from '../config/db.js';
+import pool from '../config/db.js';
 
 // Registrar un nuevo usuario (cliente por defecto)
 export const registerUser = async (req, res) => {
-    const connection = getConnection();
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
-
     const { nombre, email, password } = req.body;
 
     // Validación básica (se puede expandir)
@@ -21,7 +16,7 @@ export const registerUser = async (req, res) => {
 
     try {
         // Verificar si el email ya existe
-        const [existingUser] = await connection.query('SELECT id FROM usuarios WHERE email = ?', [email]);
+        const [existingUser] = await pool.promise().query('SELECT id FROM usuarios WHERE email = ?', [email]);
         if (existingUser.length > 0) {
             return res.status(409).json({ message: 'El correo electrónico ya está registrado.' }); // 409 Conflict
         }
@@ -32,7 +27,7 @@ export const registerUser = async (req, res) => {
 
         // Insertar nuevo usuario (rol por defecto es 'cliente' según la DB)
         const insertQuery = 'INSERT INTO usuarios (nombre, email, password_hash) VALUES (?, ?, ?)';
-        const [result] = await connection.execute(insertQuery, [nombre, email, password_hash]);
+        const [result] = await pool.promise().execute(insertQuery, [nombre, email, password_hash]);
 
         if (result.insertId) {
             // Opcional: generar un token JWT inmediatamente después del registro y loguear al usuario
@@ -55,11 +50,6 @@ export const registerUser = async (req, res) => {
 
 // Iniciar sesión de un usuario
 export const loginUser = async (req, res) => {
-    const connection = getConnection();
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
-
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -68,7 +58,7 @@ export const loginUser = async (req, res) => {
 
     try {
         // Buscar usuario por email
-        const [users] = await connection.query('SELECT id, nombre, email, password_hash, rol FROM usuarios WHERE email = ?', [email]);
+        const [users] = await pool.promise().query('SELECT id, nombre, email, password_hash, rol FROM usuarios WHERE email = ?', [email]);
         if (users.length === 0) {
             return res.status(401).json({ message: 'Credenciales inválidas.' }); // 401 Unauthorized
         }
@@ -83,7 +73,7 @@ export const loginUser = async (req, res) => {
 
         // Si la contraseña es correcta, crear y firmar un JWT
         const payload = {
-            userId: user.id,
+            id: user.id,
             nombre: user.nombre,
             email: user.email,
             rol: user.rol

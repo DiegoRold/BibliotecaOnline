@@ -1,19 +1,39 @@
-import { getConnection } from '../config/db.js';
+import pool from '../config/db.js';
 
-// Obtener todos los libros (público)
+// Obtener todos los libros (público) con paginación
 export const getAllBooks = async (req, res) => {
-    const connection = getConnection();
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
     try {
-        // Considerar añadir filtros (género, precio, etc.) y paginación en el futuro
-        // Por ahora, seleccionamos campos clave para la vista de catálogo
-        const query = 'SELECT id, title, author, cover_image_url, price, stock FROM libros WHERE stock > 0 ORDER BY title';
-        const [books] = await connection.query(query);
-        res.json(books);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 12; // Mismo límite que en js/books.js
+        const offset = (page - 1) * limit;
+
+        // Consulta para obtener el total de libros (para calcular totalPages)
+        const countQuery = 'SELECT COUNT(*) as totalBooks FROM libros WHERE stock > 0';
+        const [countResult] = await pool.promise().query(countQuery);
+        const totalBooks = countResult[0].totalBooks;
+        const totalPages = Math.ceil(totalBooks / limit);
+
+        // Consulta para obtener los libros de la página actual
+        const booksQuery = `
+            SELECT id, title, author, cover_image_url, price, stock 
+            FROM libros 
+            WHERE stock > 0 
+            ORDER BY title 
+            LIMIT ? 
+            OFFSET ?`;
+        const [books] = await pool.promise().query(booksQuery, [limit, offset]);
+
+        res.json({
+            books,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalBooks,
+                limit
+            }
+        });
     } catch (error) {
-        console.error('Error en getAllBooks:', error);
+        console.error('Error en getAllBooks con paginación:', error);
         res.status(500).json({ message: 'Error interno del servidor al obtener los libros.', error: error.message });
     }
 };
@@ -21,13 +41,9 @@ export const getAllBooks = async (req, res) => {
 // Obtener un libro por su ID (público)
 export const getBookById = async (req, res) => {
     const { id } = req.params;
-    const connection = getConnection();
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
     try {
         // Seleccionar todos los campos para la vista de detalle del libro
-        const [books] = await connection.query('SELECT * FROM libros WHERE id = ?', [id]);
+        const [books] = await pool.promise().query('SELECT * FROM libros WHERE id = ?', [id]);
         if (books.length === 0) {
             return res.status(404).json({ message: 'Libro no encontrado.' });
         }
@@ -42,14 +58,8 @@ export const getBookById = async (req, res) => {
 
 // Crear un nuevo libro (solo admin)
 export const createBook = async (req, res) => {
-    const connection = getConnection();
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
-    // Extraer todos los campos necesarios y opcionales del body
     const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
 
-    // Validación básica (puedes expandirla)
     if (!title || !price || stock === undefined) {
         return res.status(400).json({ message: 'Título, precio y stock son requeridos.' });
     }
@@ -57,7 +67,7 @@ export const createBook = async (req, res) => {
     try {
         const query = `INSERT INTO libros (title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const [result] = await connection.execute(query, [
+        const [result] = await pool.promise().execute(query, [
             title, author || null, publication_date || null, cover_image_url || null, rating || 0,
             price, description || null, tags || null, pages || 0, publisher || null, stock || 0,
             categories || null, isbn || null
@@ -72,15 +82,8 @@ export const createBook = async (req, res) => {
 // Actualizar un libro existente (solo admin)
 export const updateBook = async (req, res) => {
     const { id } = req.params;
-    const connection = getConnection();
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
-    // Extraer campos del body (solo los que se pueden actualizar)
-    // Es importante decidir qué campos son actualizables
     const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
 
-    // Crear una lista de campos a actualizar dinámicamente
     let fieldsToUpdate = [];
     let values = [];
     if (title !== undefined) { fieldsToUpdate.push('title = ?'); values.push(title); }
@@ -100,11 +103,11 @@ export const updateBook = async (req, res) => {
     if (fieldsToUpdate.length === 0) {
         return res.status(400).json({ message: 'No se proporcionaron campos para actualizar.' });
     }
-    values.push(id); // Añadir el ID al final para la cláusula WHERE
+    values.push(id);
 
     try {
         const query = `UPDATE libros SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
-        const [result] = await connection.execute(query, values);
+        const [result] = await pool.promise().execute(query, values);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Libro no encontrado para actualizar.' });
         }
@@ -118,12 +121,8 @@ export const updateBook = async (req, res) => {
 // Eliminar un libro (solo admin)
 export const deleteBook = async (req, res) => {
     const { id } = req.params;
-    const connection = getConnection();
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
     try {
-        const [result] = await connection.execute('DELETE FROM libros WHERE id = ?', [id]);
+        const [result] = await pool.promise().execute('DELETE FROM libros WHERE id = ?', [id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Libro no encontrado para eliminar.' });
         }

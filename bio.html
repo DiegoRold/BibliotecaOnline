@@ -3,12 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finalizar Compra - ENTRE HOJAS</title>
+    <title>Quiénes Somos - ENTRE HOJAS</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
+    <style>
+        /* Estilos adicionales para la página de biografía si son necesarios */
+        .bio-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: #fff; /* Fondo blanco para las secciones */
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .bio-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .dark .bio-section {
+            background-color: #1f2937; /* Un gris oscuro para modo oscuro */
+            color: #e5e7eb;
+        }
+        .dark .bio-section h2 {
+            color: #f9fafb;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 flex flex-col min-h-screen">
-    <!-- Header (Reutilizado de index.html) -->
+<body class="bg-gray-100 dark:bg-gray-900">
+    <!-- Header (copiado de index.html) -->
     <header class="bg-gray-800 shadow-md relative z-10">
         <div class="container mx-auto px-4 pt-2 pb-0">
             <!-- Nivel Superior: Logo, Título, Búsqueda, Iconos -->
@@ -19,21 +42,21 @@
                     <a href="index.html"><h1 class="text-3xl font-bold hidden sm:block text-white">ENTRE HOJAS</h1></a>
                 </div>
 
-                <!-- Centro: Barra de Búsqueda (Opcional en checkout) -->
+                <!-- Centro: Barra de Búsqueda -->
                 <div class="flex-grow mx-4 hidden md:flex justify-center">
-                    <!-- <div class="relative w-full max-w-md">
+                    <div class="relative w-full max-w-md">
                         <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <button class="absolute right-0 top-0 mt-2 mr-3">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </button>
-                    </div> -->
+                    </div>
                 </div>
 
                 <!-- Derecha: Iconos -->
                 <div class="flex items-center space-x-2 md:space-x-3">
                     <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700 relative" title="Mi Cuenta">
                         <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
-                         <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden">
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden">
                             <div id="user-greeting" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hidden"></div>
                             <a href="login.html" id="login-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Iniciar Sesión</a>
                             <a href="register.html" id="register-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Registrarse</a>
@@ -57,17 +80,17 @@
                     </button>
                 </div>
             </div>
-            <!-- Barra de búsqueda para móviles (Opcional en checkout) -->
-            <!-- <div class="mt-2 md:hidden">
+            <!-- Barra de búsqueda para móviles -->
+            <div class="mt-2 md:hidden">
                  <div class="relative w-full">
                     <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <button class="absolute right-0 top-0 mt-2 mr-3">
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </button>
                 </div>
-            </div> -->
+            </div>
 
-            <!-- Nivel Inferior: Navegación (Simplificada para checkout) -->
+            <!-- Nivel Inferior: Navegación -->
             <nav class="flex justify-center py-2">
                 <ul class="flex space-x-4 md:space-x-8">
                     <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
@@ -80,47 +103,45 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 flex-grow">
-        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 md:p-8">
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-6">Finalizar Compra</h1>
-            
-            <div id="checkout-cart-summary" class="mb-6">
-                <p id="loading-cart-message" class="text-gray-600 dark:text-gray-400">Cargando resumen del carrito...</p>
-                <div id="cart-items-details">
-                    <!-- Los items del carrito se renderizarán aquí por js/checkout.js -->
-                </div>
-            </div>
+    <!-- Contenido Principal de la Biografía -->
+    <main id="bio-content" class="container mx-auto px-4 py-8">
+        <section class="bio-section text-center">
+            <h1 class="text-4xl font-bold text-gray-800 dark:text-white mb-6">Nuestra Historia: Un Viaje Entre Hojas</h1>
+            <img src="assets/bio/interior-libreria.jpg" alt="Interior acogedor de la librería Entre Hojas" class="mx-auto mb-6 shadow-lg" style="width: 500px; height: auto;">
+            <p class="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                Bienvenidos a "Entre Hojas", un sueño tejido con la tinta de mil historias y el susurro de páginas anhelantes por ser descubiertas. Nacimos de una pasión compartida por la lectura, en un pequeño rincón de la ciudad que olía a café recién hecho y a aventuras por comenzar. Lo que empezó como una modesta colección de tesoros literarios personales, pronto floreció en un refugio para la comunidad, un lugar donde cada libro es una puerta y cada lector, un viajero.
+            </p>
+        </section>
 
-            <div class="mt-6">
-                <!-- Sección de Totales -->
-                <div class="border-t dark:border-gray-700 pt-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-lg text-gray-700 dark:text-gray-300">Subtotal:</span>
-                        <span id="checkout-subtotal" class="text-lg font-semibold text-gray-800 dark:text-white">0.00 €</span>
-                    </div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-gray-700 dark:text-gray-300">Gastos de Envío:</span>
-                        <span class="text-gray-800 dark:text-white">GRATIS</span> <!-- Placeholder, ajustar si hay lógica de envío -->
-                    </div>
-                    <div class="flex justify-between items-center text-xl font-bold text-gray-800 dark:text-white mt-4 pt-4 border-t dark:border-gray-600">
-                        <span>Total General:</span>
-                        <span id="checkout-grand-total">0.00 €</span>
-                    </div>
-                </div>
+        <section class="bio-section md:flex md:items-center">
+            <div class="md:w-1/2 md:pr-8">
+                <h2 class="text-3xl font-semibold text-gray-800 dark:text-white mb-4">Más que Libros, Creamos Experiencias</h2>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                    En "Entre Hojas", no solo vendemos libros; curamos experiencias. Creemos firmemente que una librería debe ser un epicentro cultural, un espacio vivo que invite al diálogo y al descubrimiento. Por eso, nuestras estanterías no solo albergan los últimos bestsellers y los clásicos atemporales, sino también joyas ocultas de editoriales independientes y autores emergentes que merecen ser escuchados. 
+                </p>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    Organizamos regularmente clubes de lectura, presentaciones de autores, talleres de escritura y eventos para niños, buscando fomentar el amor por la lectura desde la más tierna edad. Queremos que "Entre Hojas" sea tu segunda casa, un lugar donde siempre encuentres una recomendación amiga, una conversación estimulante o simplemente un rincón tranquilo para perderte en la magia de un buen libro.
+                </p>
             </div>
-
-            <!-- Botón de Realizar Pago -->
-            <div class="mt-8 text-center">
-                <button id="proceed-to-payment-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg">
-                    REALIZAR PAGO
-                </button>
+            <div class="md:w-1/2 mt-6 md:mt-0 flex justify-center items-center">
+                <img src="assets/bio/estante.jpg" alt="Estanterías rebosantes de libros en Entre Hojas" class="shadow-lg rounded-lg object-contain" style="height: 300px; width: auto;">
             </div>
+        </section>
 
-        </div>
+        <section class="bio-section text-center">
+            <h2 class="text-3xl font-semibold text-gray-800 dark:text-white mb-4">Nuestro Compromiso Contigo</h2>
+            <img src="assets/bio/cliente-cogiendo-libro.jpg" alt="Una mano seleccionando un libro de una estantería" class="mx-auto mb-6 shadow-lg" style="width: 400px; height: auto;">
+            <p class="text-lg text-gray-700 dark:text-gray-300 leading-relaxed max-w-3xl mx-auto">
+                Nuestra misión va más allá de ofrecer una amplia selección de títulos. Nos esforzamos por brindar un servicio personalizado y cercano. Conocemos a nuestros clientes, sus gustos, sus búsquedas, y nos encanta ser parte de su viaje literario. Ya sea que busques esa novela que te cambie la vida, el ensayo que te haga reflexionar, o el cuento perfecto para compartir, nuestro equipo de apasionados libreros está aquí para ayudarte.
+            </p>
+            <p class="text-lg text-gray-700 dark:text-gray-300 leading-relaxed max-w-3xl mx-auto mt-4">
+                Te invitamos a explorar "Entre Hojas", a perderte en nuestros pasillos, a descubrir tu próxima aventura. Gracias por ser parte de nuestra historia.
+            </p>
+        </section>
+        
     </main>
 
-    <!-- Footer (nuevo footer de bio.html) -->
+    <!-- Footer (copiado de index.html - estructura genérica) -->
     <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
         <div class="container mx-auto px-4 text-center">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
@@ -144,117 +165,6 @@
         </div>
     </footer>
 
-    <!-- Scripts Locales -->
-    <script src="js/app.js"></script>
-    <script src="js/checkout.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentYearSpan = document.getElementById('current-year');
-            if (currentYearSpan) currentYearSpan.textContent = new Date().getFullYear();
-        });
-    </script>
-
-    <!-- Modales para el flujo de pago personalizado -->
-    <dialog id="auth-required-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full fixed inset-x-0 top-1/4 mx-auto z-50">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Atención</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">TIENES QUE ESTAR REGISTRADO PARA PODER REALIZAR LA COMPRA</p>
-            <div class="flex justify-end">
-                <button id="close-auth-required-modal" type="button" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">Entendido</button>
-            </div>
-        </div>
-    </dialog>
-    
-    <dialog id="confirm-purchase-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full fixed inset-x-0 top-1/4 mx-auto z-50">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Compra</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de realizar la compra por <span id="confirmation-total-price" class="font-bold">X</span> €?</p>
-            <div class="flex justify-end space-x-3">
-                <button id="cancel-purchase-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md">CANCELAR</button>
-                <button id="confirm-purchase-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">CONFIRMAR</button>
-            </div>
-        </div>
-    </dialog>
-    
-    <dialog id="purchase-success-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full fixed inset-x-0 top-1/4 mx-auto z-50">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
-            <h3 class="text-lg font-medium leading-6 text-green-600 dark:text-green-400 mb-4">¡Éxito!</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¡Compra realizada con éxito! Tu número de pedido es: <span id="order-number-display" class="font-bold"></span>.</p>
-            <div class="flex justify-end">
-                <button id="close-purchase-success-modal" type="button" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md">Aceptar</button>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- Otros modales (Contacto, Wishlist, Carrito, Confirmación Vaciar Carrito) -->
-    <dialog id="contact-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
-            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-700">
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Información de Contacto</h2>
-                <button id="close-contact-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
-                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="space-y-5">
-                <div class="flex items-center space-x-3"><img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0"><span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span></div>
-                <div class="flex items-center space-x-3"><img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0"><a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a></div>
-                <div class="flex items-start space-x-3"><img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1"><span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span></div>
-            </div>
-        </div>
-    </dialog>
-
-    <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2>
-                <button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
-                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto">
-            </div>
-        </div>
-    </dialog>
-
-    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-sm">
-        <div class="bg-white dark:bg-gray-800 rounded-lg">
-            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Mi Compra</h2>
-                <button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
-                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto">
-            </div>
-            <div class="p-4 border-t dark:border-gray-700">
-                 <div class="flex justify-between items-center mb-3">
-                    <span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span>
-                    <span id="cart-total-price" class="text-lg font-semibold text-gray-800 dark:text-white">0.00 €</span>
-                </div>
-                <button id="go-to-checkout-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-2">
-                    Ver Mi Compra
-                </button>
-                <button id="empty-cart-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md">
-                    Vaciar Carrito
-                </button>
-            </div>
-        </div>
-    </dialog>
-    <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p>
-            <div class="flex justify-end space-x-3">
-                <button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
-                    Cancelar
-                </button>
-                <button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800">
-                    Sí, Vaciar Carrito
-                </button>
-            </div>
-        </div>
-    </dialog>
-
     <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-xs w-full">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
             <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
@@ -275,5 +185,77 @@
         </div>
     </dialog>
 
+    <!-- Modales (asumiendo que son los mismos de index.html/books.html) -->
+    <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2>
+                <button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto"></div>
+        </div>
+    </dialog>
+
+    <dialog id="contact-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Información de Contacto</h2>
+                <button id="close-contact-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-5">
+                <div class="flex items-center space-x-3"><img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0"><span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span></div>
+                <div class="flex items-center space-x-3"><img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0"><a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a></div>
+                <div class="flex items-start space-x-3"><img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1"><span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span></div>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md">Cancelar</button>
+                <button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">Sí, Vaciar Carrito</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-lg">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Mi Compra</h2>
+                <button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto"></div>
+            <div class="p-4 border-t dark:border-gray-700">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span>
+                    <span id="cart-total-price" class="text-lg font-bold text-gray-800 dark:text-white">0.00 €</span>
+                </div>
+                <a href="checkout.html" id="checkout-btn" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Finalizar Compra
+                </a>
+                <button id="empty-cart-btn" class="mt-2 w-full text-center bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                    Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="js/components/book-card.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Script para el año actual en el footer
+        if (document.getElementById('currentYear')) {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        }
+    </script>
 </body>
-</html> 
+</html>

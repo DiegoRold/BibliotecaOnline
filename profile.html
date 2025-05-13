@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - ENTRE HOJAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        .profile-section {
+            background-color: #fff;
+            padding: 1.5rem; /* 24px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 2rem; /* 32px */
+        }
+        .dark .profile-section {
+            background-color: #1f2937; /* gray-800 */
+        }
+        .profile-section h2 {
+            font-size: 1.5rem; /* 24px */
+            font-weight: 600;
+            color: #111827; /* gray-900 */
+            margin-bottom: 1rem; /* 16px */
+            padding-bottom: 0.5rem; /* 8px */
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .dark .profile-section h2 {
+            color: #f3f4f6; /* gray-100 */
+            border-bottom-color: #374151; /* gray-700 */
+        }
+        .profile-input-group {
+            margin-bottom: 1rem; /* 16px */
+        }
+        .profile-input-group label {
+            display: block;
+            font-medium: text-sm;
+            color: #374151; /* gray-700 */
+            margin-bottom: 0.25rem; /* 4px */
+        }
+        .dark .profile-input-group label {
+            color: #d1d5db; /* gray-300 */
+        }
+        .profile-input-group input[type="text"],
+        .profile-input-group input[type="email"],
+        .profile-input-group input[type="password"] {
+            width: 100%;
+            padding: 0.5rem 0.75rem; /* 8px 12px */
+            border: 1px solid #d1d5db; /* gray-300 */
+            border-radius: 0.375rem; /* 6px */
+            background-color: #fff;
+            color: #111827; /* gray-900 */
+        }
+        .dark .profile-input-group input[type="text"],
+        .dark .profile-input-group input[type="email"],
+        .dark .profile-input-group input[type="password"] {
+            background-color: #374151; /* gray-700 */
+            border-color: #4b5563; /* gray-600 */
+            color: #f3f4f6; /* gray-100 */
+        }
+        .profile-input-group input:disabled {
+            background-color: #f3f4f6; /* gray-100 */
+            cursor: not-allowed;
+        }
+        .dark .profile-input-group input:disabled {
+            background-color: #4b5563; /* gray-600 */
+        }
+        .profile-button {
+            padding: 0.625rem 1.25rem; /* 10px 20px */
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            border-radius: 0.375rem; /* 6px */
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+        }
+        .profile-button:hover {
+            background-color: #1d4ed8; /* blue-700 */
+        }
+        .profile-button-secondary {
+            background-color: #4b5563; /* gray-600 */
+        }
+        .profile-button-secondary:hover {
+            background-color: #374151; /* gray-700 */
+        }
+
+        /* Estilos para el layout del perfil con menú lateral */
+        .profile-layout {
+            display: flex;
+            gap: 2rem; /* 32px */
+        }
+
+        .profile-nav {
+            width: 250px; /* Ancho del menú lateral */
+            flex-shrink: 0;
+        }
+
+        .profile-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            position: sticky; /* Para que el menú se quede fijo al hacer scroll */
+            top: 2rem; /* Espacio desde la parte superior */
+        }
+
+        .profile-nav li a {
+            display: block;
+            padding: 0.75rem 1rem; /* 12px 16px */
+            color: #374151; /* gray-700 */
+            border-radius: 0.375rem; /* 6px */
+            text-decoration: none;
+            margin-bottom: 0.5rem; /* 8px */
+            font-weight: 500;
+        }
+
+        .dark .profile-nav li a {
+            color: #d1d5db; /* gray-300 */
+        }
+
+        .profile-nav li a:hover {
+            background-color: #e5e7eb; /* gray-200 */
+        }
+
+        .dark .profile-nav li a:hover {
+            background-color: #374151; /* gray-700 */
+        }
+        
+        /* Estilo para el enlace activo - podrías añadir JS para esto dinámicamente */
+        .profile-nav li a.active {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+        }
+        .dark .profile-nav li a.active {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+        }
+
+        /* Estilo para el enlace de Cerrar Sesión en el menú lateral */
+        .profile-nav li a#profile-sidebar-logout-link {
+            color: #ef4444; /* red-500 */
+        }
+        .dark .profile-nav li a#profile-sidebar-logout-link {
+            color: #f87171; /* red-400 */
+        }
+        .profile-nav li a#profile-sidebar-logout-link:hover {
+            background-color: #fee2e2; /* red-100 */
+            color: #b91c1c; /* red-700 */
+        }
+        .dark .profile-nav li a#profile-sidebar-logout-link:hover {
+            background-color: #7f1d1d; /* red-900 */
+            color: #fca5a5; /* red-300 */
+        }
+
+        .profile-content {
+            flex-grow: 1;
+        }
+
+        /* Responsive: para pantallas más pequeñas, el menú podría ir arriba o desaparecer */
+        @media (max-width: 768px) { /* md breakpoint */
+            .profile-layout {
+                flex-direction: column;
+            }
+            .profile-nav {
+                width: 100%;
+                margin-bottom: 2rem;
+                position: static; /* Quitar sticky en móvil */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex flex-col min-h-screen">
+    <!-- Header (Copiado de index.html) -->
+    <header class="bg-gray-800 shadow-md relative z-10">
+        <div class="container mx-auto px-4 pt-2 pb-0">
+            <div class="flex justify-between items-center border-b pb-2 border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <a href="index.html"><img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-16 md:h-20 w-auto"></a>
+                    <a href="index.html"><h1 class="text-3xl font-bold hidden sm:block text-white">ENTRE HOJAS</h1></a>
+                </div>
+                <div class="flex-grow mx-4 hidden md:flex justify-center">
+                    <div class="relative w-full max-w-md">
+                        <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button class="absolute right-0 top-0 mt-2 mr-3">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 md:space-x-3">
+                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700 relative" title="Mi Cuenta">
+                        <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden">
+                            <div id="user-greeting" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hidden"></div>
+                            <a href="login.html" id="login-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Iniciar Sesión</a>
+                            <a href="register.html" id="register-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Registrarse</a>
+                            <a href="profile.html" id="profile-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden font-bold">Mi Perfil</a>
+                            <a href="orders.html" id="orders-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mis Pedidos</a>
+                            <a href="#" id="logout-link-menu" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Cerrar Sesión</a>
+                        </div>
+                    </button>
+                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
+                        <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema">
+                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos">
+                        <img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="cart-icon" class="relative p-2 rounded-lg hover:bg-gray-700" title="Mi Compra">
+                        <img src="assets/carrito.png" alt="Mi Compra" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span>
+                    </button>
+                </div>
+            </div>
+            <div class="mt-2 md:hidden">
+                 <div class="relative w-full">
+                    <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button class="absolute right-0 top-0 mt-2 mr-3"><svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
+                </div>
+            </div>
+            <nav class="flex justify-center py-2">
+                <ul class="flex space-x-4 md:space-x-8">
+                    <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
+                    <li><a href="books.html" class="text-gray-300 hover:text-white">Libros</a></li>
+                    <li><a href="bio.html" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
+                    <li><a href="blog.html" class="text-gray-300 hover:text-white">Blog</a></li>
+                    <li><a href="#" id="horario-link" class="text-gray-300 hover:text-white">Horario</a></li> 
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal del Perfil -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-8 text-center">Mi Perfil</h1>
+        
+        <div class="profile-layout">
+            <aside class="profile-nav">
+                <ul class="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+                    <li><a href="#info-personal-section">Información Personal</a></li>
+                    <li><a href="#direccion-envio-section">Dirección de Envío</a></li>
+                    <li><a href="#seguridad-cuenta-section">Seguridad de la Cuenta</a></li>
+                    <li><a href="#mis-pedidos-section">Mis Pedidos</a></li>
+                    <li><a href="#" id="profile-sidebar-logout-link">Cerrar Sesión</a></li>
+                </ul>
+            </aside>
+
+            <div class="profile-content">
+                <!-- Información Personal -->
+                <section id="info-personal-section" class="profile-section scroll-mt-20">
+                    <h2>Información Personal</h2>
+                    <form id="profile-info-form">
+                        <div class="profile-input-group">
+                            <label for="profile-name">Nombre Completo</label>
+                            <input type="text" id="profile-name" name="name" value="Nombre Apellido Ejemplo" disabled>
+                        </div>
+                        <div class="profile-input-group">
+                            <label for="profile-email">Correo Electrónico</label>
+                            <input type="email" id="profile-email" name="email" value="usuario@example.com" disabled>
+                        </div>
+                        <button type="button" id="edit-profile-info-btn" class="profile-button profile-button-secondary mt-2">Editar Información</button>
+                        <button type="submit" id="save-profile-info-btn" class="profile-button mt-2 hidden">Guardar Cambios</button>
+                    </form>
+                </section>
+
+                <!-- Dirección de Envío -->
+                <section id="direccion-envio-section" class="profile-section scroll-mt-20">
+                    <h2>Dirección de Envío</h2>
+                    <form id="shipping-address-form">
+                        <div class="profile-input-group">
+                            <label for="profile-street">Calle y Número</label>
+                            <input type="text" id="profile-street" name="street" value="Calle Falsa 123" disabled>
+                        </div>
+                        <div class="profile-input-group">
+                            <label for="profile-apartment">Piso, Puerta, Detalles Adicionales (opcional)</label>
+                            <input type="text" id="profile-apartment" name="apartment" value="Piso 2, Puerta A" disabled>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="profile-input-group">
+                                <label for="profile-zip">Código Postal</label>
+                                <input type="text" id="profile-zip" name="zip" value="28001" disabled>
+                            </div>
+                            <div class="profile-input-group">
+                                <label for="profile-city">Ciudad</label>
+                                <input type="text" id="profile-city" name="city" value="Madrid" disabled>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="profile-input-group">
+                                <label for="profile-state">Provincia</label>
+                                <input type="text" id="profile-state" name="state" value="Madrid" disabled>
+                            </div>
+                            <div class="profile-input-group">
+                                <label for="profile-country">País</label>
+                                <input type="text" id="profile-country" name="country" value="España" disabled>
+                            </div>
+                        </div>
+                        <button type="button" id="edit-shipping-address-btn" class="profile-button profile-button-secondary mt-2">Editar Dirección</button>
+                        <button type="submit" id="save-shipping-address-btn" class="profile-button mt-2 hidden">Guardar Dirección</button>
+                    </form>
+                </section>
+
+                <!-- Seguridad de la Cuenta -->
+                <section id="seguridad-cuenta-section" class="profile-section scroll-mt-20">
+                    <h2>Seguridad de la Cuenta</h2>
+                    <form id="change-password-form">
+                        <div class="profile-input-group">
+                            <label for="current-password">Contraseña Actual</label>
+                            <input type="password" id="current-password" name="currentPassword">
+                        </div>
+                        <div class="profile-input-group">
+                            <label for="new-password">Nueva Contraseña</label>
+                            <input type="password" id="new-password" name="newPassword">
+                        </div>
+                        <div class="profile-input-group">
+                            <label for="confirm-new-password">Confirmar Nueva Contraseña</label>
+                            <input type="password" id="confirm-new-password" name="confirmNewPassword">
+                        </div>
+                        <button type="submit" class="profile-button">Cambiar Contraseña</button>
+                    </form>
+                </section>
+
+                <!-- Mis Pedidos -->
+                <section id="mis-pedidos-section" class="profile-section scroll-mt-20">
+                    <h2>Mis Pedidos</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">Consulta el historial y el estado de tus pedidos.</p>
+                    <a href="orders.html" class="profile-button">Ver Mis Pedidos</a>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer (Copiado de index.html) -->
+    <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div>
+                    <h5 class="font-bold text-lg mb-2 text-white">ENTRE HOJAS</h5>
+                    <p>Tu refugio literario en el corazón de la ciudad. Descubre, lee, sueña.</p>
+                </div>
+                <div>
+                    <h5 class="font-bold text-lg mb-2 text-white">Enlaces Rápidos</h5>
+                    <ul>
+                        <li><a href="index.html" class="hover:text-white">Inicio</a></li>
+                        <li><a href="books.html" class="hover:text-white">Libros</a></li>
+                        <li><a href="bio.html" class="hover:text-white">Quiénes Somos</a></li>
+                        <li><a href="blog.html" class="hover:text-white">Blog</a></li>
+                        <li><a href="#" class="hover:text-white">Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+            <p class="text-sm">&copy; <span id="currentYear"></span> ENTRE HOJAS. Todos los derechos reservados.</p>
+            <p class="text-xs mt-2">Hecho con <span class="text-red-500">&hearts;</span> por amantes de la lectura.</p>
+        </div>
+    </footer>
+
+    <!-- Modales (Copiados de index.html) -->
+    <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2>
+                <button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto"></div>
+        </div>
+    </dialog>
+
+    <dialog id="contact-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Información de Contacto</h2>
+                <button id="close-contact-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-5">
+                <div class="flex items-center space-x-3"><img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0"><span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span></div>
+                <div class="flex items-center space-x-3"><img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0"><a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a></div>
+                <div class="flex items-start space-x-3"><img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1"><span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span></div>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md">Cancelar</button>
+                <button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">Sí, Vaciar Carrito</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-lg">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Mi Compra</h2>
+                <button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto"></div>
+            <div class="p-4 border-t dark:border-gray-700">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span>
+                    <span id="cart-total-price" class="text-lg font-bold text-gray-800 dark:text-white">0.00 €</span>
+                </div>
+                 <a href="checkout.html" id="go-to-checkout-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-2 block text-center">
+                    Ver Mi Compra
+                </a>
+                <button id="empty-cart-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md">
+                    Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-xs w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2>
+                <button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-3 text-center">
+                <img src="assets/reloj.png" alt="Horario" class="w-16 h-16 mx-auto mb-4 filter dark:invert">
+                <div class="text-gray-700 dark:text-gray-300">
+                    <p class="font-semibold">Lunes - Sábado</p>
+                    <p class="mb-2 text-lg">9:30 a 21:00</p>
+                    <p class="font-semibold">Domingo y Festivos</p>
+                    <p class="text-lg">10:00 a 14:00</p>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal de Confirmación de Cierre de Sesión -->
+    <dialog id="confirm-logout-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Cierre de Sesión</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de cerrar la sesión?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-logout-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md">NO</button>
+                <button id="confirm-logout-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">SI</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="js/components/book-card.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Script para el año actual en el footer
+        if (document.getElementById('currentYear')) {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        }
+
+        // Lógica básica para la página de perfil (frontend)
+        document.addEventListener('DOMContentLoaded', () => {
+            const editProfileInfoBtn = document.getElementById('edit-profile-info-btn');
+            const saveProfileInfoBtn = document.getElementById('save-profile-info-btn');
+            const profileNameInput = document.getElementById('profile-name');
+            const profileEmailInput = document.getElementById('profile-email');
+
+            // Referencias para la sección de Dirección de Envío
+            const editShippingAddressBtn = document.getElementById('edit-shipping-address-btn');
+            const saveShippingAddressBtn = document.getElementById('save-shipping-address-btn');
+            const shippingAddressForm = document.getElementById('shipping-address-form');
+            const addressInputs = {
+                street: document.getElementById('profile-street'),
+                apartment: document.getElementById('profile-apartment'),
+                zip: document.getElementById('profile-zip'),
+                city: document.getElementById('profile-city'),
+                state: document.getElementById('profile-state'),
+                country: document.getElementById('profile-country')
+            };
+
+            // Enlace de logout en el menú lateral
+            const profileSidebarLogoutLink = document.getElementById('profile-sidebar-logout-link');
+
+            // Elementos del modal de confirmación de logout
+            const confirmLogoutModal = document.getElementById('confirm-logout-modal');
+            const cancelLogoutBtn = document.getElementById('cancel-logout-btn');
+            const confirmLogoutActionBtn = document.getElementById('confirm-logout-action-btn');
+
+            if (editProfileInfoBtn) {
+                editProfileInfoBtn.addEventListener('click', () => {
+                    profileNameInput.disabled = false;
+                    profileEmailInput.disabled = false;
+                    editProfileInfoBtn.classList.add('hidden');
+                    if(saveProfileInfoBtn) saveProfileInfoBtn.classList.remove('hidden');
+                    profileNameInput.focus();
+                });
+            }
+
+            // Simulación de guardar cambios de información personal
+            const profileInfoForm = document.getElementById('profile-info-form');
+            if (profileInfoForm && saveProfileInfoBtn) {
+                profileInfoForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    profileNameInput.disabled = true;
+                    profileEmailInput.disabled = true;
+                    saveProfileInfoBtn.classList.add('hidden');
+                    if(editProfileInfoBtn) editProfileInfoBtn.classList.remove('hidden');
+                    alert('Información actualizada (simulación).');
+                });
+            }
+
+            // Lógica para editar/guardar Dirección de Envío
+            if (editShippingAddressBtn) {
+                editShippingAddressBtn.addEventListener('click', () => {
+                    for (const key in addressInputs) {
+                        if (addressInputs[key]) addressInputs[key].disabled = false;
+                    }
+                    editShippingAddressBtn.classList.add('hidden');
+                    if(saveShippingAddressBtn) saveShippingAddressBtn.classList.remove('hidden');
+                    if(addressInputs.street) addressInputs.street.focus();
+                });
+            }
+
+            if (shippingAddressForm && saveShippingAddressBtn) {
+                shippingAddressForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    for (const key in addressInputs) {
+                        if (addressInputs[key]) addressInputs[key].disabled = true;
+                    }
+                    saveShippingAddressBtn.classList.add('hidden');
+                    if(editShippingAddressBtn) editShippingAddressBtn.classList.remove('hidden');
+                    alert('Dirección de envío actualizada (simulación).');
+                });
+            }
+
+            // Simulación de cambio de contraseña
+            const changePasswordForm = document.getElementById('change-password-form');
+            if (changePasswordForm) {
+                changePasswordForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const newPassword = document.getElementById('new-password').value;
+                    const confirmNewPassword = document.getElementById('confirm-new-password').value;
+                    if (newPassword !== confirmNewPassword) {
+                        alert('Las nuevas contraseñas no coinciden.');
+                        return;
+                    }
+                    if (newPassword.length < 6) {
+                        alert('La nueva contraseña debe tener al menos 6 caracteres.');
+                        return;
+                    }
+                    alert('Contraseña cambiada con éxito (simulación).');
+                    changePasswordForm.reset();
+                });
+            }
+
+            // Cargar datos del usuario desde localStorage (si existen y el usuario está logueado)
+            // Esto es una simulación y se debería integrar con la lógica de updateUserUI de app.js
+            const authToken = localStorage.getItem('authToken');
+            const userDataString = localStorage.getItem('userData');
+            if (authToken && userDataString) {
+                try {
+                    const userData = JSON.parse(userDataString);
+                    if (profileNameInput) profileNameInput.value = userData.nombre || 'Usuario Ejemplo';
+                    if (profileEmailInput) profileEmailInput.value = userData.email || 'usuario@example.com';
+                } catch (e) {
+                    console.error("Error parsing user data for profile page:", e);
+                }
+            } else {
+                // Si no hay usuario logueado, redirigir a login (o mostrar mensaje)
+                // Por ahora, mostramos placeholders
+                console.log("Usuario no logueado, mostrando datos placeholder en perfil.");
+            }
+
+            // Manejador para el enlace de logout del menú lateral
+            if (profileSidebarLogoutLink && confirmLogoutModal) {
+                profileSidebarLogoutLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    confirmLogoutModal.showModal();
+                });
+            }
+
+            // Manejador para el botón NO del modal de logout
+            if (cancelLogoutBtn && confirmLogoutModal) {
+                cancelLogoutBtn.addEventListener('click', () => {
+                    confirmLogoutModal.close();
+                });
+            }
+
+            // Manejador para el botón SI del modal de logout
+            if (confirmLogoutActionBtn && confirmLogoutModal) {
+                confirmLogoutActionBtn.addEventListener('click', () => {
+                    if (typeof logoutUser === 'function') {
+                        logoutUser();
+                        // Opcionalmente redirigir a la página de inicio o login después del logout
+                        window.location.href = 'index.html'; 
+                    } else {
+                        console.error('La función logoutUser no está definida.');
+                        alert('Error al intentar cerrar sesión.');
+                    }
+                    confirmLogoutModal.close();
+                });
+            }
+
+            // Cerrar modales si se hace clic fuera de ellos (backdrop) - AÑADIR confirmLogoutModal A LA LISTA
+            [wishlistModal, contactModal, horarioModal, cartModal, confirmEmptyCartModal, confirmLogoutModal].forEach(modal => {
+                if (modal) {
+                    modal.addEventListener('click', (event) => {
+                        if (event.target === modal) {
+                            modal.close();
+                        }
+                    });
+                }
+            });
+
+        });
+    </script>
+</body>
+</html> 

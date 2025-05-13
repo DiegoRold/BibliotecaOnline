@@ -1,45 +1,31 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
 
-dotenv.config(); // Asegúrate de que las variables de entorno estén cargadas
+dotenv.config(); // Cargar variables de entorno
 
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'entre_hojas_db'
-};
+// Crear el pool de conexiones
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10, // Ajusta según tus necesidades
+    queueLimit: 0
+});
 
-let connection;
-
-async function connectToDatabase() {
+// Función para verificar la conexión (opcional, pero útil para server.js)
+export const connectToDatabase = async () => {
     try {
-        if (connection && connection.connection && connection.connection._closing === false) {
-            // Ya existe una conexión activa y no se está cerrando
-            console.log('Reutilizando conexión a la base de datos MySQL existente.');
-            return connection;
-        }
-        connection = await mysql.createConnection(dbConfig);
-        console.log('Nueva conexión a la base de datos MySQL establecida exitosamente.');
-        return connection;
+        // Intenta obtener una conexión para probar el pool
+        const connection = await pool.getConnection();
+        console.log('Conectado exitosamente a la base de datos MySQL.');
+        connection.release(); // Libera la conexión
     } catch (error) {
         console.error('Error al conectar con la base de datos MySQL:', error);
-        // Es importante manejar este error, quizás reintentar o terminar la app
-        // Por ahora, relanzamos para que el llamador lo maneje o la app termine si es en el inicio.
-        throw error;
+        throw error; // Propagar el error para que el servidor falle si no puede conectar
     }
-}
+};
 
-function getConnection() {
-    if (!connection || connection.connection._closing === true) {
-        console.warn('Se intentó obtener una conexión a la DB no establecida o cerrada.');
-        // Podrías intentar reconectar aquí o lanzar un error más específico
-        // throw new Error('La conexión a la base de datos no está disponible.');
-        // Por ahora, devolvemos la conexión (que podría estar cerrada o ser undefined)
-        // el controlador debería verificarla.
-    }
-    return connection;
-}
-
-// Exportamos la función para conectar y la función para obtener la conexión
-export { connectToDatabase, getConnection }; 
+// Exportar el pool como el default export para que otros módulos puedan usarlo
+export default pool; 

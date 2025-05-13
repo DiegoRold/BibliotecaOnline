@@ -73,21 +73,11 @@
             <!-- Nivel Inferior: Navegación -->
             <nav class="flex justify-center py-2">
                 <ul class="flex space-x-4 md:space-x-8">
-                    <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
-                    <li class="relative group">
-                        <a href="#" class="text-gray-300 hover:text-white flex items-center">
-                            Libros 
-                            <svg class="w-4 h-4 ml-1 fill-current text-gray-500 group-hover:text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                        </a>
-                        <!-- Submenú (funcionalidad a implementar) -->
-                        <!-- <ul class="absolute hidden group-hover:block bg-white shadow-lg rounded mt-1 py-1 w-48 z-20">
-                            <li><a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Novedades</a></li>
-                            <li><a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-100">Materias</a></li>
-                        </ul> -->
-                    </li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Blog</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Horario</a></li> 
+                    <li><a href="index.html" class="text-gray-300 hover:text-white font-bold">Inicio</a></li>
+                    <li><a href="books.html" class="text-gray-300 hover:text-white">Libros</a></li>
+                    <li><a href="bio.html" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
+                    <li><a href="blog.html" class="text-gray-300 hover:text-white">Blog</a></li>
+                    <li><a href="#" id="horario-link" class="text-gray-300 hover:text-white">Horario</a></li> 
                 </ul>
             </nav>
         </div>
@@ -275,17 +265,57 @@
         </div>
     </dialog>
 
-    <!-- Footer (Reutilizado de checkout.html) -->
-    <footer class="bg-gray-800 text-white py-8 mt-12">
+    <!-- Footer (nuevo footer de bio.html) -->
+    <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
         <div class="container mx-auto px-4 text-center">
-            <p>&copy; <span id="current-year-index"></span> ENTRE HOJAS - Tu Tienda de Libros Online. Todos los derechos reservados.</p>
-            <p class="text-sm mt-2">Proyecto de demostración.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div>
+                    <h5 class="font-bold text-lg mb-2 text-white">ENTRE HOJAS</h5>
+                    <p>Tu refugio literario en el corazón de la ciudad. Descubre, lee, sueña.</p>
+                </div>
+                <div>
+                    <h5 class="font-bold text-lg mb-2 text-white">Enlaces Rápidos</h5>
+                    <ul>
+                        <li><a href="index.html" class="hover:text-white">Inicio</a></li>
+                        <li><a href="books.html" class="hover:text-white">Libros</a></li>
+                        <li><a href="bio.html" class="hover:text-white">Quiénes Somos</a></li>
+                        <li><a href="blog.html" class="hover:text-white">Blog</a></li>
+                        <li><a href="#" class="hover:text-white">Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+            <p class="text-sm">&copy; <span id="currentYear"></span> ENTRE HOJAS. Todos los derechos reservados.</p>
+            <p class="text-xs mt-2">Hecho con <span class="text-red-500">&hearts;</span> por amantes de la lectura.</p>
         </div>
     </footer>
 
+    <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-xs w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2>
+                <button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-3 text-center">
+                <img src="assets/reloj.png" alt="Horario" class="w-16 h-16 mx-auto mb-4 filter dark:invert">
+                <div class="text-gray-700 dark:text-gray-300">
+                    <p class="font-semibold">Lunes - Sábado</p>
+                    <p class="mb-2 text-lg">9:30 a 21:00</p>
+                    <p class="font-semibold">Domingo y Festivos</p>
+                    <p class="text-lg">10:00 a 14:00</p>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
     <script>
-        // Pequeño script para el año en el footer de index
-        document.getElementById('current-year-index').textContent = new Date().getFullYear();
+        // Script para el año actual en el footer
+        // Asegurarse que el ID 'currentYear' sea el usado en este nuevo footer.
+        // El footer de index.html usaba 'current-year-index'. Cambiar a 'currentYear' o ajustar el script.
+        if (document.getElementById('currentYear')) { // Cambiado de 'current-year-index' a 'currentYear'
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        }
     </script>
 </body>
 </html> 

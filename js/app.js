@@ -20,6 +20,9 @@ let userGreeting, loginLinkMenu, registerLinkMenu, profileLinkMenu, ordersLinkMe
 // Elementos del modal de confirmación para vaciar carrito
 let confirmEmptyCartModal, cancelEmptyCartBtn, confirmEmptyCartActionBtn;
 
+// Modal de Horario: Declarar aquí, asignar en init
+let horarioLink, horarioModal, closeHorarioModal;
+
 // --- INICIALIZACIÓN ---
 async function init() {
     // Seleccionar elementos del DOM
@@ -57,6 +60,11 @@ async function init() {
     confirmEmptyCartModal = document.getElementById('confirm-empty-cart-modal');
     cancelEmptyCartBtn = document.getElementById('cancel-empty-cart-btn');
     confirmEmptyCartActionBtn = document.getElementById('confirm-empty-cart-action-btn');
+
+    // Seleccionar elementos del modal de Horario aquí, dentro de init
+    horarioLink = document.getElementById('horario-link');
+    horarioModal = document.getElementById('horario-modal');
+    closeHorarioModal = document.getElementById('close-horario-modal');
 
     applyTheme(); // Aplicar tema lo antes posible
 
@@ -711,14 +719,11 @@ function setupEventListeners() {
 
         // Cerrar dropdown si se hace clic fuera
         document.addEventListener('click', (event) => {
-            if (!userDropdown.classList.contains('hidden') && !userIcon.contains(event.target)) {
+            if (userDropdown && !userDropdown.classList.contains('hidden') && userIcon && !userIcon.contains(event.target)) {
                 userDropdown.classList.add('hidden');
             }
         });
     }
-
-    // Cerrar modales con click en backdrop
-    [wishlistModal, contactModal, cartModal].forEach(modal => { if (modal) modal.addEventListener("click", e => { if (e.target === modal) modal.close(); }); });
 
     // Listeners para el modal de confirmación de vaciar carrito
     if (cancelEmptyCartBtn && confirmEmptyCartModal) {
@@ -728,8 +733,7 @@ function setupEventListeners() {
     }
     if (confirmEmptyCartActionBtn && confirmEmptyCartModal) {
         confirmEmptyCartActionBtn.addEventListener('click', () => {
-            performEmptyCartAction(); // La función que realmente vacía el carrito
-            // confirmEmptyCartModal.close(); // Se cierra dentro de performEmptyCartAction
+            performEmptyCartAction();
         });
     }
 
@@ -746,6 +750,40 @@ function setupEventListeners() {
     });
     document.addEventListener('toggle-wishlist', e => {
         toggleWishlistItem(e.detail.bookId);
+    });
+
+    // Lógica para el modal de Horario
+    if (horarioLink && horarioModal) {
+        console.log('Horario modal: Attaching listener to horarioLink:', horarioLink); // DEBUG
+        horarioLink.addEventListener('click', (event) => {
+            event.preventDefault(); 
+            console.log('Horario link clicked, showing modal:', horarioModal); // DEBUG
+            horarioModal.showModal();
+        });
+    } else {
+        console.warn('Horario modal: horarioLink or horarioModal not found. Check DOM order or IDs.'); // DEBUG
+    }
+
+    if (closeHorarioModal && horarioModal) {
+        console.log('Horario modal: Attaching listener to closeHorarioModal:', closeHorarioModal); // DEBUG
+        closeHorarioModal.addEventListener('click', () => {
+            console.log('Close horario modal clicked.'); // DEBUG
+            horarioModal.close();
+        });
+    } else {
+        // No es un warn si closeHorarioModal no existe, ya que el modal podría cerrarse solo con clic en backdrop
+        if (!horarioModal) console.warn('Horario modal: closeHorarioModal or horarioModal not found for close button.'); // DEBUG
+    }
+
+    // Cerrar modales si se hace clic fuera de ellos (backdrop) - ÚNICA INSTANCIA CONSOLIDADA
+    [wishlistModal, contactModal, horarioModal, cartModal, confirmEmptyCartModal].forEach(modal => {
+        if (modal) {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.close();
+                }
+            });
+        }
     });
 }
 
@@ -839,7 +877,10 @@ function updateUserUI() {
             }
             if (loginLinkMenu) loginLinkMenu.classList.add('hidden');
             if (registerLinkMenu) registerLinkMenu.classList.add('hidden');
-            if (profileLinkMenu) profileLinkMenu.classList.remove('hidden');
+            if (profileLinkMenu) {
+                profileLinkMenu.classList.remove('hidden');
+                profileLinkMenu.href = 'profile.html';
+            }
             if (ordersLinkMenu) ordersLinkMenu.classList.remove('hidden');
             if (logoutLinkMenu) logoutLinkMenu.classList.remove('hidden');
 

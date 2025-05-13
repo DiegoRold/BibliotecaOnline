@@ -8,10 +8,16 @@ import {
 } from '../controllers/bookController.js';
 import authMiddleware, { authorize } from '../middlewares/authMiddleware.js';
 
+console.log('[routes/bookRoutes.js] Módulo cargado.'); // Log para verificar carga del módulo
+
 const router = express.Router();
 
 // Rutas públicas (cualquiera puede acceder)
-router.get('/', getAllBooks);
+router.get('/', (req, res, next) => {
+    console.log(`[routes/bookRoutes.js] Petición GET recibida en ruta base ('/'). Query:`, req.query); // Log para verificar si la petición llega aquí
+    next(); // Continuar al siguiente manejador (getAllBooks)
+}, getAllBooks);
+
 router.get('/:id', getBookById);
 
 // Rutas protegidas solo para administradores

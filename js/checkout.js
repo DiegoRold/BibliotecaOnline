@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(cancelPurchaseBtn) cancelPurchaseBtn.addEventListener('click', () => closeModal(confirmPurchaseModal));
     if(closePurchaseSuccessModalBtn) closePurchaseSuccessModalBtn.addEventListener('click', () => {
         closeModal(purchaseSuccessModal);
-        // Considerar redirigir a 'orders.html' o limpiar el carrito aquí si es apropiado después del éxito.
-        window.location.href = 'orders.html'; 
+        // Redirigir a index.html en lugar de orders.html
+        window.location.href = 'index.html'; 
     });
 
     // Lógica del botón "REALIZAR PAGO"
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 console.log('Enviando pedido al backend:', JSON.stringify(orderPayload, null, 2));
-                const response = await fetchWithAuth('/api/pedidos', {
+                const response = await fetchWithAuth('http://localhost:3000/api/pedidos', {
                     method: 'POST',
                     body: JSON.stringify(orderPayload)
                 });
@@ -134,8 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.state && typeof window.state.cart !== 'undefined') window.state.cart = [];
                 localStorage.removeItem('cart');
                 if (typeof updateCartIcon === 'function') updateCartIcon();
+                if (typeof renderCartModal === 'function') renderCartModal();
                 currentCheckoutCart = []; // Limpiar también la variable local
                 loadCartSummary(currentCheckoutCart); // Actualizar la vista del resumen del carrito a vacío
+                
+                console.log('Disparando evento cartUpdated con carrito vacío...');
+                // Disparar evento para que otras partes de la app se enteren
+                document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: [] } }));
+                console.log('Evento cartUpdated disparado.');
                 
                 const authToken = localStorage.getItem('authToken');
                 if (authToken && typeof fetchWithAuth === 'function') {

@@ -124,27 +124,28 @@ export const createOrder = async (req, res) => {
                 throw new Error(`Datos inválidos para el item del pedido: ${JSON.stringify(item)}`);
             }
 
-            // Verificar stock antes de reducirlo
-            const [bookRows] = await connection.query('SELECT stock FROM libros WHERE id = ?', [item.book_id]);
+            // Buscar el libro por api_id (item.book_id)
+            const [bookRows] = await connection.query('SELECT id, stock FROM libros WHERE api_id = ?', [item.book_id]);
             if (bookRows.length === 0) {
                 throw new Error(`Libro con ID ${item.book_id} no encontrado.`);
             }
+            const realBookId = bookRows[0].id;
             const currentStock = bookRows[0].stock;
             if (currentStock < item.quantity) {
                 throw new Error(`Stock insuficiente para el libro "${item.title}" (ID: ${item.book_id}). Solicitado: ${item.quantity}, Disponible: ${currentStock}`);
             }
 
-            // Insertar item del pedido
+            // Insertar item del pedido (usando el id numérico real)
             await connection.query(
                 'INSERT INTO pedido_items (pedido_id, libro_id, cantidad, precio_unitario_en_compra, titulo_en_compra) VALUES (?, ?, ?, ?, ?)',
-                [newOrderId, item.book_id, item.quantity, item.price, item.title]
+                [newOrderId, realBookId, item.quantity, item.price, item.title]
             );
 
             // Actualizar stock del libro
             const newStock = currentStock - item.quantity;
             await connection.query(
                 'UPDATE libros SET stock = ? WHERE id = ?',
-                [newStock, item.book_id]
+                [newStock, realBookId]
             );
         }
 

@@ -375,15 +375,14 @@ function updateBookCardVisualState(bookId, isNowInWishlist) {
 }
 
 function addBookToCart(bookId, title, price, cover, stock) {
+    // NO convertir bookId a número para usuarios logueados
     const authToken = localStorage.getItem('authToken');
 
     if (authToken) {
         // Usuario logueado: interactuar con el backend
-        // El backend en POST /api/cart espera { book_id, quantity (opcional, default 1) }
-        // y maneja la lógica de si el ítem ya existe para incrementar la cantidad.
         fetchWithAuth('http://localhost:3000/api/cart', {
             method: 'POST',
-            body: JSON.stringify({ book_id: bookId, quantity: 1 }) // Siempre añadimos 1 unidad con este botón
+            body: JSON.stringify({ book_id: bookId, quantity: 1 }) // Enviar siempre el api_id (cadena)
         })
         .then(response => {
             if (!response.ok) {
@@ -394,7 +393,6 @@ function addBookToCart(bookId, title, price, cover, stock) {
         })
         .then(data => {
             console.log(data.message); // Mensaje del backend: "Libro añadido" o "Cantidad actualizada"
-            // Después de una operación exitosa, recargar el carrito desde el backend para asegurar consistencia
             fetchUserCart(); 
         })
         .catch(error => {
@@ -404,7 +402,11 @@ function addBookToCart(bookId, title, price, cover, stock) {
 
     } else {
         // Usuario invitado: usar localStorage (lógica existente)
-        const existingBook = state.cart.find(item => item.id === bookId);
+        let realBookId = bookId;
+        if (typeof bookId === 'string' && bookId.startsWith('book-')) {
+            realBookId = parseInt(bookId.replace('book-', ''), 10);
+        }
+        const existingBook = state.cart.find(item => item.id === realBookId);
         const currentStock = stock || 0; 
 
         if (existingBook) {
@@ -416,7 +418,7 @@ function addBookToCart(bookId, title, price, cover, stock) {
             }
         } else {
             if (currentStock > 0) {
-                 state.cart.push({ id: bookId, title, price, cover, stock: currentStock, quantity: 1 });
+                 state.cart.push({ id: realBookId, title, price, cover, stock: currentStock, quantity: 1 });
             } else {
                 alert(`"${title}" no está disponible actualmente.`);
                 return;
@@ -962,3 +964,20 @@ async function fetchUserCart() {
 
 // --- INICIALIZAR ---
 document.addEventListener('DOMContentLoaded', init);
+
+// Escuchar el evento cartUpdated para mantener sincronizado el carrito
+document.addEventListener('cartUpdated', (event) => {
+    console.log('Evento cartUpdated recibido en app.js:', event.detail.cart);
+    // Actualizar el estado global
+    if (window.state) {
+        window.state.cart = event.detail.cart;
+        // Actualizar localStorage
+        localStorage.setItem('cart', JSON.stringify(event.detail.cart));
+        // Actualizar UI
+        updateCartIcon();
+        renderCartModal();
+        console.log('Estado del carrito actualizado en app.js');
+    } else {
+        console.warn('window.state no está disponible al recibir cartUpdated');
+    }
+});

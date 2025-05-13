@@ -8,21 +8,21 @@ export const getUserCart = async (req, res) => {
     if (!connection) return res.status(503).json({ message: 'DB Service Unavailable' });
 
     try {
-        // Devolver los ítems del carrito con detalles del libro (título, portada, precio actual del libro)
-        // El precio en cart_items podría ser el precio al momento de añadir, si quisiéramos esa lógica.
-        // Por ahora, obtenemos el precio actual de la tabla 'libros' si es posible, o usamos un placeholder.
-        // Dado que book_id en cart_items es VARCHAR y libros.id es INT, un JOIN directo es complejo.
-        // Similar a la wishlist, el frontend podría tener que buscar detalles en allBooks.
-        // O, si tu tabla 'libros' también tuviera un campo VARCHAR con el ID de la API externa, podríamos hacer JOIN.
-        
-        // Versión Simplificada: Devolver items del carrito (book_id, quantity).
-        // El frontend buscará los detalles en allBooks.
-        const query = `SELECT ci.book_id, ci.quantity, ci.added_at, ci.updated_at 
-                       FROM cart_items ci 
-                       WHERE ci.user_id = ? 
-                       ORDER BY ci.added_at DESC`;
+        // JOIN para obtener api_id
+        const query = `
+            SELECT ci.book_id, ci.quantity, l.api_id
+            FROM cart_items ci
+            JOIN libros l ON ci.book_id = l.id
+            WHERE ci.user_id = ?
+            ORDER BY ci.added_at DESC
+        `;
         const [cartItems] = await connection.query(query, [userId]);
-        res.json(cartItems);
+        // Devuelve api_id como book_id para el frontend
+        const frontendCart = cartItems.map(item => ({
+            book_id: item.api_id,
+            quantity: item.quantity
+        }));
+        res.json(frontendCart);
     } catch (error) {
         console.error('Error en getUserCart:', error);
         res.status(500).json({ message: 'Error al obtener el carrito.', error: error.message });
@@ -33,7 +33,7 @@ export const getUserCart = async (req, res) => {
 // POST /api/cart
 export const addItemToCart = async (req, res) => {
     const userId = req.user.userId;
-    const { book_id, quantity = 1 } = req.body; // quantity por defecto a 1
+    const { book_id, quantity = 1 } = req.body; // book_id es ahora el api_id (ej: "book-0")
     const connection = getConnection();
     if (!connection) return res.status(503).json({ message: 'DB Service Unavailable' });
 
@@ -41,37 +41,50 @@ export const addItemToCart = async (req, res) => {
         return res.status(400).json({ message: 'book_id y una cantidad válida son requeridos.' });
     }
 
+    // LOG: Valor recibido
+    console.log('--- addItemToCart DEBUG ---');
+    console.log('userId:', userId);
+    console.log('book_id recibido:', book_id, '| typeof:', typeof book_id);
+    console.log('quantity:', quantity);
+
+    // Buscar el libro por api_id
+    const [libro] = await connection.query('SELECT id, api_id, title FROM libros WHERE api_id = ?', [book_id]);
+    console.log('Resultado de SELECT id, api_id, title FROM libros WHERE api_id = ?', libro);
+
+    if (libro.length === 0) {
+        console.log('No se encontró ningún libro con ese api_id.');
+        return res.status(404).json({ message: 'Libro no encontrado.' });
+    }
+    const realBookId = libro[0].id;
+    console.log('ID numérico real del libro encontrado:', realBookId);
+
     try {
         const [existingItem] = await connection.query(
             'SELECT id, quantity FROM cart_items WHERE user_id = ? AND book_id = ?',
-            [userId, book_id]
+            [userId, realBookId]
         );
+        console.log('Resultado de SELECT en cart_items:', existingItem);
 
         if (existingItem.length > 0) {
-            // El ítem ya existe, actualizar cantidad
             const currentQuantity = existingItem[0].quantity;
-            const newQuantity = currentQuantity + quantity; // Sumar la cantidad recibida
-            // Aquí deberíamos verificar contra el stock del libro si es posible
+            const newQuantity = currentQuantity + quantity;
             await connection.execute(
                 'UPDATE cart_items SET quantity = ?, updated_at = NOW() WHERE id = ?',
                 [newQuantity, existingItem[0].id]
             );
+            console.log('Cantidad actualizada en el carrito:', newQuantity);
             res.json({ message: 'Cantidad actualizada en el carrito.', book_id, quantity: newQuantity });
         } else {
-            // El ítem no existe, insertarlo
-            // Aquí también deberíamos verificar stock antes de insertar
             const [result] = await connection.execute(
                 'INSERT INTO cart_items (user_id, book_id, quantity) VALUES (?, ?, ?)',
-                [userId, book_id, quantity]
+                [userId, realBookId, quantity]
             );
+            console.log('Libro añadido al carrito. ID del nuevo cart_item:', result.insertId);
             res.status(201).json({ message: 'Libro añadido al carrito.', cartItemId: result.insertId, book_id, quantity });
         }
     } catch (error) {
         console.error('Error en addItemToCart:', error);
-        if (error.code === 'ER_DUP_ENTRY') { // Aunque ahora lo manejamos con update
-            return res.status(409).json({ message: 'Error de duplicado, intente actualizar la cantidad.' });
-        }
-        res.status(500).json({ message: 'Error al añadir/actualizar ítem en el carrito.', error: error.message });
+        res.status(500).json({ message: 'Error al añadir al carrito.', error: error.message });
     }
 };
 

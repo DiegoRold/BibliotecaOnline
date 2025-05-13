@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loadingOrdersMessage = document.getElementById('loading-orders-message');
     const noOrdersMessage = document.getElementById('no-orders-message');
 
-    // Verificar si los elementos existen para evitar errores si esta página no los tiene
+    // Verificar si los elementos existen
     if (!ordersListContainer || !loadingOrdersMessage || !noOrdersMessage) {
         console.error('Elementos necesarios para la página de pedidos no encontrados.');
         return;
@@ -12,32 +12,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     const authToken = localStorage.getItem('authToken');
 
     if (!authToken) {
-        // Usuario no autenticado
         loadingOrdersMessage.classList.add('hidden');
-        ordersListContainer.innerHTML = '<p class="text-center text-red-500 dark:text-red-400">Debes <a href="login.html" class="underline">iniciar sesión</a> para ver tus pedidos.</p>';
-        // Opcionalmente, redirigir a login.html después de un breve retraso
-        // setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+        ordersListContainer.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-lock text-4xl text-gray-400 dark:text-gray-600 mb-4"></i>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">Debes iniciar sesión para ver tus pedidos.</p>
+                <a href="login.html" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                    Iniciar Sesión
+                </a>
+            </div>`;
         return;
     }
 
     try {
-        // fetchWithAuth está definido en app.js, que se carga antes que orders.js
-        // Asegúrate de que app.js define fetchWithAuth globalmente o exportándolo y orders.js importándolo si usas módulos.
-        // Por simplicidad, asumimos que fetchWithAuth está disponible globalmente como en el contexto del proyecto.
-        const response = await fetchWithAuth('http://localhost:3000/api/pedidos'); 
-
+        const response = await fetchWithAuth('/api/pedidos');
+        
         if (!response.ok) {
             if (response.status === 401) {
-                // Token inválido o expirado. app.js debería tener una función global para manejar esto.
-                // Si logoutUser() no está disponible globalmente, se debe asegurar su acceso.
-                // Asumiendo que logoutUser de app.js está disponible:
                 if (typeof logoutUser === 'function') {
-                    logoutUser(); // Limpia localStorage y actualiza UI general
+                    logoutUser();
                 }
-                ordersListContainer.innerHTML = '<p class="text-center text-red-500 dark:text-red-400">Tu sesión ha expirado. Por favor, <a href="login.html" class="underline">inicia sesión</a> de nuevo.</p>';
+                ordersListContainer.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-circle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Tu sesión ha expirado. Por favor, inicia sesión de nuevo.</p>
+                        <a href="login.html" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                            Iniciar Sesión
+                        </a>
+                    </div>`;
             } else {
-                const errorData = await response.json().catch(() => ({ message: 'Error desconocido al obtener pedidos.' }));
-                throw new Error(errorData.message || `Error del servidor: ${response.status}`);
+                throw new Error(`Error del servidor: ${response.status}`);
             }
             loadingOrdersMessage.classList.add('hidden');
             return;
@@ -55,70 +59,79 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Error al cargar los pedidos:', error);
         loadingOrdersMessage.classList.add('hidden');
-        ordersListContainer.innerHTML = `<p class="text-center text-red-500 dark:text-red-400">Error al cargar tus pedidos: ${error.message}. Inténtalo de nuevo más tarde.</p>`;
+        ordersListContainer.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-triangle text-4xl text-yellow-400 mb-4"></i>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">Ha ocurrido un error al cargar tus pedidos.</p>
+                <button onclick="window.location.reload()" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                    Reintentar
+                </button>
+            </div>`;
     }
 });
 
 function renderOrders(orders, container) {
-    container.innerHTML = ''; // Limpiar mensajes previos o de carga
+    container.innerHTML = ''; // Limpiar mensajes previos
 
-    orders.sort((a, b) => new Date(b.fecha_pedido) - new Date(a.fecha_pedido)); // Mostrar más recientes primero
+    // Ordenar pedidos por fecha (más recientes primero)
+    orders.sort((a, b) => new Date(b.fecha_pedido) - new Date(a.fecha_pedido));
 
     orders.forEach(order => {
         const orderCard = document.createElement('div');
-        orderCard.className = 'bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 mb-6';
+        orderCard.className = 'bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 mb-6 transform transition duration-200 hover:shadow-xl';
 
         const formattedDate = new Date(order.fecha_pedido).toLocaleDateString('es-ES', {
-            day: '2-digit', month: '2-digit', year: 'numeric'
-        });
-        const formattedTime = new Date(order.fecha_pedido).toLocaleTimeString('es-ES', {
-            hour: '2-digit', minute: '2-digit'
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
         });
 
-        let estadoPagoClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-700 dark:text-yellow-100';
-        if (order.estado_pago === 'COMPLETADO') {
-            estadoPagoClass = 'bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100';
-        } else if (order.estado_pago === 'FALLIDO' || order.estado_pago === 'RECHAZADO') {
-            estadoPagoClass = 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100';
-        }
-        
-        let estadoPedidoClass = 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
-        // Ejemplo de clases según estado del pedido (puedes expandir esto)
-        switch (order.estado_pedido.toUpperCase()) {
-            case 'PENDIENTE':
-                estadoPedidoClass = 'bg-yellow-100 text-yellow-700 dark:bg-yellow-700 dark:text-yellow-100';
-                break;
-            case 'PROCESANDO':
-                estadoPedidoClass = 'bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100';
-                break;
-            case 'ENVIADO':
-                estadoPedidoClass = 'bg-purple-100 text-purple-700 dark:bg-purple-700 dark:text-purple-100';
-                break;
-            case 'ENTREGADO':
-                estadoPedidoClass = 'bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100';
-                break;
-            case 'CANCELADO':
-                estadoPedidoClass = 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100';
-                break;
-        }
+        // Clases para los estados
+        const estadoPagoClass = getEstadoPagoClass(order.estado_pago);
+        const estadoPedidoClass = getEstadoPedidoClass(order.estado_pedido);
 
-        let itemsHtml = '<p class="text-sm text-gray-500 dark:text-gray-400">No hay detalles de artículos disponibles para este pedido.</p>';
+        // Renderizar items del pedido
+        let itemsHtml = '<p class="text-sm text-gray-500 dark:text-gray-400">No hay detalles de artículos disponibles.</p>';
         if (order.items && order.items.length > 0) {
-            itemsHtml = '<ul class="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400 pl-2">';
-            order.items.forEach(item => {
-                itemsHtml += `<li>${item.titulo_en_compra || 'Nombre no disponible'} (x${item.cantidad}) - ${(item.precio_unitario_en_compra * item.cantidad).toFixed(2)} ${order.moneda || 'EUR'}</li>`;
-            });
-            itemsHtml += '</ul>';
+            itemsHtml = `
+                <div class="space-y-2">
+                    ${order.items.map(item => `
+                        <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                            <div class="flex items-center space-x-3">
+                                ${item.cover_image_url ? `
+                                    <img src="${item.cover_image_url}" alt="${item.titulo_en_compra}" 
+                                         class="w-12 h-16 object-cover rounded shadow-sm">
+                                ` : `
+                                    <div class="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                                        <i class="fas fa-book text-gray-400 dark:text-gray-500"></i>
+                                    </div>
+                                `}
+                                <div>
+                                    <h4 class="font-medium text-gray-800 dark:text-white">${item.titulo_en_compra}</h4>
+                                    ${item.autor_libro ? `
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">${item.autor_libro}</p>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600 dark:text-gray-300">${item.cantidad} x ${item.precio_unitario_en_compra.toFixed(2)} €</p>
+                                <p class="font-medium text-gray-800 dark:text-white">${(item.cantidad * item.precio_unitario_en_compra).toFixed(2)} €</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
         }
 
         orderCard.innerHTML = `
-            <div class="flex flex-wrap justify-between items-start mb-3">
+            <div class="flex flex-wrap justify-between items-start mb-4">
                 <div>
                     <h3 class="text-xl font-semibold text-gray-800 dark:text-white">Pedido #${order.id}</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Fecha: ${formattedDate} a las ${formattedTime}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">${formattedDate}</p>
                 </div>
-                <div class="flex flex-col items-end space-y-1 mt-2 sm:mt-0">
-                     <span class="px-3 py-1 text-xs font-semibold rounded-full ${estadoPagoClass}">
+                <div class="flex flex-col items-end space-y-2 mt-2 sm:mt-0">
+                    <span class="px-3 py-1 text-xs font-semibold rounded-full ${estadoPagoClass}">
                         Pago: ${order.estado_pago || 'Desconocido'}
                     </span>
                     <span class="px-3 py-1 text-xs font-semibold rounded-full ${estadoPedidoClass}">
@@ -127,17 +140,60 @@ function renderOrders(orders, container) {
                 </div>
             </div>
             <div class="mb-4">
-                <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Artículos:</h4>
+                <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">Artículos:</h4>
                 ${itemsHtml}
             </div>
-            <div class="border-t dark:border-gray-700 pt-3 mt-3">
-                 <div class="text-right">
+            <div class="border-t dark:border-gray-700 pt-4 mt-4">
+                <div class="flex justify-between items-center">
                     <p class="text-lg font-bold text-gray-800 dark:text-white">Total: ${parseFloat(order.monto_total).toFixed(2)} ${order.moneda || 'EUR'}</p>
-                    <!-- Enlace a detalles del pedido (funcionalidad futura) -->
-                    <!-- <a href="order-details.html?id=${order.id}" class="text-blue-600 hover:underline dark:text-blue-400 text-sm mt-1 inline-block">Ver Detalles del Pedido</a> -->
+                    <button onclick="verDetallesPedido(${order.id})" 
+                            class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                        Ver Detalles
+                    </button>
                 </div>
-            </div>
-        `;
+            </div>`;
+
         container.appendChild(orderCard);
     });
+}
+
+function getEstadoPagoClass(estado) {
+    switch (estado?.toUpperCase()) {
+        case 'PAGADO':
+            return 'bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100';
+        case 'PENDIENTE':
+            return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-700 dark:text-yellow-100';
+        case 'FALLIDO':
+        case 'RECHAZADO':
+            return 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100';
+        default:
+            return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
+    }
+}
+
+function getEstadoPedidoClass(estado) {
+    switch (estado?.toUpperCase()) {
+        case 'PENDIENTE':
+            return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-700 dark:text-yellow-100';
+        case 'PROCESANDO':
+            return 'bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100';
+        case 'ENVIADO':
+            return 'bg-purple-100 text-purple-700 dark:bg-purple-700 dark:text-purple-100';
+        case 'ENTREGADO':
+            return 'bg-green-100 text-green-700 dark:bg-green-700 dark:text-green-100';
+        case 'CANCELADO':
+            return 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100';
+        default:
+            return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
+    }
+}
+
+// Función para ver detalles del pedido (se puede expandir según necesidades)
+function verDetallesPedido(orderId) {
+    // Por ahora, solo mostramos un alert con el ID
+    // En el futuro, podríamos:
+    // 1. Abrir un modal con más detalles
+    // 2. Navegar a una página específica de detalles
+    // 3. Expandir/colapsar la información en la misma tarjeta
+    alert(`Detalles del pedido #${orderId}`);
 } 

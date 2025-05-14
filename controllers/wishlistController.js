@@ -1,16 +1,13 @@
-import { getConnection } from '../config/db.js';
+import pool from '../config/db.js';
 
 // Obtener la lista de deseos de un usuario
 // GET /api/wishlist
 export const getUserWishlist = async (req, res) => {
-    const userId = req.user.userId; 
-    const connection = getConnection();
-
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
+    const userId = req.user.userId;
+    let connection;
 
     try {
+        connection = await pool.getConnection();
         // Devolver solo los book_id (strings) de la wishlist del usuario.
         // El frontend se encargará de buscar los detalles en allBooks.
         const query = `
@@ -21,12 +18,12 @@ export const getUserWishlist = async (req, res) => {
         `;
         const [wishlistItems] = await connection.query(query, [userId]);
         
-        // Mapear para devolver solo un array de book_ids si se prefiere, o el objeto completo.
-        // Por ahora devolvemos objetos con book_id y added_at para mantener la estructura.
         res.json(wishlistItems.map(item => ({ book_id: item.book_id, added_at: item.added_at }) ));
     } catch (error) {
         console.error('Error en getUserWishlist:', error);
         res.status(500).json({ message: 'Error interno del servidor al obtener la lista de deseos.', error: error.message });
+    } finally {
+        if (connection) connection.release();
     }
 };
 
@@ -35,17 +32,14 @@ export const getUserWishlist = async (req, res) => {
 export const addToWishlist = async (req, res) => {
     const userId = req.user.userId;
     const { book_id } = req.body; // book_id es ahora un string (ej. "book-0")
-    const connection = getConnection();
-
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
+    let connection;
 
     if (!book_id) {
         return res.status(400).json({ message: 'El ID del libro (book_id) es requerido.' });
     }
 
     try {
+        connection = await pool.getConnection();
         // Ya no verificamos si el libro existe en la tabla 'libros' mediante su ID numérico.
         // Asumimos que el frontend envía un ID válido que él maneja.
 
@@ -58,7 +52,6 @@ export const addToWishlist = async (req, res) => {
         const [result] = await connection.execute(insertQuery, [userId, book_id]);
 
         if (result.insertId) {
-            // Devolvemos el book_id que se añadió, además del nuevo ID de la tabla wishlist_items
             res.status(201).json({ message: 'Libro añadido a la lista de deseos exitosamente.', wishlistItemId: result.insertId, book_id: book_id });
         } else {
             res.status(500).json({ message: 'Error al añadir el libro a la lista de deseos.' });
@@ -69,6 +62,8 @@ export const addToWishlist = async (req, res) => {
             return res.status(409).json({ message: 'Este libro ya está en tu lista de deseos.' });
         }
         res.status(500).json({ message: 'Error interno del servidor al añadir a la lista de deseos.', error: error.message });
+    } finally {
+        if (connection) connection.release();
     }
 };
 
@@ -77,13 +72,10 @@ export const addToWishlist = async (req, res) => {
 export const removeFromWishlist = async (req, res) => {
     const userId = req.user.userId;
     const { book_id } = req.params; // book_id (string) viene de los parámetros de la ruta
-    const connection = getConnection();
-
-    if (!connection || connection.connection._closing === true) {
-        return res.status(503).json({ message: 'Servicio no disponible temporalmente (DB).' });
-    }
+    let connection;
 
     try {
+        connection = await pool.getConnection();
         const deleteQuery = 'DELETE FROM wishlist_items WHERE user_id = ? AND book_id = ?';
         const [result] = await connection.execute(deleteQuery, [userId, book_id]);
 
@@ -95,5 +87,7 @@ export const removeFromWishlist = async (req, res) => {
     } catch (error) {
         console.error('Error en removeFromWishlist:', error);
         res.status(500).json({ message: 'Error interno del servidor al eliminar de la lista de deseos.', error: error.message });
+    } finally {
+        if (connection) connection.release();
     }
 }; 

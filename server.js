@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { connectToDatabase } from './config/db.js'; // Importar solo la función de conexión
+import { checkDatabaseConnection } from './config/db.js'; // Cambiado: Importar checkDatabaseConnection
 
 console.log('[server.js] Iniciando ejecución del servidor...'); // Log 1
 
@@ -81,7 +81,7 @@ app.use('/api', userRoutes); // <--- AÑADIR ESTA LÍNEA
 async function startServer() {
     console.log('[server.js] Iniciando función startServer...'); // Log 7
     try {
-        await connectToDatabase(); // Primero conectamos a la DB
+        await checkDatabaseConnection(); // Cambiado: Llamar a checkDatabaseConnection
         console.log('[server.js] Conexión a la base de datos establecida.'); // Log 8
         app.listen(PORT, () => {
             console.log(`Servidor corriendo en http://localhost:${PORT}`);

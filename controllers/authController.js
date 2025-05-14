@@ -16,7 +16,7 @@ export const registerUser = async (req, res) => {
 
     try {
         // Verificar si el email ya existe
-        const [existingUser] = await pool.promise().query('SELECT id FROM usuarios WHERE email = ?', [email]);
+        const [existingUser] = await pool.query('SELECT id FROM usuarios WHERE email = ?', [email]);
         if (existingUser.length > 0) {
             return res.status(409).json({ message: 'El correo electrónico ya está registrado.' }); // 409 Conflict
         }
@@ -27,7 +27,7 @@ export const registerUser = async (req, res) => {
 
         // Insertar nuevo usuario (rol por defecto es 'cliente' según la DB)
         const insertQuery = 'INSERT INTO usuarios (nombre, email, password_hash) VALUES (?, ?, ?)';
-        const [result] = await pool.promise().execute(insertQuery, [nombre, email, password_hash]);
+        const [result] = await pool.execute(insertQuery, [nombre, email, password_hash]);
 
         if (result.insertId) {
             // Opcional: generar un token JWT inmediatamente después del registro y loguear al usuario
@@ -58,7 +58,7 @@ export const loginUser = async (req, res) => {
 
     try {
         // Buscar usuario por email
-        const [users] = await pool.promise().query('SELECT id, nombre, email, password_hash, rol FROM usuarios WHERE email = ?', [email]);
+        const [users] = await pool.query('SELECT id, nombre, email, password_hash, rol FROM usuarios WHERE email = ?', [email]);
         if (users.length === 0) {
             return res.status(401).json({ message: 'Credenciales inválidas.' }); // 401 Unauthorized
         }

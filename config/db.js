@@ -14,8 +14,8 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Función para verificar la conexión (opcional, pero útil para server.js)
-export const connectToDatabase = async () => {
+// Función para verificar la conexión (opcional, para usar en server.js al arrancar)
+export const checkDatabaseConnection = async () => {
     try {
         // Intenta obtener una conexión para probar el pool
         const connection = await pool.getConnection();

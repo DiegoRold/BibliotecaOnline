@@ -4,33 +4,25 @@ import pool from '../config/db.js';
 export const getAllBooks = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 12; // Mismo límite que en js/books.js
+        const limit = parseInt(req.query.limit) || 12;
         const offset = (page - 1) * limit;
 
-        // Consulta para obtener el total de libros (para calcular totalPages)
         const countQuery = 'SELECT COUNT(*) as totalBooks FROM libros WHERE stock > 0';
-        const [countResult] = await pool.promise().query(countQuery);
+        const [countResult] = await pool.query(countQuery);
         const totalBooks = countResult[0].totalBooks;
         const totalPages = Math.ceil(totalBooks / limit);
 
-        // Consulta para obtener los libros de la página actual
         const booksQuery = `
-            SELECT id, title, author, cover_image_url, price, stock 
+            SELECT 
+                api_id AS id, title, author, cover_image_url AS cover, price, stock,
+                rating, description, publication_date, pages, publisher, categories, isbn, tags
             FROM libros 
-            WHERE stock > 0 
-            ORDER BY title 
-            LIMIT ? 
-            OFFSET ?`;
-        const [books] = await pool.promise().query(booksQuery, [limit, offset]);
+            WHERE stock > 0 ORDER BY title LIMIT ? OFFSET ?`;
+        const [books] = await pool.query(booksQuery, [limit, offset]);
 
         res.json({
             books,
-            pagination: {
-                currentPage: page,
-                totalPages,
-                totalBooks,
-                limit
-            }
+            pagination: { currentPage: page, totalPages, totalBooks, limit }
         });
     } catch (error) {
         console.error('Error en getAllBooks con paginación:', error);
@@ -42,8 +34,7 @@ export const getAllBooks = async (req, res) => {
 export const getBookById = async (req, res) => {
     const { id } = req.params;
     try {
-        // Seleccionar todos los campos para la vista de detalle del libro
-        const [books] = await pool.promise().query('SELECT * FROM libros WHERE id = ?', [id]);
+        const [books] = await pool.query('SELECT * FROM libros WHERE id = ?', [id]);
         if (books.length === 0) {
             return res.status(404).json({ message: 'Libro no encontrado.' });
         }
@@ -58,21 +49,19 @@ export const getBookById = async (req, res) => {
 
 // Crear un nuevo libro (solo admin)
 export const createBook = async (req, res) => {
-    const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
-
-    if (!title || !price || stock === undefined) {
-        return res.status(400).json({ message: 'Título, precio y stock son requeridos.' });
+    const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn, api_id } = req.body;
+    if (!title || !price || stock === undefined || !api_id) {
+        return res.status(400).json({ message: 'Título, api_id, precio y stock son requeridos.' });
     }
-
     try {
-        const query = `INSERT INTO libros (title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const [result] = await pool.promise().execute(query, [
+        const query = `INSERT INTO libros (title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn, api_id)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const [result] = await pool.execute(query, [
             title, author || null, publication_date || null, cover_image_url || null, rating || 0,
             price, description || null, tags || null, pages || 0, publisher || null, stock || 0,
-            categories || null, isbn || null
+            categories || null, isbn || null, api_id
         ]);
-        res.status(201).json({ message: 'Libro creado exitosamente.', bookId: result.insertId });
+        res.status(201).json({ message: 'Libro creado exitosamente.', bookId: result.insertId, api_id });
     } catch (error) {
         console.error('Error en createBook:', error);
         res.status(500).json({ message: 'Error interno del servidor al crear el libro.', error: error.message });
@@ -82,11 +71,11 @@ export const createBook = async (req, res) => {
 // Actualizar un libro existente (solo admin)
 export const updateBook = async (req, res) => {
     const { id } = req.params;
-    const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn } = req.body;
-
+    const { title, author, publication_date, cover_image_url, rating, price, description, tags, pages, publisher, stock, categories, isbn, api_id } = req.body;
     let fieldsToUpdate = [];
     let values = [];
     if (title !== undefined) { fieldsToUpdate.push('title = ?'); values.push(title); }
+    if (api_id !== undefined) { fieldsToUpdate.push('api_id = ?'); values.push(api_id); }
     if (author !== undefined) { fieldsToUpdate.push('author = ?'); values.push(author); }
     if (publication_date !== undefined) { fieldsToUpdate.push('publication_date = ?'); values.push(publication_date); }
     if (cover_image_url !== undefined) { fieldsToUpdate.push('cover_image_url = ?'); values.push(cover_image_url); }
@@ -104,10 +93,9 @@ export const updateBook = async (req, res) => {
         return res.status(400).json({ message: 'No se proporcionaron campos para actualizar.' });
     }
     values.push(id);
-
     try {
         const query = `UPDATE libros SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
-        const [result] = await pool.promise().execute(query, values);
+        const [result] = await pool.execute(query, values);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Libro no encontrado para actualizar.' });
         }
@@ -122,7 +110,7 @@ export const updateBook = async (req, res) => {
 export const deleteBook = async (req, res) => {
     const { id } = req.params;
     try {
-        const [result] = await pool.promise().execute('DELETE FROM libros WHERE id = ?', [id]);
+        const [result] = await pool.execute('DELETE FROM libros WHERE id = ?', [id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'Libro no encontrado para eliminar.' });
         }

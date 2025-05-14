@@ -8,24 +8,58 @@ const state = {
 // Variable global para almacenar los libros de la API
 let allBooks = [];
 
-// --- SELECCIÓN DOM --- (Asegúrate de que todas las selecciones estén aquí)
+// --- SELECCIÓN DOM ---
 let themeToggle, wishlistModal, closeWishlist, contactIcon, contactModal, closeContactModal;
 let cartIcon, wishlistHeaderIcon, cartCountBadge;
 let cartModal, closeCartModalBtn, cartItemsContainer, goToCheckoutBtn, cartTotalPrice, emptyCartBtn;
-let wishlistContent; // Asegurar que se define
-let recommendationsContainer, sliderTrack;
-let userIcon, userDropdown; // <--- Añadido para el menú de usuario
-// Elementos del menú de usuario para la UI dinámica
+let wishlistContent; 
+let userIcon, userDropdown; 
 let userGreeting, loginLinkMenu, registerLinkMenu, profileLinkMenu, ordersLinkMenu, logoutLinkMenu;
-// Elementos del modal de confirmación para vaciar carrito
 let confirmEmptyCartModal, cancelEmptyCartBtn, confirmEmptyCartActionBtn;
-
-// Modal de Horario: Declarar aquí, asignar en init
 let horarioLink, horarioModal, closeHorarioModal;
+let goToBlogBtn, goToBioBtn;
+let goToBooksBtn;
+
+// --- Slider Dinámico de Libros ---
+let dynamicSliderElement;
+// IMPORTANTE: Crea la carpeta 'assets/books/' y pon tus imágenes allí.
+// Luego, actualiza esta lista con los nombres de tus archivos de imagen.
+const bookImageFilenames = [
+    "1984.jpg",
+    "anna-karenina.jpg",
+    "brave-new-world.jpg",
+    "cien-anos-de-soledad-(edicion-revisada).jpg",
+    "crime-and-punishment.jpg",
+    "dune.jpg",
+    "el-principito.jpg",
+    "frankenstein.jpg",
+    "harry-potter-and-the-sorcerers-stone.jpg",
+    "moby-dick.jpg",
+    "pride-and-prejudice.jpg",
+    "slaughterhouse-five.jpg",
+    "the-alchemist.jpg",
+    "the-bell-jar.jpg",
+    "the-catcher-in-the-rye.jpg",
+    "the-chronicles-of-narnia-the-lion-the-witch-and-the-wardrobe.jpg",
+    "the-great-gatsby.jpg",
+    "the-hobbit.jpg",
+    "the-lord-of-the-rings-the-fellowship-of-the-ring.jpg",
+    "the-odyssey.jpg",
+    "the-outsiders.jpg",
+    "the-picture-of-dorian-gray.jpg",
+    "the-secret-garden.jpg",
+    "the-shining.jpg",
+    "to-kill-a-mockingbird.jpg",
+    "wuthering-heights.jpg"
+];
+let currentImageGroupIndex = 0;
+let slideCycleCount = 0;
+const IMAGES_PER_GROUP = 4;
+const TOTAL_SLIDE_CYCLES_BEFORE_RESET = 3;
+let bookSliderIntervalId = null;
 
 // --- INICIALIZACIÓN ---
 async function init() {
-    // Seleccionar elementos del DOM
     themeToggle = document.getElementById('theme-toggle');
     wishlistModal = document.getElementById('wishlist-modal');
     closeWishlist = document.getElementById('close-wishlist');
@@ -42,183 +76,64 @@ async function init() {
     goToCheckoutBtn = document.getElementById('go-to-checkout-btn');
     cartTotalPrice = document.getElementById('cart-total-price');
     emptyCartBtn = document.getElementById('empty-cart-btn');
-    sliderTrack = document.getElementById('slider-track');
-    recommendationsContainer = document.getElementById('recommendations-container');
     userIcon = document.getElementById('user-icon'); 
     userDropdown = document.getElementById('user-dropdown'); 
-
-    // Seleccionar elementos del menú de usuario
     userGreeting = document.getElementById('user-greeting');
     loginLinkMenu = document.getElementById('login-link-menu');
     registerLinkMenu = document.getElementById('register-link-menu');
     profileLinkMenu = document.getElementById('profile-link-menu');
     ordersLinkMenu = document.getElementById('orders-link-menu');
-    console.log('Elemento ordersLinkMenu seleccionado en init:', ordersLinkMenu);
     logoutLinkMenu = document.getElementById('logout-link-menu');
-
-    // Seleccionar elementos del modal de confirmación para vaciar carrito
     confirmEmptyCartModal = document.getElementById('confirm-empty-cart-modal');
     cancelEmptyCartBtn = document.getElementById('cancel-empty-cart-btn');
     confirmEmptyCartActionBtn = document.getElementById('confirm-empty-cart-action-btn');
-
-    // Seleccionar elementos del modal de Horario aquí, dentro de init
     horarioLink = document.getElementById('horario-link');
     horarioModal = document.getElementById('horario-modal');
     closeHorarioModal = document.getElementById('close-horario-modal');
+    goToBlogBtn = document.getElementById('go-to-blog-btn');
+    goToBioBtn = document.getElementById('go-to-bio-btn');
+    goToBooksBtn = document.getElementById('go-to-books-btn');
+    dynamicSliderElement = document.getElementById('dynamic-book-slider'); // <--- Slider Element
 
-    applyTheme(); // Aplicar tema lo antes posible
+    applyTheme();
+    initializeDynamicBookSlider(); // <--- Inicializar el nuevo slider
 
     try {
-        allBooks = await fetchBooks(); // Cargar libros de la API
+        allBooks = await fetchBooks(); 
         console.log(`Fetched ${allBooks.length} books from API.`);
-        // Añadir log para ver los datos obtenidos
-        console.log('Datos de allBooks (primeros 5):', allBooks.slice(0, 5)); 
 
-        renderSliderImages(allBooks); // Renderizar slider
-        renderRecommendedBooks(allBooks); // Renderizar recomendaciones
+        setupEventListeners(); 
+        updateCartIcon(); 
+        renderWishlist(); 
+        renderCartModal(); 
+        updateUserUI(); 
 
-        setupEventListeners(); // Configurar listeners después de cargar datos y renderizar
-        updateCartIcon(); // Actualizar UI inicial del carrito
-        renderWishlist(); // Renderizar UI inicial de wishlist
-        renderCartModal(); // Renderizar UI inicial del modal carrito
-        updateUserUI(); // <--- Actualizar UI del usuario al iniciar
-
-        console.log('Aplicación inicializada con datos de la API.');
+        console.log('Aplicación inicializada (sin slider ni recomendaciones).');
 
     } catch (error) {
         console.error('Error inicializando la aplicación:', error);
-        // Mostrar mensaje de error al usuario si falla la carga de libros
-        if (recommendationsContainer) {
-            recommendationsContainer.innerHTML = '<p class="text-red-500 text-center col-span-full">Error al cargar los libros. Por favor, inténtalo de nuevo más tarde.</p>';
-        }
-         if (sliderTrack) {
-             sliderTrack.innerHTML = '<p class="text-red-500 text-center w-full">Error al cargar imágenes.</p>';
-         }
     }
 }
 
 // --- OBTENER DATOS ---
 async function fetchBooks() {
-    const apiUrl = 'https://books-foniuhqsba-uc.a.run.app/'; // <--- REVERTIDO a API Externa
+    const apiUrl = 'http://localhost:3000/api/libros';
     try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl); 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
         }
-        let data = await response.json();
-
-        // REVERTIDO: Filtrar "Cien años de soledad" de los datos ANTES de mapear
-        data = data.filter(book => 
-            !book.title || book.title.toLowerCase() !== 'cien años de soledad'
-        );
-
-        // REVERTIDO: Mapear datos y construir la URL de la portada localmente
-        return data.map((book, index) => {
-            const bookId = `book-${index}`;
-            const rawTitle = book.title || 'untitled'; 
-
-            const filename = rawTitle
-                .toLowerCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') 
-                .replace(/ñ/g, 'n') 
-                .replace(/\s+/g, '-') 
-                .replace(/[^a-z0-9-()]/g, ''); 
-            
-            return {
-                ...book,
-                id: bookId, // ID generado localmente
-                cover: `assets/books/${filename}.jpg` // Ruta local a la imagen construida
-            };
-        });
+        const data = await response.json();
+        console.log('Libros obtenidos del backend (data.books):', data.books);
+        return data.books; 
     } catch (error) {
-        console.error("Error fetching books:", error); // Mensaje original
+        console.error("Error fetching books from local backend:", error);
         throw error; 
     }
 }
 
-
 // --- RENDERIZADO ---
 function applyTheme() { document.body.classList.toggle('dark', state.isDarkMode); }
-
-function renderSliderImages(books) {
-    if (!sliderTrack) return;
-    sliderTrack.innerHTML = ''; 
-    const placeholderUrl = 'assets/placeholder-cover.png';
-
-    // REVERTIDO: Filtrar "Cien años de soledad" de la lista de libros para el slider
-    const booksWithoutCienAnos = books.filter(book => 
-        !book.title || book.title.toLowerCase() !== 'cien años de soledad'
-    );
-
-    const booksForSlider = booksWithoutCienAnos.slice(0, TOTAL_IMAGES_IN_SLIDER); 
-
-    if (booksForSlider.length === 0 && TOTAL_IMAGES_IN_SLIDER > 0) {
-        // Si no hay libros pero esperamos imágenes, mostrar placeholders
-        for (let i = 0; i < TOTAL_IMAGES_IN_SLIDER; i++) {
-            const div = document.createElement('div');
-            div.className = 'w-1/3 flex-shrink-0 px-2 flex items-center justify-center';
-            div.innerHTML = `<img src="${placeholderUrl}" alt="Placeholder Portada libro ${i + 1}" class="w-auto h-56 object-contain border dark:border-gray-700">`;
-            sliderTrack.appendChild(div);
-        }
-    } else {
-        // Usar imágenes de los libros, o placeholder si falta la portada
-        for (let i = 0; i < TOTAL_IMAGES_IN_SLIDER; i++) {
-            const book = booksForSlider[i % booksForSlider.length]; // Repetir libros si hay menos de 12
-            const div = document.createElement('div');
-            div.className = 'w-1/3 flex-shrink-0 px-2 flex items-center justify-center';
-            const coverUrl = (book && book.cover) ? book.cover : placeholderUrl;
-            const altText = (book && book.title) ? book.title : `Portada libro ${i + 1}`;
-            // Añadir un manejador de error para cada imagen
-            div.innerHTML = `<img src="${coverUrl}" alt="${altText}" class="w-auto h-56 object-contain border dark:border-gray-700" onerror="this.onerror=null;this.src='${placeholderUrl}';">`; 
-            sliderTrack.appendChild(div);
-        }
-    }
-
-    const actualTotalSlides = Math.ceil(Math.min(booksForSlider.length, TOTAL_IMAGES_IN_SLIDER) / SLIDES_TO_SHOW);
-    if(actualTotalSlides > 1) {
-        startSliderAnimation();
-    } else {
-        if (sliderInterval) clearInterval(sliderInterval); // Detener si no hay suficientes slides
-    }
-}
-
-function renderRecommendedBooks(books) {
-    if (!recommendationsContainer) return;
-    recommendationsContainer.innerHTML = ''; 
-
-    // Barajar una copia de los libros para obtener una selección aleatoria
-    const shuffledBooks = [...books].sort(() => 0.5 - Math.random());
-    const booksToShow = shuffledBooks.slice(0, 4); // Mostrar 4 libros aleatorios
-
-    if (booksToShow.length === 0) {
-        recommendationsContainer.innerHTML = '<p class="text-gray-500 text-center w-full">No hay libros para mostrar.</p>';
-        return;
-    }
-
-    booksToShow.forEach(book => {
-        const cardContainer = document.createElement('div');
-        const card = document.createElement('book-card');
-        card.setAttribute('id', book.id); 
-        card.setAttribute('title', book.title);
-        card.setAttribute('author', book.author || 'Desconocido');
-        card.setAttribute('cover', book.cover || 'assets/placeholder-cover.png');
-        card.setAttribute('price', book.price || 0);
-        card.setAttribute('stock', book.stock || 0);
-        if (book.year) card.setAttribute('year', book.year);
-        if (book.category) card.setAttribute('category', book.category);
-        if (book.rating) card.setAttribute('rating', book.rating); 
-        if (book.pages) card.setAttribute('pages', book.pages);
-        if (book.language) card.setAttribute('language', book.language);
-
-        // Establecer si está en la lista de deseos
-        if (state.wishlist.includes(book.id)) {
-            card.setAttribute('in-wishlist', 'true');
-        }
-
-        cardContainer.appendChild(card);
-        recommendationsContainer.appendChild(cardContainer);
-    });
-}
 
 function renderWishlist() {
     if (!wishlistContent) return;
@@ -318,7 +233,6 @@ function renderCartModal() {
     cartItemsContainer.querySelectorAll('.remove-cart-item-btn').forEach(b => b.addEventListener('click', e => removeBookFromCart(e.currentTarget.dataset.bookId, true))); // True para eliminar todas las unidades
     cartItemsContainer.querySelectorAll('.move-to-wishlist-btn').forEach(b => b.addEventListener('click', e => moveCartItemToWishlist(e.currentTarget.dataset.bookId)));
 }
-
 
 // --- MANEJO DE ESTADO (CARRITO / WISHLIST) ---
 function toggleWishlistItem(bookId) {
@@ -672,30 +586,6 @@ function updateCartIcon() {
      if (cartIcon) cartIcon.title = `Mi Compra (${cartItemCount} items)`;
 }
 
-
-// --- LÓGICA SLIDER Y SCROLL ---
-let currentSlide = 0;
-let sliderInterval;
-const SLIDES_TO_SHOW = 3;
-const TOTAL_IMAGES_IN_SLIDER = 12;
-
-function startSliderAnimation() {
-    if (!sliderTrack) return;
-    if (sliderInterval) clearInterval(sliderInterval);
-    const actualTotalSlides = Math.ceil(TOTAL_IMAGES_IN_SLIDER / SLIDES_TO_SHOW);
-    if (actualTotalSlides <= 1) return;
-
-    sliderInterval = setInterval(() => {
-        currentSlide = (currentSlide + 1) % actualTotalSlides;
-        updateSliderPosition();
-    }, 4000);
-}
-
-function updateSliderPosition() {
-    if (!sliderTrack) return;
-    sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
-}
-
 // --- EVENT LISTENERS GENERALES ---
 function setupEventListeners() {
     // Listeners del header y modales generales
@@ -709,6 +599,27 @@ function setupEventListeners() {
     if (goToCheckoutBtn && cartModal) goToCheckoutBtn.addEventListener('click', () => { cartModal.close(); window.location.href = 'checkout.html'; });
     if (emptyCartBtn) emptyCartBtn.addEventListener('click', () => emptyCart());
     if (logoutLinkMenu) logoutLinkMenu.addEventListener('click', (e) => { e.preventDefault(); logoutUser(); }); // <--- Listener para logout
+
+    // Listener para el botón del blog
+    if (goToBlogBtn) {
+        goToBlogBtn.addEventListener('click', () => {
+            window.location.href = 'blog.html';
+        });
+    }
+
+    // Listener para el botón de bio
+    if (goToBioBtn) {
+        goToBioBtn.addEventListener('click', () => {
+            window.location.href = 'bio.html';
+        });
+    }
+
+    // Listener para el botón de libros
+    if (goToBooksBtn) {
+        goToBooksBtn.addEventListener('click', () => {
+            window.location.href = 'books.html';
+        });
+    }
 
     // Listener para el menú de usuario
     if (userIcon && userDropdown) {
@@ -792,6 +703,13 @@ function setupEventListeners() {
 // Helper para realizar fetch con token de autenticación
 async function fetchWithAuth(url, options = {}) {
     const token = localStorage.getItem('authToken');
+    
+    let completeUrl = url;
+    // Verificar si la URL ya es absoluta
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        completeUrl = `http://localhost:3000${url}`;
+    }
+
     const headers = {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -799,7 +717,7 @@ async function fetchWithAuth(url, options = {}) {
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-    return fetch(url, { ...options, headers });
+    return fetch(completeUrl, { ...options, headers });
 }
 
 async function fetchUserWishlist() {
@@ -1003,6 +921,72 @@ async function fetchUserCart() {
     }
 }
 
+// --- NUEVO: LÓGICA DEL SLIDER DINÁMICO DE LIBROS ---
+function initializeDynamicBookSlider() {
+    if (!dynamicSliderElement) {
+        console.warn("Elemento del slider dinámico 'dynamic-book-slider' no encontrado.");
+        return;
+    }
+    if (bookImageFilenames.length === 0) {
+        console.warn("No hay imágenes definidas en 'bookImageFilenames' para el slider.");
+        dynamicSliderElement.innerHTML = '<p class="text-center text-gray-500 p-4">No hay imágenes para mostrar en el slider.</p>';
+        return;
+    }
+    if (bookImageFilenames.length < IMAGES_PER_GROUP) {
+        console.warn(`Se necesitan al menos ${IMAGES_PER_GROUP} imágenes para el slider, solo se encontraron ${bookImageFilenames.length}. Mostrando las disponibles sin animación.`);
+        // Renderizar las pocas imágenes disponibles sin iniciar el intervalo
+        renderCurrentImageGroupInSlider();
+        return;
+    }
+
+    renderCurrentImageGroupInSlider();
+    if (bookSliderIntervalId) clearInterval(bookSliderIntervalId); // Limpiar intervalo anterior si existe
+    bookSliderIntervalId = setInterval(advanceBookSlider, 2000);
+}
+
+function renderCurrentImageGroupInSlider() {
+    if (!dynamicSliderElement || bookImageFilenames.length === 0) return;
+
+    dynamicSliderElement.innerHTML = ''; // Limpiar contenido anterior
+
+    for (let i = 0; i < IMAGES_PER_GROUP; i++) {
+        const imageIndex = (currentImageGroupIndex + i) % bookImageFilenames.length;
+        const imageName = bookImageFilenames[imageIndex];
+        
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'w-1/4 flex-shrink-0 p-2 box-border'; // Tailwind para 4 imágenes por fila
+        
+        const imgElement = document.createElement('img');
+        imgElement.src = `assets/books/${imageName}`;
+        imgElement.alt = `Portada ${imageName.split('.')[0]}`; // Alt text básico
+        imgElement.className = 'w-full h-64 object-contain rounded shadow-md bg-white dark:bg-gray-800 p-1'; // Estilos de la imagen
+
+        imgContainer.appendChild(imgElement);
+        dynamicSliderElement.appendChild(imgContainer);
+    }
+}
+
+function advanceBookSlider() {
+    // Avanzar al siguiente grupo de imágenes
+    currentImageGroupIndex = (currentImageGroupIndex + IMAGES_PER_GROUP);
+    
+    // Si currentImageGroupIndex se pasa del total de imágenes (considerando un ciclo completo),
+    // y no es momento de un reseteo total por slideCycleCount, lo ajustamos para que siga en el ciclo.
+    if (currentImageGroupIndex >= bookImageFilenames.length) {
+         currentImageGroupIndex %= bookImageFilenames.length;
+    }
+
+    slideCycleCount++;
+
+    if (slideCycleCount >= TOTAL_SLIDE_CYCLES_BEFORE_RESET) {
+        slideCycleCount = 0;
+        currentImageGroupIndex = 0; // Reiniciar al primer grupo de imágenes
+        console.log("Slider reiniciado después de 3 ciclos.");
+    }
+    
+    renderCurrentImageGroupInSlider();
+}
+
 // --- INICIALIZAR ---
 document.addEventListener('DOMContentLoaded', init);
 
@@ -1010,15 +994,18 @@ document.addEventListener('DOMContentLoaded', init);
 document.addEventListener('cartUpdated', (event) => {
     console.log('Evento cartUpdated recibido en app.js:', event.detail.cart);
     // Actualizar el estado global
-    if (window.state) {
-        window.state.cart = event.detail.cart;
+    if (state) {
+        state.cart = event.detail.cart;
         // Actualizar localStorage
-        localStorage.setItem('cart', JSON.stringify(event.detail.cart));
+        localStorage.setItem('cart', JSON.stringify(state.cart));
         // Actualizar UI
         updateCartIcon();
-        renderCartModal();
+        // Considera si renderCartModal() es necesario aquí y si el modal podría estar abierto
+        if (cartModal && cartModal.open) {
+            renderCartModal(); 
+        }
         console.log('Estado del carrito actualizado en app.js');
     } else {
-        console.warn('window.state no está disponible al recibir cartUpdated');
+        console.warn('La variable state no está disponible al recibir cartUpdated. Esto no debería ocurrir.'); 
     }
 });

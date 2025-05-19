@@ -19,6 +19,7 @@ let confirmEmptyCartModal, cancelEmptyCartBtn, confirmEmptyCartActionBtn;
 let horarioLink, horarioModal, closeHorarioModal;
 let goToBlogBtn, goToBioBtn;
 let goToBooksBtn;
+let recommendationsGrid; // <--- NUEVO: Para la cuadrícula de recomendaciones
 
 // --- Slider Dinámico de Libros ---
 let dynamicSliderElement;
@@ -94,6 +95,7 @@ async function init() {
     goToBioBtn = document.getElementById('go-to-bio-btn');
     goToBooksBtn = document.getElementById('go-to-books-btn');
     dynamicSliderElement = document.getElementById('dynamic-book-slider'); // <--- Slider Element
+    recommendationsGrid = document.getElementById('recommendationsGrid'); // <--- NUEVO
 
     applyTheme();
     initializeDynamicBookSlider(); // <--- Inicializar el nuevo slider
@@ -108,7 +110,10 @@ async function init() {
         renderCartModal(); 
         updateUserUI(); 
 
-        console.log('Aplicación inicializada (sin slider ni recomendaciones).');
+        // Seleccionar 4 libros aleatorios para recomendaciones
+        renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4));
+
+        console.log('Aplicación inicializada.');
 
     } catch (error) {
         console.error('Error inicializando la aplicación:', error);
@@ -134,6 +139,39 @@ async function fetchBooks() {
 
 // --- RENDERIZADO ---
 function applyTheme() { document.body.classList.toggle('dark', state.isDarkMode); }
+
+// --- FUNCIÓN MODIFICADA: Renderizar una tarjeta de libro usando el Custom Element <book-card> ---
+function renderBookCard(book) {
+    const bookCardElement = document.createElement('book-card');
+
+    bookCardElement.setAttribute('id', book.id.toString());
+    bookCardElement.setAttribute('title', book.title || '');
+    bookCardElement.setAttribute('author', book.author || '');
+    
+    // Simplificación: Asumir que book.cover ya es la URL correcta o placeholder
+    // La lógica compleja para determinar la portada se debe hacer ANTES de llamar a esta función.
+    const coverSrc = book.cover || 'assets/books/placeholder-cover.png'; // Usar directamente book.cover o un placeholder
+    bookCardElement.setAttribute('cover', coverSrc);
+
+    bookCardElement.setAttribute('year', book.publication_date ? new Date(book.publication_date).getFullYear().toString() : 'N/A');
+    bookCardElement.setAttribute('category', book.categories && Array.isArray(book.categories) ? book.categories.join(', ') : (book.categories || 'N/A'));
+    bookCardElement.setAttribute('rating', book.rating ? book.rating.toString() : 'N/A');
+    bookCardElement.setAttribute('pages', book.pages ? book.pages.toString() : 'N/A');
+    // language no está en tu BD según la imagen, pero el componente lo espera. Podemos omitirlo o poner N/A
+    bookCardElement.setAttribute('language', book.language || 'N/A'); 
+    bookCardElement.setAttribute('price', book.price ? book.price.toString() : '0');
+    bookCardElement.setAttribute('stock', book.stock ? book.stock.toString() : '0');
+
+    const isInWishlist = state.wishlist.includes(book.id.toString());
+    bookCardElement.setAttribute('in-wishlist', isInWishlist.toString());
+
+    // Los event listeners para 'view-book-details', 'toggle-wishlist', 'add-to-cart'
+    // se añadirán globalmente en setupEventListeners() para escuchar los eventos que burbujean
+    // desde los custom elements <book-card>.
+    // No es necesario añadirlos aquí directamente al `bookCardElement` si los eventos burbujean (composed: true).
+
+    return bookCardElement;
+}
 
 function renderWishlist() {
     if (!wishlistContent) return;
@@ -291,9 +329,29 @@ function toggleWishlistItem(bookId) {
 
 // Función auxiliar para actualizar una sola tarjeta de libro
 function updateBookCardVisualState(bookId, isNowInWishlist) {
-    document.querySelectorAll(`book-card[id="${bookId}"]`).forEach(cardElement => {
-        cardElement.setAttribute('in-wishlist', isNowInWishlist.toString());
+    // Actualizar el icono en la tarjeta de libro específica si está visible
+    const bookCards = document.querySelectorAll(`.book-card[data-book-id="${bookId}"]`);
+    bookCards.forEach(card => {
+        const wishlistIcon = card.querySelector('.wishlist-icon');
+        if (wishlistIcon) {
+            wishlistIcon.src = isNowInWishlist ? 'assets/wishlist-filled.png' : 'assets/wishlist.png';
+            wishlistIcon.dataset.isWishlisted = isNowInWishlist;
+            wishlistIcon.alt = isNowInWishlist ? 'Quitar de Deseos' : 'Añadir a Deseos';
+        }
     });
+
+    // Actualizar también el icono en el slider dinámico si el libro está allí
+    const sliderBookDivs = document.querySelectorAll(`.dynamic-book-slide[data-book-id="${bookId}"]`);
+    sliderBookDivs.forEach(div => {
+        const wishlistIcon = div.querySelector('.slider-wishlist-icon'); // Asumiendo una clase específica para el slider
+        if (wishlistIcon) {
+            wishlistIcon.src = isNowInWishlist ? 'assets/wishlist-filled.png' : 'assets/wishlist.png';
+            // Podrías necesitar un data-attribute similar para el estado en el slider
+        }
+    });
+
+    // Si tienes una sección de libros en books.html que usa tarjetas similares, deberás actualizarla también.
+    // Esto podría requerir una función más global o llamar a esta función desde el contexto de books.js
 }
 
 function addBookToCart(bookId, title, price, cover, stock) {
@@ -649,18 +707,44 @@ function setupEventListeners() {
     }
 
     // Listeners para eventos de book-card
-    document.addEventListener('view-book-details', e => alert(`Ver detalles del libro ID: ${e.detail.bookId}`));
-    document.addEventListener('add-to-cart', e => {
-        addBookToCart(
-            e.detail.bookId,
-            e.detail.title,
-            parseFloat(e.detail.price || 0),
-            e.detail.cover,
-            parseInt(e.detail.stock || 0)
-        );
+    document.addEventListener('view-book-details', e => {
+        // Lógica para ver detalles, por ejemplo:
+        // window.location.href = `product-detail.html?id=${e.detail.bookId}`;
+        alert(`Ver detalles (desde custom event): ${e.detail.bookId}`);
     });
+
     document.addEventListener('toggle-wishlist', e => {
         toggleWishlistItem(e.detail.bookId);
+    });
+
+    document.addEventListener('add-to-cart', e => {
+        const bookDetails = allBooks.find(b => b.id.toString() === e.detail.bookId.toString());
+        if (bookDetails) {
+            addBookToCart(
+                bookDetails.id, 
+                bookDetails.title, 
+                bookDetails.price, 
+                bookDetails.cover, 
+                bookDetails.stock
+            );
+        } else {
+            console.warn(`No se encontraron detalles del libro ${e.detail.bookId} para añadir al carrito desde el evento del custom element.`);
+            // Podrías necesitar pasar más detalles en e.detail desde el custom element
+            // o asegurar que allBooks siempre está completo.
+            // El custom element <book-card> pasa: { bookId, title, price, cover, stock } en su evento add-to-cart
+            // así que podemos usarlos directamente si el find falla.
+            if(e.detail.title && e.detail.price !== undefined) { // Chequeo mínimo
+                 addBookToCart(
+                    e.detail.bookId, 
+                    e.detail.title, 
+                    parseFloat(e.detail.price),
+                    e.detail.cover, 
+                    parseInt(e.detail.stock)
+                );
+            } else {
+                console.error("Detalles insuficientes en el evento 'add-to-cart' del custom element.");
+            }
+        }
     });
 
     // Lógica para el modal de Horario
@@ -768,12 +852,12 @@ async function fetchUserWishlist() {
 }
 
 function updateAllBookCardWishlistStatus() {
-    document.querySelectorAll('book-card').forEach(card => {
-        const bookId = card.getAttribute('id');
-        if (state.wishlist.includes(bookId)) {
-            card.setAttribute('in-wishlist', 'true');
-        } else {
-            card.setAttribute('in-wishlist', 'false');
+    if (!allBooks || allBooks.length === 0) return;
+    
+    allBooks.forEach(book => {
+        if (book && book.id !== undefined) { // Asegurarse que book y book.id existan
+            const isInWishlist = state.wishlist.includes(book.id.toString());
+            updateBookCardVisualState(book.id.toString(), isInWishlist);
         }
     });
 }
@@ -1009,3 +1093,14 @@ document.addEventListener('cartUpdated', (event) => {
         console.warn('La variable state no está disponible al recibir cartUpdated. Esto no debería ocurrir.'); 
     }
 });
+
+function renderBookCardsSlider(books) {
+  const slider = document.getElementById('book-cards-slider');
+  if (!slider) return;
+  slider.innerHTML = '';
+  // Solo mostrar 4 libros
+  books.slice(0, 4).forEach(book => {
+    const card = renderBookCard(book);
+    slider.appendChild(card);
+  });
+}

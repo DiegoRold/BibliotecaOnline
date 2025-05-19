@@ -34,16 +34,6 @@ class BookCard extends HTMLElement {
         const stock = parseInt(this.getAttribute('stock')) || 0;
         const isInWishlist = this.getAttribute('in-wishlist') === 'true';
 
-        let stockMessage = '';
-        let stockMessageClass = '';
-        if (stock === 0) {
-            stockMessage = 'NO QUEDAN UNIDADES';
-            stockMessageClass = 'stock-out';
-        } else if (stock > 0 && stock <= 100) {
-            stockMessage = '¡ÚLTIMAS UNIDADES!';
-            stockMessageClass = 'stock-low';
-        }
-
         const isOutOfStock = stock === 0;
 
         const wishlistIconSrc = isInWishlist ? 'assets/wishlist-filled.png' : 'assets/wishlist.png';
@@ -56,12 +46,12 @@ class BookCard extends HTMLElement {
                     display: block;
                     background: var(--card-bg-color, white);
                     border-radius: 0.5rem;
-                    overflow: hidden;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                     transition: transform 0.2s;
                     height: 100%; /* Ensure cards in a grid have same height */
-                    display: flex; /* Added for flex column layout */
-                    flex-direction: column; /* Added for flex column layout */
+                    display: flex; /* Sobrescribe display: block */
+                    flex-direction: column; /* Para layout interno vertical */
+                    overflow: hidden; /* Añadido para cortar contenido que exceda la altura */
                 }
 
                 :host(:hover) {
@@ -70,7 +60,7 @@ class BookCard extends HTMLElement {
 
                 .book-cover {
                     width: 100%;
-                    height: 280px; /* Adjusted height */
+                    height: 380px; /* Aumentada para más prominencia */
                     object-fit: cover;
                 }
 
@@ -100,23 +90,6 @@ class BookCard extends HTMLElement {
                     font-weight: bold;
                     color: var(--accent-color, #2563eb);
                     margin-bottom: 0.5rem;
-                }
-
-                .stock-message {
-                    font-size: 0.8rem;
-                    font-weight: bold;
-                    margin-bottom: 0.5rem;
-                    padding: 0.25rem 0.5rem;
-                    border-radius: 0.25rem;
-                    text-align: center;
-                }
-                .stock-out {
-                    color: var(--error-text-color, #ef4444);
-                    background-color: var(--error-bg-color, #fee2e2);
-                }
-                .stock-low {
-                    color: var(--warning-text-color, #f59e0b);
-                    background-color: var(--warning-bg-color, #fffbeb);
                 }
 
                 .book-meta {
@@ -187,7 +160,6 @@ class BookCard extends HTMLElement {
                 <h3 class="book-title">${title}</h3>
                 <p class="book-author">${author}</p>
                 <p class="book-price">${price.toFixed(2)} €</p>
-                ${stockMessage ? `<div class="stock-message ${stockMessageClass}">${stockMessage}</div>` : ''}
                 <div class="book-meta">
                     <div class="meta-item">
                         <span>📅</span> <span>${year}</span>
@@ -226,9 +198,13 @@ class BookCard extends HTMLElement {
 
         if (detailsBtn) {
             detailsBtn.addEventListener('click', () => {
-                this.dispatchEvent(new CustomEvent('view-book-details', {
-                    bubbles: true, composed: true, detail: { bookId: id }
-                }));
+                // Navegar a la página de detalles del libro con el ID
+                window.location.href = `book-details.html?id=${id}`;
+                
+                // Opcional: También puedes emitir el evento si alguna otra parte de tu aplicación lo usa
+                // this.dispatchEvent(new CustomEvent('view-book-details', {
+                //     bubbles: true, composed: true, detail: { bookId: id }
+                // }));
             });
         }
 

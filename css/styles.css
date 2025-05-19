@@ -19,44 +19,21 @@
     --border-color: #374151;
 }
 
-/* Estilos para el grid de libros */
+/* Estilos para #books-grid en books.html - ELIMINADOS o COMENTADOS 
 #books-grid {
-    transition: all 0.3s ease;
+    display: flex; 
+    overflow-x: auto; 
+    gap: 1.5rem; 
+    padding: 1rem 0; 
+    scroll-behavior: smooth; 
 }
-
-#books-grid.grid-view {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
+#books-grid book-card {
+    min-width: 250px;
+    max-width: 250px;
+    height: 530px; 
+    flex: 0 0 auto; 
 }
-
-#books-grid.flex-view {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-#books-grid.flex-view book-card {
-    display: flex;
-    flex-direction: row;
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--bg-light);
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#books-grid.flex-view .book-cover {
-    width: 150px;
-    height: 200px;
-    object-fit: cover;
-}
-
-#books-grid.flex-view .book-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
+*/
 
 /* Estilos para el modal de wishlist */
 #wishlist-modal {
@@ -171,4 +148,211 @@ book-card {
     .book-reader {
         width: 95vw;
     }
-} 
+}
+
+/* === ESTILOS PARA LA SECCIÓN DE RECOMENDACIONES Y TARJETAS DE LIBRO === */
+
+.recommendations-section {
+    padding: 20px;
+    text-align: center; /* Centra el título h2 */
+}
+
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.book-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+    background-color: var(--bg-light);
+    color: var(--text-light);
+}
+
+/* Estilos para modo oscuro en book-card usando variables CSS existentes */
+.dark .book-card {
+    border-color: var(--border-color);
+}
+
+.dark .book-card .book-author {
+    color: #a0aec0;
+}
+
+.book-card-top img.book-cover {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.book-card-middle {
+    text-align: left;
+    margin-bottom: 10px;
+    flex-grow: 1;
+}
+
+.book-card-middle .book-title {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+}
+
+.book-card-middle .book-author {
+    font-size: 0.9em;
+    color: #555;
+    margin: 0;
+}
+
+.book-card-bottom .book-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+.book-card-bottom .book-actions {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.book-card-bottom .wishlist-icon,
+.book-card-bottom .cart-icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.dark .book-card-bottom .wishlist-icon,
+.dark .book-card-bottom .cart-icon {
+    filter: brightness(0) invert(1);
+}
+
+.book-card-bottom .details-button {
+    padding: 8px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.book-card-bottom .details-button:hover {
+    background-color: var(--secondary-color);
+}
+
+.book-actions img {
+    margin: 0 5px;
+}
+
+/* Carrusel de book-card */
+#book-cards-slider {
+  scroll-behavior: smooth;
+}
+#book-cards-slider book-card {
+  min-width: 250px;
+  max-width: 250px;
+  flex: 0 0 auto;
+  height: 530px;
+}
+#slider-prev, #slider-next {
+  font-size: 2.5rem;
+  line-height: 1;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 10;
+}
+#slider-prev:hover, #slider-next:hover {
+  background: #f3f4f6;
+}
+
+/* Estilos para la paginación en books.html */
+#pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem; /* Espacio reducido entre elementos */
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.pagination-symbol-nav, .page-number {
+    padding: 0.6rem 0.8rem; /* Ajustar padding si es necesario */
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 0.25rem; /* Un poco menos redondeado */
+    background-color: var(--bg-light, white);
+    color: var(--text-light, #374151); /* Color de texto general */
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    font-weight: 500;
+    text-decoration: none;
+    min-width: 40px; /* Ancho mínimo para acomodar dos dígitos y símbolos */
+    text-align: center;
+    line-height: 1.2; /* Para mejor alineación vertical del texto/símbolo */
+}
+
+.pagination-symbol-nav {
+    color: var(--primary-color, #3b82f6); /* Color primario para símbolos de navegación */
+}
+
+.pagination-symbol-nav:hover, .page-number:hover {
+    background-color: var(--primary-color, #3b82f6);
+    color: white;
+    border-color: var(--primary-color, #3b82f6);
+}
+
+.page-number.active {
+    background-color: var(--text-light, #1f2937); /* Fondo oscuro para el activo (ej. negro o gris oscuro) */
+    color: var(--bg-light, white); /* Texto claro para el activo */
+    border-color: var(--text-light, #1f2937);
+    font-weight: bold;
+    cursor: default;
+}
+
+.dark .page-number.active {
+    background-color: var(--text-dark, #f3f4f6); /* Fondo claro para el activo en modo oscuro */
+    color: var(--bg-dark, #1f2937); /* Texto oscuro para el activo en modo oscuro */
+    border-color: var(--text-dark, #f3f4f6);
+}
+
+.pagination-symbol-nav:disabled, .page-number:disabled { /* page-number no debería deshabilitarse, pero por si acaso */
+    background-color: var(--bg-light-disabled, #f3f4f6);
+    color: var(--text-disabled, #9ca3af);
+    border-color: var(--border-color-disabled, #d1d5db);
+    cursor: not-allowed;
+}
+
+.pagination-symbol-nav:disabled:hover, .page-number:disabled:hover {
+    background-color: var(--bg-light-disabled, #f3f4f6);
+    color: var(--text-disabled, #9ca3af);
+    border-color: var(--border-color-disabled, #d1d5db);
+}
+
+/* Variables CSS para deshabilitados (asegúrate que estén definidas) */
+/* 
+:root {
+    --bg-light-disabled: #f3f4f6;
+    --text-disabled: #9ca3af;
+    --border-color-disabled: #d1d5db;
+}
+.dark {
+    --bg-light-disabled: #374151; 
+    --text-disabled: #6b7280;
+    --border-color-disabled: #4b5563;
+}
+*/ 

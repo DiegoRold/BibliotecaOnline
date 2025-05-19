@@ -32,103 +32,91 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderBooks(books) {
         booksGrid.innerHTML = ''; 
         if (!books || books.length === 0) {
-            booksGrid.innerHTML = '<p class="col-span-4 text-center">No se encontraron libros.</p>';
+            booksGrid.innerHTML = '<p class="w-full text-center">No se encontraron libros.</p>';
             return;
         }
 
-        const localPlaceholder = 'assets/placeholder-cover.png'; // Placeholder local
+        const localPlaceholder = 'assets/books/placeholder.png';
 
         books.forEach(book => {
-            let imageUrl = localPlaceholder; // Por defecto, el placeholder local
+            // console.log('Datos completos del libro (books.js):', JSON.stringify(book, null, 2)); // Comentado o eliminado
+            let finalCoverUrl = localPlaceholder;
 
-            // Caso especial para "Cien años de soledad"
             if (book.title && book.title.toLowerCase().includes('cien años de soledad')) {
-                imageUrl = 'assets/books/cien-anos-de-soledad-(edicion-revisada).jpg';
+                finalCoverUrl = 'assets/books/cien-anos-de-soledad-(edicion-revisada).jpg';
+            } else if (book.cover && typeof book.cover === 'string' && book.cover.trim() !== '') {
+                finalCoverUrl = book.cover.trim();
             } else {
-                // Lógica general para otras imágenes
-                if (book.cover_image_url && typeof book.cover_image_url === 'string' && book.cover_image_url.trim() !== '') {
-                    const coverUrl = book.cover_image_url.trim();
-                    if (coverUrl.startsWith('http')) {
-                        imageUrl = coverUrl; 
-                    } else if (coverUrl.startsWith('assets/')) {
-                        imageUrl = coverUrl; 
-                    } else {
-                        imageUrl = `assets/books/${coverUrl}`;
-                    }
-                } else if (book.title && typeof book.title === 'string' && book.title.trim() !== '') {
-                    const rawTitle = book.title.trim();
-                    const filename = rawTitle
-                        .toLowerCase()
-                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') 
-                        .replace(/ñ/g, 'n') 
-                        .replace(/\s+/g, '-') 
-                        .replace(/[^a-z0-9-]/g, '');
-                    imageUrl = `assets/books/${filename}.jpg`;
-                }
-            }
-            
-            let priceText = 'No disponible';
-            if (book.price !== null && book.price !== undefined) {
-                const priceNumber = parseFloat(book.price);
-                if (!isNaN(priceNumber)) {
-                    priceText = priceNumber.toFixed(2) + ' €';
-                }
+                console.log(`Libro "${book.title}" no tiene propiedad 'cover' válida o está vacía, usando placeholder: ${localPlaceholder}`);
+                finalCoverUrl = localPlaceholder;
             }
 
-            const bookElement = `
-                <div class="book-item">
-                    <img src="${imageUrl}" 
-                         alt="${book.title || 'Título no disponible'}" 
-                         onerror="this.onerror=null; this.src='${localPlaceholder}';">
-                    <h3>${book.title || 'Título no disponible'}</h3>
-                    <p>Autor: ${book.author || 'Autor desconocido'}</p>
-                    <p class="price">Precio: ${priceText}</p>
-                    <!-- Podríamos añadir más detalles o un botón de "Añadir al carrito" aquí -->
-                </div>
-            `;
-            booksGrid.insertAdjacentHTML('beforeend', bookElement);
+            const bookCardData = {
+                id: book.id.toString(),
+                title: book.title || '',
+                author: book.author || '',
+                cover: finalCoverUrl,
+                year: book.publication_date ? new Date(book.publication_date).getFullYear().toString() : 'N/A',
+                category: book.categories && Array.isArray(book.categories) ? book.categories.join(', ') : (book.categories || 'N/A'),
+                rating: book.rating ? book.rating.toString() : 'N/A',
+                pages: book.pages ? book.pages.toString() : 'N/A',
+                language: book.language || 'N/A', 
+                price: book.price ? book.price.toString() : '0',
+                stock: book.stock ? book.stock.toString() : '0',
+            };
+            
+            const bookCardElement = renderBookCard(bookCardData); 
+            booksGrid.appendChild(bookCardElement);
         });
     }
 
     function renderPagination(totalPages, currentPage) {
-        paginationContainer.innerHTML = ''; // Limpiar paginación existente
-        if (totalPages <= 1) return; // No mostrar paginación si solo hay una página
+        paginationContainer.innerHTML = ''; 
+        if (totalPages <= 1) return;
 
-        // Botón Anterior
-        const prevButton = document.createElement('button');
-        prevButton.textContent = 'ANTERIOR';
-        prevButton.disabled = currentPage === 1;
-        prevButton.addEventListener('click', () => {
-            if (currentPage > 1) {
-                loadPage(currentPage - 1);
+        const createButton = (text, page, isDisabled = false, isNavSymbol = false) => {
+            const button = document.createElement('button');
+            button.innerHTML = text; // Usar innerHTML para símbolos como < >
+            button.classList.add(isNavSymbol ? 'pagination-symbol-nav' : 'page-number');
+            if (page === currentPage && !isNavSymbol) {
+                button.classList.add('active');
             }
-        });
-        paginationContainer.appendChild(prevButton);
+            button.disabled = isDisabled;
+            button.addEventListener('click', () => loadPage(page));
+            return button;
+        };
 
-        // Números de página
-        for (let i = 1; i <= totalPages; i++) {
-            const pageNumberSpan = document.createElement('span');
-            pageNumberSpan.textContent = i;
-            pageNumberSpan.classList.add('page-number');
-            if (i === currentPage) {
-                pageNumberSpan.classList.add('active');
-            }
-            pageNumberSpan.addEventListener('click', () => {
-                loadPage(i);
-            });
-            paginationContainer.appendChild(pageNumberSpan);
+        // Botón Primera (si no estamos en la primera página y hay más de X páginas para justificarlo)
+        if (currentPage > 1 && totalPages > 5) { // Umbral para mostrar "Primera"
+            paginationContainer.appendChild(createButton('« Primera', 1, false, true));
         }
 
-        // Botón Siguiente
-        const nextButton = document.createElement('button');
-        nextButton.textContent = 'SIGUIENTE';
-        nextButton.disabled = currentPage === totalPages;
-        nextButton.addEventListener('click', () => {
-            if (currentPage < totalPages) {
-                loadPage(currentPage + 1);
-            }
-        });
-        paginationContainer.appendChild(nextButton);
+        // Botón Anterior (<)
+        paginationContainer.appendChild(createButton('<', currentPage - 1, currentPage === 1, true));
+
+        // Números de página (lógica para mostrar un rango alrededor de la actual)
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        if (currentPage <= 3) { // Si estamos al principio, mostrar más páginas iniciales
+            endPage = Math.min(totalPages, 5);
+        }
+        if (currentPage > totalPages - 3) { // Si estamos al final, mostrar más páginas finales
+            startPage = Math.max(1, totalPages - 4);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageText = i.toString().padStart(2, '0'); // Formatear a dos dígitos
+            paginationContainer.appendChild(createButton(pageText, i, false));
+        }
+
+        // Botón Siguiente (>)
+        paginationContainer.appendChild(createButton('>', currentPage + 1, currentPage === totalPages, true));
+
+        // Botón Última (si no estamos en la última página y hay más de X páginas)
+        if (currentPage < totalPages && totalPages > 5) { // Umbral para mostrar "Última"
+            paginationContainer.appendChild(createButton('Última »', totalPages, false, true));
+        }
     }
 
     async function loadPage(page) {
@@ -152,3 +140,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Carga inicial de la primera página
     loadPage(currentPage);
 }); 
+
+function renderBookCard(bookData) {
+    const bookCardElement = document.createElement('book-card');
+    bookCardElement.setAttribute('id', bookData.id);
+    bookCardElement.setAttribute('title', bookData.title);
+    bookCardElement.setAttribute('author', bookData.author);
+    bookCardElement.setAttribute('cover', bookData.cover);
+    bookCardElement.setAttribute('year', bookData.year);
+    bookCardElement.setAttribute('category', bookData.category);
+    bookCardElement.setAttribute('rating', bookData.rating);
+    bookCardElement.setAttribute('pages', bookData.pages);
+    bookCardElement.setAttribute('language', bookData.language);
+    bookCardElement.setAttribute('price', bookData.price);
+    bookCardElement.setAttribute('stock', bookData.stock);
+    
+    return bookCardElement;
+} 

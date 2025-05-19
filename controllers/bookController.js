@@ -14,11 +14,17 @@ export const getAllBooks = async (req, res) => {
 
         const booksQuery = `
             SELECT 
-                api_id AS id, title, author, cover_image_url AS cover, price, stock,
+                id AS numeric_id, api_id AS id, title, author, cover_image_url AS cover, price, stock,
                 rating, description, publication_date, pages, publisher, categories, isbn, tags
             FROM libros 
             WHERE stock > 0 ORDER BY title LIMIT ? OFFSET ?`;
-        const [books] = await pool.query(booksQuery, [limit, offset]);
+        const [booksFromDB] = await pool.query(booksQuery, [limit, offset]);
+
+        // Asegurar que el precio sea numérico
+        const books = booksFromDB.map(book => ({
+            ...book,
+            price: parseFloat(book.price) // Convertir a número de punto flotante
+        }));
 
         res.json({
             books,
@@ -34,14 +40,47 @@ export const getAllBooks = async (req, res) => {
 export const getBookById = async (req, res) => {
     const { id } = req.params;
     try {
-        const [books] = await pool.query('SELECT * FROM libros WHERE id = ?', [id]);
-        if (books.length === 0) {
+        const [booksFromDB] = await pool.query('SELECT id AS numeric_id, api_id AS id, title, author, cover_image_url, price, stock, rating, description, publication_date, pages, publisher, categories, isbn, tags FROM libros WHERE id = ?', [id]);
+        if (booksFromDB.length === 0) {
             return res.status(404).json({ message: 'Libro no encontrado.' });
         }
-        res.json(books[0]);
+        // Asegurar que el precio sea numérico para el libro individual
+        const book = {
+            ...booksFromDB[0],
+            price: parseFloat(booksFromDB[0].price)
+        };
+        res.json(book);
     } catch (error) {
         console.error('Error en getBookById:', error);
         res.status(500).json({ message: 'Error interno del servidor al obtener el libro.', error: error.message });
+    }
+};
+
+// Obtener un libro por su API_ID (público)
+export const getBookByApiId = async (req, res) => {
+    const { api_id } = req.params;
+    try {
+        // Devolver todos los campos, incluyendo el id numérico como numeric_id y el api_id como id
+        const query = `
+            SELECT 
+                id AS numeric_id, api_id AS id, title, author, cover_image_url, price, stock,
+                rating, description, publication_date, pages, publisher, categories, isbn, tags
+            FROM libros 
+            WHERE api_id = ?`;
+        const [booksFromDB] = await pool.query(query, [api_id]);
+        
+        if (booksFromDB.length === 0) {
+            return res.status(404).json({ message: 'Libro no encontrado con el API ID proporcionado.' });
+        }
+        // Asegurar que el precio sea numérico para el libro individual
+        const book = {
+            ...booksFromDB[0],
+            price: parseFloat(booksFromDB[0].price)
+        };
+        res.json(book); // Devuelve el primer libro encontrado (debería ser único)
+    } catch (error) {
+        console.error('Error en getBookByApiId:', error);
+        res.status(500).json({ message: 'Error interno del servidor al obtener el libro por API ID.', error: error.message });
     }
 };
 

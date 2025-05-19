@@ -14,7 +14,14 @@ class BookCard extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
+        console.log(`[book-card id=${this.getAttribute('id')}] attributeChanged: ${name}, oldValue: ${oldValue}, newValue: ${newValue}`);
         if (oldValue !== newValue) {
+            // Si es 'in-wishlist' el que cambia, loguear el estado antes de re-renderizar
+            if (name === 'in-wishlist') {
+                const currentInWishlistAttr = this.getAttribute('in-wishlist') === 'true';
+                const nextIconSrc = currentInWishlistAttr ? `http://localhost:3000/assets/wishlist-filled.png` : `http://localhost:3000/assets/wishlist.png`;
+                console.log(`[book-card id=${this.getAttribute('id')}] 'in-wishlist' changed. Current attr value: ${this.getAttribute('in-wishlist')}. Next icon determined: ${nextIconSrc}`);
+            }
             this.render();
             this.setupEventListeners(); // Re-attach listeners if attributes like stock change, to update button state
         }
@@ -23,7 +30,17 @@ class BookCard extends HTMLElement {
     render() {
         const title = this.getAttribute('title') || '';
         const author = this.getAttribute('author') || '';
-        const cover = this.getAttribute('cover') || '';
+        let cover = this.getAttribute('cover') || '';
+        if (cover && !cover.startsWith('http') && !cover.startsWith('/')) {
+            // Asumimos que si no es http y no empieza con /, es relativa a assets/books/
+            // Esta lógica puede necesitar ajustarse si book.cover en app.js ya está prefijada.
+            // Por ahora, si renderBookCard en app.js ya pone una ruta como assets/books/nombre.png o http://...
+            // entonces esta normalización aquí puede no ser necesaria o podría ser errónea.
+            // Si book.cover ya es 'assets/books/placeholder-cover.png', esto lo dejaría igual.
+            // Si cover es solo 'nombre.png', lo prefijaría.
+            // Por simplicidad y consistencia con book-details, usaremos la URL base del servidor para los iconos.
+        }
+
         const id = this.getAttribute('id') || '';
         const year = this.getAttribute('year') || '';
         const category = this.getAttribute('category') || '';
@@ -35,157 +52,172 @@ class BookCard extends HTMLElement {
         const isInWishlist = this.getAttribute('in-wishlist') === 'true';
 
         const isOutOfStock = stock === 0;
+        const baseAssetURL = 'http://localhost:3000/assets'; // URL base para los assets del servidor
 
-        const wishlistIconSrc = isInWishlist ? 'assets/wishlist-filled.png' : 'assets/wishlist.png';
+        const wishlistIconSrc = isInWishlist ? `${baseAssetURL}/wishlist-filled.png` : `${baseAssetURL}/wishlist.png`;
+        console.log(`[book-card id=${id}] render() called. Attr 'in-wishlist': ${this.getAttribute('in-wishlist')}, Parsed isInWishlist: ${isInWishlist}, Calculated wishlistIconSrc: ${wishlistIconSrc}`);
         const wishlistIconAlt = isInWishlist ? 'Quitar de lista de deseos' : 'Añadir a lista de deseos';
         const wishlistButtonTitle = isInWishlist ? 'Quitar de lista de deseos' : 'Añadir a lista de deseos';
+        const addToCartIconSrc = `${baseAssetURL}/add-to-cart.png`; // Asumiendo que este icono también está en assets
 
         this.shadowRoot.innerHTML = `
             <style>
                 :host {
                     display: block;
-                    background: var(--card-bg-color, white);
-                    border-radius: 0.5rem;
+                    border: 1px solid #e0e0e0; /* Gris claro */
+                    border-radius: 8px;
+                    overflow: hidden;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    transition: transform 0.2s;
-                    height: 100%; /* Ensure cards in a grid have same height */
-                    display: flex; /* Sobrescribe display: block */
-                    flex-direction: column; /* Para layout interno vertical */
-                    overflow: hidden; /* Añadido para cortar contenido que exceda la altura */
-                }
-
-                :host(:hover) {
-                    transform: translateY(-4px);
-                }
-
-                .book-cover {
-                    width: 100%;
-                    height: 380px; /* Aumentada para más prominencia */
-                    object-fit: cover;
-                }
-
-                .book-info {
-                    padding: 1rem;
-                    flex-grow: 1; /* Allows this section to grow and push actions to bottom */
+                    background-color: var(--card-bg, white); /* Permitir sobrescritura por CSS global */
+                    color: var(--card-text-color, black);
+                    transition: box-shadow 0.3s ease;
+                    height: 100%; /* Para que todas las tarjetas tengan la misma altura en un flex container */
                     display: flex;
                     flex-direction: column;
                 }
-
+                :host(:hover) {
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .card-link {
+                    text-decoration: none;
+                    color: inherit;
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%; /* Asegura que el enlace ocupe toda la tarjeta */
+                }
+                .cover-image {
+                    width: 100%;
+                    height: 200px; /* Altura fija para la imagen */
+                    object-fit: cover; /* Escalar imagen para llenar el contenedor manteniendo proporciones */
+                    border-bottom: 1px solid #e0e0e0;
+                }
+                .book-info {
+                    padding: 16px;
+                    flex-grow: 1; /* Permite que esta sección crezca para empujar las acciones hacia abajo */
+                    display: flex;
+                    flex-direction: column;
+                }
                 .book-title {
-                    font-size: 1.15rem; /* Slightly reduced */
-                    font-weight: bold;
-                    margin-bottom: 0.25rem;
-                    color: var(--text-color, #1f2937);
+                    font-size: 1.1em;
+                    font-weight: 600;
+                    margin: 0 0 4px 0;
                     line-height: 1.3;
+                    /* Limitar a 2 líneas con elipsis */
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;  
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    min-height: 2.6em; /* Ajustar para asegurar espacio para 2 líneas */
                 }
-
                 .book-author {
-                    font-size: 0.9rem;
-                    color: var(--text-secondary-color, #6b7280);
-                    margin-bottom: 0.5rem;
+                    font-size: 0.9em;
+                    color: #555;
+                    margin: 0 0 12px 0;
+                    line-height: 1.3;
+                    /* Limitar a 1 línea */
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
-                
+                .dark .book-author {
+                    color: #bbb;
+                }
                 .book-price {
-                    font-size: 1.2rem;
+                    font-size: 1.2em;
                     font-weight: bold;
-                    color: var(--accent-color, #2563eb);
-                    margin-bottom: 0.5rem;
+                    color: var(--primary-color, #007bff);
+                    margin-bottom: 12px;
                 }
-
                 .book-meta {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
-                    gap: 0.3rem;
-                    font-size: 0.8rem;
-                    color: var(--text-secondary-color, #6b7280);
-                    margin-bottom: 0.75rem;
+                    font-size: 0.8em;
+                    color: #777;
+                    margin-bottom: 16px; /* Más espacio antes de los botones */
+                    flex-grow: 1; /* Empuja las acciones al final si book-info necesita crecer */
                 }
-
+                .dark .book-meta {
+                    color: #ccc;
+                }
                 .meta-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.25rem;
+                    margin-bottom: 4px;
                 }
-
-                .rating {
-                    color: #f59e0b;
-                }
-
                 .actions {
-                    margin-top: auto; /* Pushes actions to the bottom */
                     display: flex;
-                    gap: 0.5rem;
-                    align-items: center; /* Align items vertically */
-                    padding-top: 0.5rem; /* Add some space above actions */
-                    border-top: 1px solid var(--border-color, #e5e7eb); /* Separator line */
+                    justify-content: space-between; /* Mejor distribución */
+                    align-items: center;
+                    border-top: 1px solid #e0e0e0; /* Separador */
+                    padding-top: 12px;
+                    margin-top: auto; /* Empujar al fondo */
                 }
-
-                .details-btn {
-                    flex-grow: 1; /* Takes available space */
-                    padding: 0.6rem 0.5rem;
-                    border: 1px solid var(--primary-color, #3b82f6);
-                    border-radius: 0.25rem;
-                    cursor: pointer;
-                    font-weight: 500;
-                    background-color: transparent;
-                    color: var(--primary-color, #3b82f6);
-                    text-align: center;
-                    transition: background-color 0.2s, color 0.2s;
-                }
-                .details-btn:hover {
-                    background-color: var(--primary-hover-color, #2563eb);
-                    color: white;
-                }
-
                 .icon-btn {
-                    padding: 0.5rem;
-                    border: none;
                     background: none;
-                    border-radius: 0.25rem;
+                    border: none;
                     cursor: pointer;
+                    padding: 6px;
+                    border-radius: 50%;
+                    transition: background-color 0.2s ease;
+                }
+                .icon-btn:hover {
+                    background-color: #f0f0f0;
+                }
+                .dark .icon-btn:hover {
+                    background-color: #4a4a4a;
                 }
                 .icon-btn img {
-                    width: 24px;
-                    height: 24px;
+                    width: 22px; /* Tamaño iconos */
+                    height: 22px;
                 }
-                .icon-btn:disabled img {
-                    opacity: 0.5;
+                .details-btn {
+                    font-size: 0.9em;
+                    padding: 8px 12px;
+                    background-color: var(--primary-color, #007bff);
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.2s ease;
+                }
+                .details-btn:hover {
+                    background-color: var(--secondary-color, #0056b3);
+                }
+                .add-to-cart-btn[disabled] img {
+                    filter: grayscale(100%) opacity(50%);
                     cursor: not-allowed;
                 }
-
             </style>
-
-            <img class="book-cover" src="${cover}" alt="${title}">
-            <div class="book-info">
-                <h3 class="book-title">${title}</h3>
-                <p class="book-author">${author}</p>
-                <p class="book-price">${price.toFixed(2)} €</p>
-                <div class="book-meta">
-                    <div class="meta-item">
-                        <span>📅</span> <span>${year}</span>
-                    </div>
-                    <div class="meta-item">
-                        <span>📚</span> <span>${category}</span>
-                    </div>
-                    <div class="meta-item">
-                        <span>⭐</span> <span class="rating">${rating}</span>
-                    </div>
-                    <div class="meta-item">
-                        <span>📖</span> <span>${pages} págs</span>
-                    </div>
-                     <div class="meta-item">
-                        <span>🌍</span> <span>${language}</span>
+            <a href="book-details.html?id=${id}" class="card-link">
+                <img src="${cover}" alt="${title}" class="cover-image">
+                <div class="book-info">
+                    <h3 class="book-title" title="${title}">${title}</h3>
+                    <p class="book-author" title="${author}">${author}</p>
+                    <p class="book-price">${price.toFixed(2)} €</p>
+                    <div class="book-meta">
+                        <div class="meta-item">
+                            <span>📅</span> <span>${year}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📚</span> <span>${category}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>⭐</span> <span class="rating">${rating}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📖</span> <span>${pages} págs</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>🌍</span> <span>${language}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="actions">
-                    <button class="details-btn">Ver Detalles</button>
-                    <button class="icon-btn wishlist-btn" title="${wishlistButtonTitle}">
-                        <img src="${wishlistIconSrc}" alt="${wishlistIconAlt}">
-                    </button>
-                    <button class="icon-btn add-to-cart-btn" title="Añadir al carrito" ${isOutOfStock ? 'disabled' : ''}>
-                        <img src="assets/add-to-cart.png" alt="Añadir al carrito">
-                    </button>
-                </div>
+            </a>
+            <div class="actions" style="padding: 0 16px 16px 16px;"> 
+                <button class="details-btn">Ver Detalles</button>
+                <button class="icon-btn wishlist-btn" title="${wishlistButtonTitle}">
+                    <img src="${wishlistIconSrc}" alt="${wishlistIconAlt}">
+                </button>
+                <button class="icon-btn add-to-cart-btn" title="Añadir al carrito" ${isOutOfStock ? 'disabled' : ''}>
+                    <img src="${addToCartIconSrc}" alt="Añadir al carrito">
+                </button>
             </div>
         `;
     }
@@ -198,13 +230,8 @@ class BookCard extends HTMLElement {
 
         if (detailsBtn) {
             detailsBtn.addEventListener('click', () => {
-                // Navegar a la página de detalles del libro con el ID
+                console.log(`[book-card] Details button clicked. Card ID from attribute: ${id}. Navigating to: book-details.html?id=${id}`);
                 window.location.href = `book-details.html?id=${id}`;
-                
-                // Opcional: También puedes emitir el evento si alguna otra parte de tu aplicación lo usa
-                // this.dispatchEvent(new CustomEvent('view-book-details', {
-                //     bubbles: true, composed: true, detail: { bookId: id }
-                // }));
             });
         }
 

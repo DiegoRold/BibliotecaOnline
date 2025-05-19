@@ -1,21 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const rawBookId = new URLSearchParams(window.location.search).get('id');
-    let bookId = rawBookId;
+    const bookApiIdFromUrl = new URLSearchParams(window.location.search).get('id');
+    console.log(`[book-details.js] bookApiId from URL: ${bookApiIdFromUrl}`);
 
-    if (bookId) {
-        if (bookId.includes(':')) {
-            console.warn(`El ID del libro "${rawBookId}" (antes de procesar ':') contiene caracteres adicionales. Se usará solo la parte antes de ':'. ID procesado: "${bookId.split(':')[0]}"`);
-            bookId = bookId.split(':')[0];
-        }
-
-        if (bookId.startsWith('book-')) {
-            const numericPart = bookId.substring('book-'.length);
-            if (/^\d+$/.test(numericPart) && numericPart !== '') {
-                console.warn(`El ID del libro (original: "${rawBookId}", procesado actual: "${bookId}") tiene el prefijo "book-". Se usará la parte numérica: "${numericPart}" para la API.`);
-                bookId = numericPart;
-            } else {
-                console.error(`El ID del libro (original: "${rawBookId}", procesado actual: "${bookId}") tiene un formato "book-" inválido después del prefijo. No se pudo extraer un ID numérico. Se usará "${bookId}" para la API, lo que podría causar un error.`);
-            }
+    if (bookApiIdFromUrl) {
+        // Ya no se procesa el ID, se asume que es el api_id directamente (ej: "book-123")
+        console.log(`[book-details.js] Using bookApiId for fetch: ${bookApiIdFromUrl}`);
+        fetchBookDetails(bookApiIdFromUrl);
+    } else {
+        console.error('[book-details.js] No book ID found in URL.');
+        // Mostrar un mensaje de error en la página
+        const detailsContainer = document.getElementById('book-details-container');
+        if (detailsContainer) {
+            detailsContainer.innerHTML = '<p class="text-red-500 text-center py-8">No se especificó un ID de libro válido.</p>';
         }
     }
 
@@ -58,14 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
             .replace(/^-+|-+$/g, ''); // Elimina guiones al principio y al final
     }
 
-    if (!bookId) {
-        document.getElementById('book-details-container').innerHTML = '<p class="text-red-500 text-center">No se especificó un ID de libro válido.</p>';
-        return;
-    }
+    async function fetchBookDetails(apiId) { // El identificador ahora es siempre el api_id
+        // Ya no se necesita la lógica para determinar el tipo de ID.
+        const fetchUrl = `http://localhost:3000/api/libros/details/${apiId}`;
+        console.log(`[book-details.js fetchBookDetails] Fetching from URL: ${fetchUrl}`);
 
-    async function fetchBookDetails() {
         try {
-            const response = await fetch(`http://localhost:3000/api/libros/${bookId}`);
+            const response = await fetch(fetchUrl);
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error('Libro no encontrado.');
@@ -74,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             const book = await response.json();
-            currentBook = book; // Guardar el libro actual
+            currentBook = book; 
             renderBookDetails(book);
             setupActionButtons(book);
         } catch (error) {
@@ -86,25 +81,63 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderBookDetails(book) {
         document.title = `${book.title || 'Detalles del Libro'} - Entre Hojas`; // Actualizar título de la página
         
-        let coverSrc = 'assets/books/placeholder.png'; // Imagen por defecto inicial
+        console.log('[book-details.js renderBookDetails] Book data received:', book);
+
+        // Lógica para la imagen de portada
+        const placeholderMainCover = 'assets/books/placeholder.png'; // Placeholder general
+        coverImg.src = placeholderMainCover; // Cargar placeholder inicialmente o si todo falla
+        coverImg.alt = book.title || 'Portada no disponible';
+        coverImg.style.display = 'block'; // Asegurar que sea visible si se resetea
+
         if (book.cover && (book.cover.startsWith('http://') || book.cover.startsWith('https://'))) {
-            coverSrc = book.cover;
+            coverImg.src = book.cover;
+            coverImg.onerror = function() {
+                console.error(`Error al cargar imagen externa: ${this.src}. Mostrando placeholder.`);
+                this.src = placeholderMainCover;
+                // No ocultar, simplemente mostrar el placeholder.
+            };
         } else if (book.title) {
-            // Caso especial para "Cien años de soledad"
-            if (book.title.toLowerCase().includes('cien años de soledad')) {
-                coverSrc = 'assets/books/cien-anos-de-soledad-(edicion-revisada).png';
-            } else {
-                const normalizedTitle = normalizeBookTitleForImage(book.title);
-                coverSrc = `assets/books/${normalizedTitle}.png`;
-            }
+            const normalizedTitle = normalizeBookTitleForImage(book.title);
+
+            const tryLoadLocalImage = (extension) => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    // Guardar el src que se intentará cargar para referencia en caso de error
+                    const testSrc = `assets/books/${normalizedTitle}.${extension}`;
+                    img.onload = () => resolve(testSrc); // Resolvemos con el src que funcionó
+                    img.onerror = () => reject(extension); // Rechazamos con la extensión que falló
+                    img.src = testSrc;
+                });
+            };
+
+            // Intentar cargar PNG primero
+            tryLoadLocalImage('png')
+                .then(pngSrc => {
+                    coverImg.src = pngSrc; // Si PNG carga, usarlo
+                    console.log(`[book-details.js] Portada .png cargada: ${pngSrc}`);
+                })
+                .catch(failedPngExt => {
+                    console.warn(`[book-details.js] No se encontró .${failedPngExt} para "${book.title}". Intentando .jpg.`);
+                    // Si PNG falla, intentar cargar JPG
+                    return tryLoadLocalImage('jpg')
+                        .then(jpgSrc => {
+                            // Este .then anidado se ejecuta SOLO si tryLoadLocalImage('jpg') tuvo éxito.
+                            coverImg.src = jpgSrc;
+                            console.log(`[book-details.js] Portada .jpg cargada después de fallo de .png: ${jpgSrc}`);
+                        })
+                        .catch(failedJpgExt => {
+                            // Este .catch interno se ejecuta si JPG también falla
+                            console.warn(`[book-details.js] No se encontró .${failedJpgExt} (después de intentar .png) para "${book.title}". Usando placeholder general.`);
+                            coverImg.src = placeholderMainCover; // Asegurar placeholder si ambos fallan
+                        });
+                });
+        } else {
+             // Si no hay book.cover URL ni book.title, se mantiene el placeholder inicial.
+             coverImg.src = placeholderMainCover;
         }
-        
-        coverImg.src = coverSrc;
-        coverImg.alt = book.title || 'Portada';
-        coverImg.onerror = function() {
-            this.style.display = 'none'; // Ocultar si la imagen no carga
-            console.error(`Error al cargar la imagen de portada para "${book.title}" en la ruta: ${this.src}`);
-        };
+
+        // El onerror genérico en coverImg para URLs externas o si los intentos locales fallan y se setea el placeholder
+        // se maneja arriba o por el hecho de que el src final será el placeholder.
 
         titleEl.textContent = book.title || 'N/A';
         authorEl.textContent = book.author || 'N/A';
@@ -145,64 +178,87 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupActionButtons(book) {
-        // Lógica Wishlist (simplificada, necesita integración con estado global de app.js)
-        let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-        const baseAssetURL = 'http://localhost:3000/assets'; // URL base para los assets del servidor
+        // book.id es el api_id (ej: "book-123") que se usa para la wishlist de invitado
+        // book.numeric_id es el id numérico de la BD, que podría ser necesario para wishlist de usuario registrado
+        const bookApiId = book.id; 
+        // const bookNumericId = book.numeric_id; // Disponible si es necesario para API de usuario registrado
 
-        const updateWishlistIcon = () => {
-            if (wishlist.includes(book.id.toString())) {
+        const updateLocalWishlistIcon = () => {
+            const appState = window.getStateApp ? window.getStateApp() : { wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]') };
+            const baseAssetURL = 'http://localhost:3000/assets';
+
+            // Comparamos con bookApiId (que es el book.id del objeto libro actual)
+            if (appState.wishlist.includes(bookApiId)) {
                 wishlistIcon.src = `${baseAssetURL}/wishlist-filled.png`;
                 toggleWishlistBtn.title = 'Quitar de la lista de deseos';
             } else {
                 wishlistIcon.src = `${baseAssetURL}/wishlist.png`;
                 toggleWishlistBtn.title = 'Añadir a la lista de deseos';
             }
-            // Añadir un manejador de errores para los iconos de wishlist
             wishlistIcon.onerror = function() {
                 console.error(`Error al cargar el icono de wishlist: ${this.src}`);
-                this.style.display = 'none'; // Ocultar si no carga
+                this.style.display = 'none';
             };
             wishlistIcon.onload = function() {
-                this.style.display = ''; // Asegurarse de que se muestre si carga correctamente
+                this.style.display = ''; 
             };
         };
-        updateWishlistIcon();
+
+        updateLocalWishlistIcon(); // Estado inicial
+
+        // Escuchar el evento global para actualizar el icono si cambia en otra parte
+        window.addEventListener('wishlistUpdated', updateLocalWishlistIcon);
+        // Considerar remover este listener si la página se va (cleanup) para evitar leaks si book-details.js se carga múltiples veces sin recarga de página.
 
         toggleWishlistBtn.addEventListener('click', () => {
-            wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            const bookIdStr = book.id.toString();
-            if (wishlist.includes(bookIdStr)) {
-                wishlist = wishlist.filter(id => id !== bookIdStr);
+            if (window.toggleWishlistItemApp) {
+                // Pasamos el api_id (book.id) y el objeto libro completo
+                // app.js decidirá si necesita book.numeric_id para usuarios registrados
+                window.toggleWishlistItemApp(book, true); // true indica que es desde book-details
             } else {
-                wishlist.push(bookIdStr);
+                console.error('La función global toggleWishlistItemApp no está disponible.');
+                let localWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+                if (localWishlist.includes(bookApiId)) {
+                    localWishlist = localWishlist.filter(id => id !== bookApiId);
+                } else {
+                    localWishlist.push(bookApiId);
+                }
+                localStorage.setItem('wishlist', JSON.stringify(localWishlist));
+                updateLocalWishlistIcon(); 
+                window.dispatchEvent(new CustomEvent('wishlistUpdated'));// Para que app.js (modal) reaccione también
             }
-            localStorage.setItem('wishlist', JSON.stringify(wishlist));
-            updateWishlistIcon();
-            window.dispatchEvent(new CustomEvent('wishlistUpdated'));
         });
 
-        // Lógica Carrito (simplificada)
+        // Lógica Carrito (simplificada) - puede usar window.addBookToCartApp si se expone
         addToCartBtn.addEventListener('click', () => {
             if (book.stock > 0) {
-                let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                const existingItem = cart.find(item => item.id === book.id);
-                if (existingItem) {
-                    if (existingItem.quantity < book.stock) {
-                        existingItem.quantity++;
-                    }
+                if (window.addBookToCartApp) {
+                    // Pasamos el api_id (book.id) y otros detalles.
+                    // app.js puede usar book.numeric_id si es necesario para el backend.
+                    window.addBookToCartApp(book); 
                 } else {
-                    cart.push({ 
-                        id: book.id, 
-                        title: book.title, 
-                        price: book.price, 
-                        cover: book.cover, 
-                        quantity: 1,
-                        stock: book.stock
-                    });
+                    console.error('La función global addBookToCartApp no está disponible.');
+                    // Fallback a lógica local de carrito si la global no está (copiada de antes)
+                    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    const existingItem = cart.find(item => item.id === book.id);
+                    if (existingItem) {
+                        if (existingItem.quantity < book.stock) {
+                            existingItem.quantity++;
+                        }
+                    } else {
+                        cart.push({ 
+                            id: book.id, 
+                            title: book.title, 
+                            price: book.price, 
+                            cover: book.cover, 
+                            quantity: 1,
+                            stock: book.stock
+                        });
+                    }
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    alert("`${book.title}` añadido al carrito.");
+                    window.dispatchEvent(new CustomEvent('cartUpdated'));
                 }
-                localStorage.setItem('cart', JSON.stringify(cart));
-                alert("`${book.title}` añadido al carrito.");
-                window.dispatchEvent(new CustomEvent('cartUpdated'));
             } else {
                 alert('Este libro está agotado.');
             }
@@ -213,5 +269,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // app.js se encargará de actualizar el badge del header al escuchar 'cartUpdated'.
 
     // --- Inicializar --- 
-    fetchBookDetails();
+    // Asegurarse de que fetchBookDetails se llama después de que bookId se haya procesado
+    // y solo si bookId es válido (ya cubierto por el if (bookId) { ... } inicial)
+    // La llamada a fetchBookDetails(bookId) ya está dentro del bloque if (bookId) al principio.
+    // No es necesario llamarlo de nuevo aquí si la estructura es:
+    // document.addEventListener('DOMContentLoaded', () => {
+    //     procesar bookId...
+    //     if (bookId) fetchBookDetails(bookId);
+    //     definir otras funciones...
+    // });
+    // Revisando, la llamada original fetchBookDetails(bookId) está bien ubicada dentro del if(bookId).
+    // El problema del GET undefined era porque bookId no se procesaba correctamente antes de la llamada en un caso anterior.
+    // Los logs añadidos confirmarán el valor de bookId antes del fetch.
+    // No se necesita cambio aquí si la llamada ya está correctamente ubicada. 
+    // El error anterior de 'undefined' en el fetch era porque el script fallaba antes de procesar bookId o bookId era realmente undefined desde la URL.
+
 }); 

@@ -2,6 +2,7 @@ import express from 'express';
 import {
     getAllBooks,
     getBookById,
+    getBookByApiId,
     createBook,
     updateBook,
     deleteBook
@@ -19,6 +20,7 @@ router.get('/', (req, res, next) => {
 }, getAllBooks);
 
 router.get('/:id', getBookById);
+router.get('/details/:api_id', getBookByApiId);
 
 // Rutas protegidas solo para administradores
 router.post('/', authMiddleware, authorize('admin'), createBook);

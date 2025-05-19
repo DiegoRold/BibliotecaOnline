@@ -102,17 +102,19 @@ async function init() {
 
     try {
         allBooks = await fetchBooks(); 
-        console.log(`Fetched ${allBooks.length} books from API.`);
+        console.log(`[app.js init] Fetched ${allBooks.length} books from API.`);
+        if (allBooks && allBooks.length > 0) {
+            console.log("[app.js init] First book object from allBooks (book.id should be api_id like 'book-X'):", JSON.stringify(allBooks[0]));
+        } else {
+            console.log("[app.js init] allBooks is empty or not loaded correctly.");
+        }
 
         setupEventListeners(); 
         updateCartIcon(); 
         renderWishlist(); 
         renderCartModal(); 
         updateUserUI(); 
-
-        // Seleccionar 4 libros aleatorios para recomendaciones
         renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4));
-
         console.log('Aplicación inicializada.');
 
     } catch (error) {
@@ -124,13 +126,26 @@ async function init() {
 async function fetchBooks() {
     const apiUrl = 'http://localhost:3000/api/libros';
     try {
-        const response = await fetch(apiUrl); 
+        const response = await fetch(apiUrl);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
         }
-        const data = await response.json();
-        console.log('Libros obtenidos del backend (data.books):', data.books);
-        return data.books; 
+        const data = await response.json(); // data es el objeto completo, ej: { books: [...] } o directamente [...] 
+        console.log("[app.js fetchBooks] Raw data from API:", JSON.stringify(data));
+        
+        // Asumimos que la API devuelve un objeto con una propiedad `books` que es el array
+        // O si la API devuelve directamente el array de libros, sería solo `data`.
+        // El log del backend era `data.books`, así que probablemente es `data.books`.
+        if (data && Array.isArray(data.books)) {
+            console.log("[app.js fetchBooks] data.books IS an array. Length:", data.books.length);
+            return data.books; 
+        } else if (Array.isArray(data)) {
+            console.log("[app.js fetchBooks] data IS an array. Length:", data.length);
+            return data; // Si la API devuelve el array directamente
+        } else {
+            console.error("[app.js fetchBooks] Data from API is not in expected format (object with a .books array, or an array). Received:", data);
+            return []; // Devolver array vacío para evitar más errores
+        }
     } catch (error) {
         console.error("Error fetching books from local backend:", error);
         throw error; 
@@ -143,26 +158,21 @@ function applyTheme() { document.body.classList.toggle('dark', state.isDarkMode)
 // --- FUNCIÓN MODIFICADA: Renderizar una tarjeta de libro usando el Custom Element <book-card> ---
 function renderBookCard(book) {
     const bookCardElement = document.createElement('book-card');
+    const cardId = book.id; // book.id ES el api_id (ej: "book-1")
 
-    bookCardElement.setAttribute('id', book.id.toString());
+    bookCardElement.setAttribute('id', cardId); 
     bookCardElement.setAttribute('title', book.title || '');
     bookCardElement.setAttribute('author', book.author || '');
-    
-    // Simplificación: Asumir que book.cover ya es la URL correcta o placeholder
-    // La lógica compleja para determinar la portada se debe hacer ANTES de llamar a esta función.
-    const coverSrc = book.cover || 'assets/books/placeholder-cover.png'; // Usar directamente book.cover o un placeholder
-    bookCardElement.setAttribute('cover', coverSrc);
-
+    bookCardElement.setAttribute('cover', book.cover_image_url || book.cover || 'assets/books/placeholder.png'); 
     bookCardElement.setAttribute('year', book.publication_date ? new Date(book.publication_date).getFullYear().toString() : 'N/A');
-    bookCardElement.setAttribute('category', book.categories && Array.isArray(book.categories) ? book.categories.join(', ') : (book.categories || 'N/A'));
+    bookCardElement.setAttribute('category', Array.isArray(book.categories) ? book.categories.join(', ') : (book.categories || 'N/A'));
     bookCardElement.setAttribute('rating', book.rating ? book.rating.toString() : 'N/A');
     bookCardElement.setAttribute('pages', book.pages ? book.pages.toString() : 'N/A');
-    // language no está en tu BD según la imagen, pero el componente lo espera. Podemos omitirlo o poner N/A
-    bookCardElement.setAttribute('language', book.language || 'N/A'); 
+    bookCardElement.setAttribute('language', book.language || 'N/A');
     bookCardElement.setAttribute('price', book.price ? book.price.toString() : '0');
     bookCardElement.setAttribute('stock', book.stock ? book.stock.toString() : '0');
 
-    const isInWishlist = state.wishlist.includes(book.id.toString());
+    const isInWishlist = state.wishlist.includes(cardId); 
     bookCardElement.setAttribute('in-wishlist', isInWishlist.toString());
 
     // Los event listeners para 'view-book-details', 'toggle-wishlist', 'add-to-cart'
@@ -175,51 +185,45 @@ function renderBookCard(book) {
 
 function renderWishlist() {
     if (!wishlistContent) return;
-    wishlistContent.innerHTML = ''; // Limpiar contenido anterior
+    wishlistContent.innerHTML = ''; 
+    console.log("[app.js renderWishlist] Rendering. state.wishlist:", JSON.stringify(state.wishlist));
 
     if (state.wishlist.length === 0) {
-        wishlistContent.innerHTML = '<p class="col-span-full text-center text-gray-500 dark:text-gray-400 py-4">Tu lista de deseos está vacía.</p>';
+        wishlistContent.innerHTML = '<p>Tu lista de deseos está vacía.</p>';
         return;
     }
 
-    state.wishlist.forEach(bookId => {
-        const book = allBooks.find(b => b.id === bookId);
-        if (book) {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'flex items-center space-x-2 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
-            
-            const coverUrl = book.cover || 'assets/placeholder-cover-small.png';
-            const price = typeof book.price === 'number' ? book.price.toFixed(2) : 'N/A';
+    if (!allBooks || allBooks.length === 0) {
+        console.warn("[app.js renderWishlist] allBooks está vacío. No se pueden renderizar items de wishlist.");
+        wishlistContent.innerHTML = '<p>Error al cargar datos de libros para la wishlist.</p>';
+        return;
+    }
 
+    state.wishlist.forEach(bookIdInWishlist => { // es api_id (ej: "book-1")
+        console.log(`[app.js renderWishlist] Searching for bookId (api_id) '${bookIdInWishlist}' in allBooks.`);
+        const book = allBooks.find(b => b.id === bookIdInWishlist); // b.id ES el api_id
+        if (book) {
+            console.log(`[app.js renderWishlist] Book found for ID '${bookIdInWishlist}':`, JSON.stringify(book));
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'flex items-center space-x-2 py-3 border-b';
+            const coverUrl = book.cover_image_url || book.cover || 'assets/books/placeholder.png';
+            const price = typeof book.price === 'number' && !isNaN(book.price) ? book.price.toFixed(2) : 'N/A';
             itemDiv.innerHTML = `
-                <img src="${coverUrl}" alt="${book.title}" class="w-12 h-16 object-cover rounded shadow">
-                <div class="flex-grow">
-                    <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">${book.title}</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">${book.author || 'Autor Desconocido'}</p>
-                </div>
-                <div class="text-sm font-semibold text-gray-800 dark:text-gray-300 w-16 text-right">${price} €</div>
-                <div class="flex flex-col space-y-1 ml-2">
-                    <button data-book-id="${book.id}" class="move-to-cart-btn p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Mover al Carrito">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path></svg>
-                    </button>
-                    <button data-book-id="${book.id}" class="remove-wishlist-item-btn p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600" title="Eliminar de la Lista de Deseos">
-                         <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
-                    </button>
-                </div>
-            `;
+                <img src="${coverUrl}" alt="${book.title}" class="w-12 h-16 object-cover">
+                <div><h4>${book.title}</h4><p>${book.author || 'N/A'}</p></div>
+                <div>${price} €</div>
+                <button data-book-id="${book.id}" class="remove-wishlist-item-btn">Quitar</button>
+            `; // Usar book.id (que es api_id) para data-book-id
             wishlistContent.appendChild(itemDiv);
         } else {
-            console.warn(`Libro con ID ${bookId} en wishlist pero no encontrado en allBooks.`);
+            console.warn(`[app.js renderWishlist] Libro con ID (api_id) '${bookIdInWishlist}' en wishlist PERO NO ENCONTRADO en allBooks.`);
         }
     });
 
-    // Adjuntar listeners a los nuevos botones
     wishlistContent.querySelectorAll('.remove-wishlist-item-btn').forEach(button => 
-        button.addEventListener('click', e => toggleWishlistItem(e.currentTarget.dataset.bookId))
+        button.addEventListener('click', e => toggleWishlistItemApp(e.currentTarget.dataset.bookId))
     );
-    wishlistContent.querySelectorAll('.move-to-cart-btn').forEach(button =>
-        button.addEventListener('click', e => moveWishlistItemToCart(e.currentTarget.dataset.bookId))
-    );
+    // Añadir listeners para 'move-to-cart-btn' si es necesario
 }
 
 function renderCartModal() {
@@ -236,8 +240,8 @@ function renderCartModal() {
         itemDiv.className = 'flex items-center space-x-2 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
         const itemTotal = item.price * item.quantity;
         totalPrice += itemTotal;
-        // Asegurarse que item.cover exista o usar placeholder
-        const cartCover = item.cover ? item.cover.replace('-L.jpg', '-S.jpg') : 'assets/placeholder-cover-small.png';
+        // Usar placeholder general para cart modal si no hay cover
+        const cartCover = item.cover ? item.cover.replace('-L.jpg', '-S.jpg') : 'assets/books/placeholder.png'; 
         itemDiv.innerHTML = `
             <img src="${cartCover}" alt="${item.title}" class="w-12 h-16 object-cover rounded shadow">
             <div class="flex-grow">
@@ -273,142 +277,158 @@ function renderCartModal() {
 }
 
 // --- MANEJO DE ESTADO (CARRITO / WISHLIST) ---
-function toggleWishlistItem(bookId) {
-    const authToken = localStorage.getItem('authToken');
-    const isInWishlist = state.wishlist.includes(bookId);
 
-    if (authToken) {
-        // Usuario logueado: interactuar con el backend
-        const url = `http://localhost:3000/api/wishlist${isInWishlist ? '/' + bookId : ''}`;
-        const method = isInWishlist ? 'DELETE' : 'POST';
-        const body = isInWishlist ? null : JSON.stringify({ book_id: bookId });
+/**
+ * Añade o quita un libro de la lista de deseos.
+ * @param {object|string} bookOrBookId - El objeto libro completo (desde book-details) o el api_id del libro (desde book-card).
+ * @param {boolean} [fromDetailsPage=false] - True si la llamada proviene de la página de detalles del libro.
+ */
+async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
+    let apiId, numericId, bookTitle;
 
-        fetchWithAuth(url, { 
-            method: method,
-            body: body // fetchWithAuth ya pone Content-Type si hay body JSON
-        })
-        .then(response => {
-            if (!response.ok) {
-                // Si es 401, el token podría haber expirado entre la carga de la página y esta acción
-                if (response.status === 401) logoutUser(); 
-                return response.json().then(errData => Promise.reject(errData));
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log(data.message);
-            // Actualizar state.wishlist localmente después de la operación exitosa del backend
-            if (isInWishlist) { // Se eliminó
-                state.wishlist = state.wishlist.filter(id => id !== bookId);
-            } else { // Se añadió
-                state.wishlist.push(bookId);
-            }
-            // Actualizar la UI
-            renderWishlist();
-            updateBookCardVisualState(bookId, !isInWishlist);
-        })
-        .catch(error => {
-            console.error('Error al actualizar wishlist en backend:', error);
-            // Podríamos mostrar un mensaje al usuario aquí
-            // alert(error.message || 'Error al actualizar tu lista de deseos.');
-        });
-
-    } else {
-        // Usuario invitado: usar localStorage (lógica existente)
-        const index = state.wishlist.indexOf(bookId);
-        if (index === -1) {
-            state.wishlist.push(bookId);
+    if (fromDetailsPage && typeof bookOrBookId === 'object' && bookOrBookId !== null) {
+        apiId = bookOrBookId.id; // Este es el api_id (ej: "book-1")
+        numericId = bookOrBookId.numeric_id; // Este es el id numérico de la BD
+        bookTitle = bookOrBookId.title;
+        console.log(`[app.js toggleWishlistItemApp fromDetails] apiId: ${apiId}, numericId: ${numericId}`);
+    } else if (!fromDetailsPage && typeof bookOrBookId === 'string') {
+        apiId = bookOrBookId; // Este es el api_id (ej: "book-1")
+        const bookFromAllBooks = allBooks.find(b => b.id === apiId);
+        if (bookFromAllBooks) {
+            numericId = bookFromAllBooks.numeric_id; // id numérico de la BD
+            bookTitle = bookFromAllBooks.title;
         } else {
-            state.wishlist.splice(index, 1);
+            console.error(`[app.js toggleWishlistItemApp fromCard] Libro con api_id '${apiId}' no encontrado en allBooks.`);
+            // Considerar mostrar un error al usuario o manejarlo de otra forma
+            return; 
+        }
+        console.log(`[app.js toggleWishlistItemApp fromCard] apiId: ${apiId}, numericId: ${numericId}`);
+    } else {
+        console.error('[app.js toggleWishlistItemApp] Argumentos inválidos:', bookOrBookId, fromDetailsPage);
+        return;
+    }
+
+    if (!apiId) {
+        console.error('[app.js toggleWishlistItemApp] No se pudo determinar el apiId del libro.');
+        return;
+    }
+
+    const isInWishlist = state.wishlist.includes(apiId);
+    const token = localStorage.getItem('token');
+
+    try {
+        if (token) {
+            // Usuario autenticado: usar API (y numericId)
+            // TODO: Asegurarse que addToWishlistAPI/removeFromWishlistAPI usan numericId y funcionan correctamente.
+            if (!numericId) {
+                console.error(`[app.js toggleWishlistItemApp] Usuario autenticado pero numericId no disponible para apiId: ${apiId}. No se puede llamar a la API.`);
+                // Podríamos intentar buscarlo de nuevo si es crucial, o fallar.
+                return; // O manejar como error
+            }
+            if (isInWishlist) {
+                await removeFromWishlistAPI(numericId); 
+                console.log(`[API] Libro ${numericId} (${bookTitle}) quitado de wishlist de usuario.`);
+            } else {
+                await addToWishlistAPI(numericId);
+                console.log(`[API] Libro ${numericId} (${bookTitle}) añadido a wishlist de usuario.`);
+            }
+            // Después de la llamada a la API, el estado local de la wishlist (state.wishlist)
+            // debería actualizarse basándose en la respuesta de la API o volviendo a hacer fetch.
+            // Por ahora, actualizamos localmente y luego el fetch síncrona el estado real.
+            // Idealmente, fetchUserWishlist() se llamaría aquí para re-sincronizar.
+        }
+
+        // Actualización local para invitado o como reflejo inmediato para usuario registrado
+        if (isInWishlist) {
+            state.wishlist = state.wishlist.filter(id => id !== apiId);
+        } else {
+            state.wishlist.push(apiId);
         }
         localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
+        console.log(`[app.js toggleWishlistItemApp] Wishlist actualizada para ${apiId}. Nueva wishlist (local):`, state.wishlist);
+
         renderWishlist();
-        updateBookCardVisualState(bookId, index === -1);
+        updateBookCardVisualState(apiId, !isInWishlist);
+        window.dispatchEvent(new CustomEvent('wishlistUpdated', { detail: { bookId: apiId, isInWishlist: !isInWishlist } }));
+        
+    } catch (error) {
+        console.error('Error al actualizar la lista de deseos:', error);
+        // Considerar revertir el cambio en state.wishlist si la API falló y el usuario está logueado.
+        // Mostrar mensaje de error al usuario.
     }
 }
+window.toggleWishlistItemApp = toggleWishlistItemApp; // Exponer globalmente
 
 // Función auxiliar para actualizar una sola tarjeta de libro
+// Esta función es ahora MENOS importante si updateAllBookCardWishlistStatus funciona bien
+// y los book-card se actualizan con el cambio de atributo 'in-wishlist'.
+// La dejamos por si se necesita para una actualización visual muy específica e inmediata no cubierta.
 function updateBookCardVisualState(bookId, isNowInWishlist) {
-    // Actualizar el icono en la tarjeta de libro específica si está visible
-    const bookCards = document.querySelectorAll(`.book-card[data-book-id="${bookId}"]`);
-    bookCards.forEach(card => {
-        const wishlistIcon = card.querySelector('.wishlist-icon');
-        if (wishlistIcon) {
-            wishlistIcon.src = isNowInWishlist ? 'assets/wishlist-filled.png' : 'assets/wishlist.png';
-            wishlistIcon.dataset.isWishlisted = isNowInWishlist;
-            wishlistIcon.alt = isNowInWishlist ? 'Quitar de Deseos' : 'Añadir a Deseos';
-        }
-    });
-
-    // Actualizar también el icono en el slider dinámico si el libro está allí
-    const sliderBookDivs = document.querySelectorAll(`.dynamic-book-slide[data-book-id="${bookId}"]`);
-    sliderBookDivs.forEach(div => {
-        const wishlistIcon = div.querySelector('.slider-wishlist-icon'); // Asumiendo una clase específica para el slider
-        if (wishlistIcon) {
-            wishlistIcon.src = isNowInWishlist ? 'assets/wishlist-filled.png' : 'assets/wishlist.png';
-            // Podrías necesitar un data-attribute similar para el estado en el slider
-        }
-    });
-
-    // Si tienes una sección de libros en books.html que usa tarjetas similares, deberás actualizarla también.
-    // Esto podría requerir una función más global o llamar a esta función desde el contexto de books.js
-}
-
-function addBookToCart(bookId, title, price, cover, stock) {
-    // NO convertir bookId a número para usuarios logueados
-    const authToken = localStorage.getItem('authToken');
-
-    if (authToken) {
-        // Usuario logueado: interactuar con el backend
-        fetchWithAuth('http://localhost:3000/api/cart', {
-            method: 'POST',
-            body: JSON.stringify({ book_id: bookId, quantity: 1 }) // Enviar siempre el api_id (cadena)
-        })
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) logoutUser();
-                return response.json().then(errData => Promise.reject(errData));
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log(data.message); // Mensaje del backend: "Libro añadido" o "Cantidad actualizada"
-            fetchUserCart(); 
-        })
-        .catch(error => {
-            console.error('Error al añadir al carrito en backend:', error);
-            alert(error.message || 'Error al añadir el libro al carrito.');
-        });
-
+    const card = document.querySelector(`book-card[id="${bookId}"]`); // Seleccionar por ID del book-card
+    if (card) {
+        card.setAttribute('in-wishlist', isNowInWishlist.toString());
+        console.log(`[app.js] updateBookCardVisualState: Set in-wishlist=${isNowInWishlist} for book-card id=${bookId}`);
     } else {
-        // Usuario invitado: usar localStorage (lógica existente)
-        let realBookId = bookId;
-        if (typeof bookId === 'string' && bookId.startsWith('book-')) {
-            realBookId = parseInt(bookId.replace('book-', ''), 10);
-        }
-        const existingBook = state.cart.find(item => item.id === realBookId);
-        const currentStock = stock || 0; 
-
-        if (existingBook) {
-            if (existingBook.quantity < existingBook.stock) {
-               existingBook.quantity += 1;
-            } else {
-                alert(`No puedes añadir más unidades de "${title}". Stock máximo (${existingBook.stock}) alcanzado.`);
-                return;
-            }
-        } else {
-            if (currentStock > 0) {
-                 state.cart.push({ id: realBookId, title, price, cover, stock: currentStock, quantity: 1 });
-            } else {
-                alert(`"${title}" no está disponible actualmente.`);
-                return;
-            }
-        }
-        localStorage.setItem('cart', JSON.stringify(state.cart));
-        updateCartIcon();
-        renderCartModal();
+        // console.warn(`[app.js] updateBookCardVisualState: Book card with id ${bookId} not found.`);
     }
+    // No es necesario manipular el src del icono directamente aquí si el book-card lo hace en su render.
 }
+
+/**
+ * Añade un libro al carrito.
+ * @param {object} bookObject - El objeto libro completo con todas sus propiedades (incluyendo id, numeric_id, title, price, cover, stock).
+ */
+function addBookToCartApp(bookObject) {
+    if (!bookObject || typeof bookObject !== 'object' || !bookObject.id) {
+        console.error('[app.js addBookToCartApp] Objeto libro inválido:', bookObject);
+        alert('Error: No se pudo añadir el libro al carrito (datos incompletos).');
+        return;
+    }
+
+    const { id: apiId, title, price, cover, stock, numeric_id } = bookObject; 
+    // apiId es el que se usa para el carrito local (localStorage)
+    // numeric_id estaría disponible para una API de carrito de usuario registrado
+
+    console.log(`[app.js addBookToCartApp] Intentando añadir/incrementar: ${title} (apiId: ${apiId}, numericId: ${numeric_id})`);
+
+    const existingItem = state.cart.find(item => item.id === apiId);
+    const numericPrice = parseFloat(price); // Asegurar que el precio es un número
+
+    if (existingItem) {
+        if (existingItem.quantity < stock) {
+            existingItem.quantity++;
+            console.log(`[app.js addBookToCartApp] Cantidad incrementada para ${title}. Nueva cantidad: ${existingItem.quantity}`);
+        } else {
+            alert('No puedes añadir más unidades de este libro (stock máximo alcanzado en carrito).');
+            return; // No hacer nada más si ya está al límite del stock
+        }
+    } else {
+        if (stock > 0) {
+            state.cart.push({ 
+                id: apiId, // Usar apiId para consistencia en el carrito local
+                numeric_id: numeric_id, // Guardar por si se necesita para API de usuario
+                title,
+                price: !isNaN(numericPrice) ? numericPrice : 0, // Usar precio numérico o 0 si no es válido
+                cover: cover || 'assets/books/placeholder.png', 
+                quantity: 1,
+                stock: parseInt(stock, 10)
+            });
+            console.log(`[app.js addBookToCartApp] Libro ${title} añadido al carrito.`);
+        } else {
+            alert('Este libro está agotado y no puede ser añadido al carrito.');
+            return; // No añadir si no hay stock
+        }
+    }
+
+    localStorage.setItem('cart', JSON.stringify(state.cart));
+    renderCartModal();
+    updateCartIcon();
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
+    
+    // Podríamos mostrar una notificación más elegante que un alert
+    alert(`"${title}" añadido al carrito.`); 
+}
+window.addBookToCartApp = addBookToCartApp; // Exponer globalmente
 
 function increaseCartItemQuantity(bookId) {
     const authToken = localStorage.getItem('authToken');
@@ -551,7 +571,7 @@ function moveCartItemToWishlist(bookId) {
     const itemInCart = state.cart.find(i => i.id === bookId);
     if (!itemInCart) return;
     if (!state.wishlist.includes(bookId)) { // Añadir solo si no está ya
-       toggleWishlistItem(bookId); 
+       toggleWishlistItemApp(bookId); 
     }
     removeBookFromCart(bookId, true); 
     console.log(`Libro ID ${bookId} movido del carrito a la lista de deseos.`);
@@ -567,16 +587,16 @@ function moveWishlistItemToCart(bookId) {
 
     // 1. Añadir al carrito
     // Necesitamos todos los detalles del libro para addBookToCart
-    addBookToCart(book.id, book.title, book.price, book.cover, book.stock);
+    addBookToCartApp(book);
 
-    // 2. Eliminar de la wishlist (toggleWishlistItem se encarga de la lógica de backend/localStorage y UI)
+    // 2. Eliminar de la wishlist (toggleWishlistItemApp se encarga de la lógica de backend/localStorage y UI)
     // Solo lo hacemos si realmente está en la wishlist para evitar un toggle innecesario si algo falló antes.
     if (state.wishlist.includes(bookId)) {
-        toggleWishlistItem(bookId);
+        toggleWishlistItemApp(bookId);
     }
     
     console.log(`Libro ID ${bookId} movido de la lista de deseos al carrito.`);
-    // renderWishlist() y renderCartModal() serán llamados por toggleWishlistItem y fetchUserCart (dentro de addBookToCart)
+    // renderWishlist() y renderCartModal() serán llamados por toggleWishlistItemApp y fetchUserCart (dentro de addBookToCartApp)
 }
 
 function emptyCart() {
@@ -714,19 +734,13 @@ function setupEventListeners() {
     });
 
     document.addEventListener('toggle-wishlist', e => {
-        toggleWishlistItem(e.detail.bookId);
+        toggleWishlistItemApp(e.detail.bookId);
     });
 
     document.addEventListener('add-to-cart', e => {
         const bookDetails = allBooks.find(b => b.id.toString() === e.detail.bookId.toString());
         if (bookDetails) {
-            addBookToCart(
-                bookDetails.id, 
-                bookDetails.title, 
-                bookDetails.price, 
-                bookDetails.cover, 
-                bookDetails.stock
-            );
+            addBookToCartApp(bookDetails);
         } else {
             console.warn(`No se encontraron detalles del libro ${e.detail.bookId} para añadir al carrito desde el evento del custom element.`);
             // Podrías necesitar pasar más detalles en e.detail desde el custom element
@@ -734,13 +748,15 @@ function setupEventListeners() {
             // El custom element <book-card> pasa: { bookId, title, price, cover, stock } en su evento add-to-cart
             // así que podemos usarlos directamente si el find falla.
             if(e.detail.title && e.detail.price !== undefined) { // Chequeo mínimo
-                 addBookToCart(
-                    e.detail.bookId, 
-                    e.detail.title, 
-                    parseFloat(e.detail.price),
-                    e.detail.cover, 
-                    parseInt(e.detail.stock)
-                );
+        addBookToCartApp(
+            {
+                id: e.detail.bookId,
+                title: e.detail.title,
+                price: parseFloat(e.detail.price),
+                cover: e.detail.cover,
+                stock: parseInt(e.detail.stock)
+            }
+        );
             } else {
                 console.error("Detalles insuficientes en el evento 'add-to-cart' del custom element.");
             }
@@ -801,63 +817,63 @@ async function fetchWithAuth(url, options = {}) {
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-    return fetch(completeUrl, { ...options, headers });
+    try {
+        const response = await fetch(completeUrl, { ...options, headers });
+        if (response.status === 401) { // Unauthorized
+            console.warn('Token no válido o expirado. Deslogueando usuario.');
+            logoutUser(); // Desloguear si el token es rechazado
+            // Podríamos querer lanzar un error aquí o redirigir a login
+            throw new Error('Unauthorized');
+        }
+        if (!response.ok && response.status !== 404) { // No tratar 404 como error fatal aquí, puede ser manejado por el llamador
+            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+            throw new Error(errorData.message || `Error ${response.status}`);
+        }
+        return response; // Devolver la respuesta completa para que el llamador maneje .json() y errores específicos como 404
+    } catch (error) {
+        console.error('Error en fetchWithAuth:', error);
+        throw error;
+    }
 }
 
 async function fetchUserWishlist() {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-        // Si no hay token, podría cargar la wishlist de localStorage para invitados
-        // o simplemente asegurarse de que state.wishlist esté sincronizado con localStorage.
-        state.wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-        renderWishlist(); // Renderizar desde localStorage
-        updateAllBookCardWishlistStatus(); // Actualizar todas las tarjetas
-        return;
-    }
-
+    console.log("[app.js fetchUserWishlist] Called. REQUIERE REVISIÓN para asegurar que obtiene y almacena api_id.");
+    // Esta función es para usuarios logueados. El backend /api/wishlist debe devolver los identificadores
+    // de los libros en la wishlist del usuario. Idealmente, debería devolver los api_id (que el frontend usa como book.id).
+    // Si solo devuelve IDs numéricos, necesitamos una forma de convertirlos a api_id (book.id) usando allBooks.
     try {
-        const response = await fetchWithAuth('http://localhost:3000/api/wishlist');
+        const response = await fetchWithAuth('/api/wishlist');
         if (!response.ok) {
-            if (response.status === 401) {
-                 // Token inválido o expirado, limpiar sesión y tratar como invitado
-                console.warn('Token inválido/expirado al obtener wishlist. Limpiando sesión.');
-                logoutUser(); // Esto ya limpia localStorage y actualiza UI
-                // state.wishlist ya se limpia en logoutUser
-                return; // Salir para no procesar más
-            }
-            throw new Error(`Error al obtener wishlist del backend: ${response.statusText}`);
+            state.wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]'); // Fallback
+            return;
         }
-        const backendWishlistItems = await response.json(); // Array de { book_id: "id", added_at: "date" }
-        state.wishlist = backendWishlistItems.map(item => item.book_id); // Almacenar solo los IDs
-        
-        // Opcional: podríamos guardar esta lista sincronizada también en localStorage
-        // localStorage.setItem('wishlist', JSON.stringify(state.wishlist)); 
-        // Pero esto podría causar confusión si el usuario cierra sesión y espera la local.
-        // Por ahora, la fuente de verdad para usuarios logueados es el backend.
-
-        console.log('Wishlist cargada del backend:', state.wishlist);
-        renderWishlist();
-        updateAllBookCardWishlistStatus();
-
+        const serverWishlistData = await response.json();
+        if (serverWishlistData && Array.isArray(serverWishlistData.wishlist)) {
+            // ASUMPCIÓN: serverWishlistData.wishlist CONTIENE items donde item.id o item.api_id es el api_id.
+            // O si solo tiene el id numérico, ej item.book_id_numeric, necesitamos convertirlo.
+            // Por ahora, asumimos que el backend de wishlist devuelve los mismos IDs que usa el frontend (book.id que es api_id)
+            state.wishlist = serverWishlistData.wishlist.map(item => item.id || item.api_id).filter(Boolean);
+            console.log("[app.js fetchUserWishlist] Wishlist del servidor procesada, state.wishlist:", JSON.stringify(state.wishlist));
+        } else {
+            state.wishlist = [];
+        }
     } catch (error) {
-        console.error('Fallo al obtener/procesar wishlist del backend:', error);
-        // En caso de error (ej. red), podríamos intentar cargar de localStorage como fallback,
-        // o simplemente mostrar la wishlist vacía para el usuario logueado hasta que se resuelva.
-        // Por ahora, si falla la carga del backend, el usuario logueado verá una wishlist vacía
-        // (ya que logoutUser no se llama aquí a menos que sea un 401)
-        // state.wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]'); // Fallback opcional
-        // renderWishlist();
-        // updateAllBookCardWishlistStatus();
+        console.error('Error fetching user wishlist:', error);
+        state.wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]'); // Fallback
     }
+    localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
+    updateAllBookCardWishlistStatus();
+    renderWishlist();
+    window.dispatchEvent(new CustomEvent('wishlistUpdated'));
 }
 
 function updateAllBookCardWishlistStatus() {
-    if (!allBooks || allBooks.length === 0) return;
-    
-    allBooks.forEach(book => {
-        if (book && book.id !== undefined) { // Asegurarse que book y book.id existan
-            const isInWishlist = state.wishlist.includes(book.id.toString());
-            updateBookCardVisualState(book.id.toString(), isInWishlist);
+    console.log("[app.js updateAllBookCardWishlistStatus] Called. state.wishlist:", JSON.stringify(state.wishlist));
+    document.querySelectorAll('book-card').forEach(card => {
+        const cardId = card.getAttribute('id'); // es api_id (ej: "book-1")
+        if (cardId) {
+            const isInWishlist = state.wishlist.includes(cardId);
+            card.setAttribute('in-wishlist', isInWishlist.toString());
         }
     });
 }
@@ -865,144 +881,68 @@ function updateAllBookCardWishlistStatus() {
 function updateUserUI() {
     const authToken = localStorage.getItem('authToken');
     const userDataString = localStorage.getItem('userData');
-    
-    console.log('updateUserUI: authToken:', authToken); // <--- NUEVO LOG
-    console.log('updateUserUI: userDataString desde localStorage:', userDataString); // <--- NUEVO LOG
 
     if (authToken && userDataString) {
-        try {
             const userData = JSON.parse(userDataString);
-            console.log('updateUserUI: userData parseado:', userData); // <--- NUEVO LOG
-            if (userGreeting) {
-                userGreeting.textContent = `Hola, ${userData.nombre}`;
-                userGreeting.classList.remove('hidden');
-            }
-            if (loginLinkMenu) loginLinkMenu.classList.add('hidden');
-            if (registerLinkMenu) registerLinkMenu.classList.add('hidden');
-            if (profileLinkMenu) {
-                profileLinkMenu.classList.remove('hidden');
-                profileLinkMenu.href = 'profile.html';
-            }
-            if (ordersLinkMenu) ordersLinkMenu.classList.remove('hidden');
-            if (logoutLinkMenu) logoutLinkMenu.classList.remove('hidden');
+        if (userGreeting) userGreeting.textContent = `Hola, ${userData.name || userData.nombre || 'Usuario'}!`;
+        if (loginLinkMenu) loginLinkMenu.style.display = 'none';
+        if (registerLinkMenu) registerLinkMenu.style.display = 'none';
+        if (profileLinkMenu) profileLinkMenu.style.display = 'flex';
+        if (ordersLinkMenu) ordersLinkMenu.style.display = 'flex';
+        if (logoutLinkMenu) logoutLinkMenu.style.display = 'flex';
+        if (userIcon) userIcon.classList.remove('text-gray-400', 'hover:text-white');
+        if (userIcon) userIcon.classList.add('text-sky-400', 'hover:text-sky-300');
 
-            fetchUserWishlist(); // <--- Cargar wishlist del backend para usuario
-            fetchUserCart(); // <--- Cargar carrito del backend/localStorage para usuario
+        // Si el usuario está logueado, obtener su wishlist (y carrito) del servidor
+        fetchUserWishlist(); // Esto actualizará state.wishlist y la UI de las tarjetas
+        fetchUserCart();     // Asumiendo que existe una función similar para el carrito
+        console.log('User is logged in. UI updated. Wishlist/cart sync initiated.');
 
-        } catch (error) {
-            console.error('Error al parsear userData:', error);
-            clearUserSessionAndUI();
-            fetchUserWishlist(); 
-            fetchUserCart(); // <--- Cargar carrito de localStorage para invitado
-        }
     } else {
-        clearUserSessionAndUI();
-        fetchUserWishlist(); 
-        fetchUserCart(); // <--- Cargar carrito de localStorage para invitado
+        if (userGreeting) userGreeting.textContent = '';
+        if (loginLinkMenu) loginLinkMenu.style.display = 'flex';
+        if (registerLinkMenu) registerLinkMenu.style.display = 'flex';
+        if (profileLinkMenu) profileLinkMenu.style.display = 'none';
+        if (ordersLinkMenu) ordersLinkMenu.style.display = 'none';
+        if (logoutLinkMenu) logoutLinkMenu.style.display = 'none';
+        if (userIcon) userIcon.classList.remove('text-sky-400', 'hover:text-sky-300');
+        if (userIcon) userIcon.classList.add('text-gray-400', 'hover:text-white');
+        
+        // Si el usuario no está logueado, cargar wishlist/carrito de localStorage
+        // state.wishlist se inicializa desde localStorage al principio.
+        // state.cart también.
+        // Solo necesitamos asegurar que la UI refleje esto.
+        updateAllBookCardWishlistStatus(); // Asegura que los iconos de corazón se actualicen
+        updateCartIcon(); // Asegura que el contador del carrito se actualice
+        renderWishlist(); // Actualiza el modal
+        renderCartModal(); // Actualiza el modal del carrito
+        console.log('User is logged out or no token. UI updated for guest. Wishlist/cart from localStorage.');
     }
 }
 
 function clearUserSessionAndUI() {
-    if (userGreeting) userGreeting.classList.add('hidden');
-    if (loginLinkMenu) loginLinkMenu.classList.remove('hidden');
-    if (registerLinkMenu) registerLinkMenu.classList.remove('hidden');
-    if (profileLinkMenu) profileLinkMenu.classList.add('hidden');
-    if (ordersLinkMenu) ordersLinkMenu.classList.add('hidden');
-    if (logoutLinkMenu) logoutLinkMenu.classList.add('hidden');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    // Limpiar la wishlist y el carrito del estado y de localStorage, ya que eran del usuario anterior.
+    // El invitado usará una nueva wishlist/carrito de localStorage.
+    state.wishlist = [];
+    state.cart = []; // Asumiendo que el carrito también debe limpiarse
+    localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
+    localStorage.setItem('cart', JSON.stringify(state.cart)); // Limpiar también el carrito
+    
+    console.log('User session cleared. Local wishlist/cart reset for guest state.');
+    updateUserUI(); // Actualizar la UI para reflejar el estado de invitado
 }
 
 function logoutUser() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
+    console.log('logoutUser called');
+    // Aquí podrías añadir una llamada a un endpoint de logout en el backend si lo tienes,
+    // por ejemplo, para invalidar el token en el servidor si es necesario.
+    // await fetchWithAuth('/api/auth/logout', { method: 'POST' });
     
-    // Limpiar carrito y wishlist de localStorage y del estado de la aplicación
-    state.cart = [];
-    localStorage.removeItem('cart');
-    updateCartIcon(); // Actualizar el icono del carrito en la UI
-    if (cartModal && cartModal.open) renderCartModal(); // Re-renderizar modal si está abierto
-
-    state.wishlist = [];
-    localStorage.removeItem('wishlist');
-    if (wishlistModal && wishlistModal.open) renderWishlist(); // Re-renderizar modal si está abierto
-    // También actualizamos las tarjetas de libro para quitar el estado 'in-wishlist'
-    document.querySelectorAll('book-card[in-wishlist="true"]').forEach(card => {
-        card.setAttribute('in-wishlist', 'false');
-    });
-
-    updateUserUI(); // Actualizar la UI para reflejar el cierre de sesión
-    console.log('Usuario ha cerrado sesión. Carrito y wishlist local limpiados.');
-    if (userDropdown && !userDropdown.classList.contains('hidden')) {
-        userDropdown.classList.add('hidden');
-    }
-}
-
-// Similar a fetchUserWishlist, pero para el carrito
-async function fetchUserCart() {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-        state.cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        renderCartModal();
-        updateCartIcon();
-        document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: state.cart } })); // <--- EVENTO
-        return;
-    }
-
-    try {
-        const response = await fetchWithAuth('http://localhost:3000/api/cart');
-        if (!response.ok) {
-            if (response.status === 401) {
-                console.warn('Token inválido/expirado al obtener carrito. Limpiando sesión.');
-                logoutUser(); // Esto ya dispara su propia lógica de actualización de UI y estado
-                // Considerar si aquí también se debe disparar 'cartUpdated' con un carrito vacío
-                document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: [] } })); // <--- EVENTO (carrito vacío tras logout)
-                return;
-            }
-            throw new Error(`Error al obtener carrito del backend: ${response.statusText}`);
-        }
-        const backendCartItems = await response.json(); // Array de { book_id, quantity, ... }
-        
-        // Reconstruir state.cart con detalles completos de allBooks
-        const newCart = [];
-        if (allBooks && allBooks.length > 0) { // Asegurarse que allBooks esté cargado
-            for (const item of backendCartItems) {
-                const bookDetails = allBooks.find(b => b.id === item.book_id);
-                if (bookDetails) {
-                    newCart.push({
-                        ...bookDetails, // title, price, cover, stock original, etc.
-                        id: item.book_id, // Asegurarse de que el id es el book_id del carrito
-                        quantity: item.quantity
-                    });
-                } else {
-                    console.warn(`Detalles no encontrados para el libro con ID ${item.book_id} en el carrito del backend.`);
-                }
-            }
-        } else {
-            console.warn("allBooks no está disponible para reconstruir el carrito del backend. El carrito podría estar incompleto en detalles.");
-            // Si allBooks no está, al menos podemos usar los datos básicos del backend, aunque falten detalles.
-            // Esto es un fallback, idealmente allBooks debería estar siempre disponible.
-            backendCartItems.forEach(item => {
-                newCart.push({
-                    id: item.book_id,
-                    quantity: item.quantity,
-                    title: item.book_id, // Placeholder
-                    price: 0, // Placeholder
-                    cover: 'assets/placeholder-cover-small.png' // Placeholder
-                    // stock no estaría disponible aquí
-                });
-            });
-        }
-        state.cart = newCart;
-        console.log('Carrito cargado del backend:', state.cart);
-        renderCartModal();
-        updateCartIcon();
-        document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: state.cart } })); // <--- EVENTO
-
-    } catch (error) {
-        console.error('Fallo al obtener/procesar carrito del backend:', error);
-        // En caso de error, disparamos el evento con el carrito actual (que podría ser el de localStorage o vacío)
-        // o un carrito vacío si la intención es reflejar un fallo de carga.
-        document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: state.cart } })); // <--- EVENTO (con carrito actual o vacío)
-    }
+    clearUserSessionAndUI();
+    // Opcional: Redirigir a la página de inicio o login
+    // window.location.href = '/login.html';
 }
 
 // --- NUEVO: LÓGICA DEL SLIDER DINÁMICO DE LIBROS ---
@@ -1014,8 +954,8 @@ function initializeDynamicBookSlider() {
     if (bookImageFilenames.length === 0) {
         console.warn("No hay imágenes definidas en 'bookImageFilenames' para el slider.");
         dynamicSliderElement.innerHTML = '<p class="text-center text-gray-500 p-4">No hay imágenes para mostrar en el slider.</p>';
-        return;
-    }
+                return;
+            }
     if (bookImageFilenames.length < IMAGES_PER_GROUP) {
         console.warn(`Se necesitan al menos ${IMAGES_PER_GROUP} imágenes para el slider, solo se encontraron ${bookImageFilenames.length}. Mostrando las disponibles sin animación.`);
         // Renderizar las pocas imágenes disponibles sin iniciar el intervalo
@@ -1086,7 +1026,7 @@ document.addEventListener('cartUpdated', (event) => {
         updateCartIcon();
         // Considera si renderCartModal() es necesario aquí y si el modal podría estar abierto
         if (cartModal && cartModal.open) {
-            renderCartModal(); 
+        renderCartModal();
         }
         console.log('Estado del carrito actualizado en app.js');
     } else {
@@ -1104,3 +1044,28 @@ function renderBookCardsSlider(books) {
     slider.appendChild(card);
   });
 }
+
+// --- NUEVAS FUNCIONES DE API PARA WISHLIST ---
+async function addToWishlistAPI(numericBookId) { 
+    console.log(`[app.js addToWishlistAPI] Placeholder: Añadir libro con ID numérico ${numericBookId} a la API.`);
+    // const token = localStorage.getItem('token');
+    // if (!token) throw new Error('Usuario no autenticado');
+    // const response = await fetchWithAuth(`/api/wishlist/${numericBookId}`, { method: 'POST' });
+    // if (!response.ok) throw new Error('Error al añadir a la wishlist en API');
+    // return await response.json(); 
+    return Promise.resolve({ message: "Libro añadido a wishlist (API)" }); // Placeholder
+}
+
+async function removeFromWishlistAPI(numericBookId) { 
+    console.log(`[app.js removeFromWishlistAPI] Placeholder: Quitar libro con ID numérico ${numericBookId} de la API.`);
+    // const token = localStorage.getItem('token');
+    // if (!token) throw new Error('Usuario no autenticado');
+    // const response = await fetchWithAuth(`/api/wishlist/${numericBookId}`, { method: 'DELETE' });
+    // if (!response.ok) throw new Error('Error al quitar de la wishlist en API');
+    // return await response.json(); 
+    return Promise.resolve({ message: "Libro quitado de wishlist (API)" }); // Placeholder
+}
+// --- FIN NUEVAS FUNCIONES ---
+
+// Exponer funciones clave globalmente si es necesario para otros scripts como book-details.js
+window.getStateApp = () => JSON.parse(JSON.stringify(state)); // Devuelve una copia para evitar mutación externa directa

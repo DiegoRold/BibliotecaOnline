@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Libro - Entre Hojas</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="assets/logo.png" type="image/x-icon">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col min-h-screen">
+
+    <!-- Header copiado de index.html -->
+    <header class="bg-gray-800 shadow-md relative z-10">
+        <div class="container mx-auto px-4 pt-2 pb-0">
+            <!-- Nivel Superior: Logo, Título, Búsqueda, Iconos -->
+            <div class="flex justify-between items-center border-b pb-2 border-gray-700">
+                <!-- Izquierda: Logo y Título -->
+                <div class="flex items-center space-x-3">
+                    <a href="index.html"><img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-16 md:h-20 w-auto"></a>
+                    <a href="index.html"><h1 class="text-3xl font-bold hidden sm:block text-white">ENTRE HOJAS</h1></a>
+                </div>
+
+                <!-- Centro: Barra de Búsqueda (opcional en detalles, pero la incluyo por consistencia) -->
+                <div class="flex-grow mx-4 hidden md:flex justify-center">
+                    <div class="relative w-full max-w-md">
+                        <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button class="absolute right-0 top-0 mt-2 mr-3">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Derecha: Iconos -->
+                <div class="flex items-center space-x-2 md:space-x-3">
+                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700 relative" title="Mi Cuenta">
+                        <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden">
+                            <div id="user-greeting" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hidden"></div>
+                            <a href="login.html" id="login-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Iniciar Sesión</a>
+                            <a href="register.html" id="register-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Registrarse</a>
+                            <a href="#" id="profile-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mi Perfil</a>
+                            <a href="orders.html" id="orders-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mis Pedidos</a>
+                            <a href="#" id="logout-link-menu" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Cerrar Sesión</a>
+                        </div>
+                    </button>
+                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
+                        <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema">
+                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos">
+                        <img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="cart-icon" class="relative p-2 rounded-lg hover:bg-gray-700" title="Mi Compra">
+                        <img src="assets/carrito.png" alt="Mi Compra" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Barra de búsqueda para móviles (opcional) -->
+            <div class="mt-2 md:hidden">
+                 <div class="relative w-full">
+                    <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button class="absolute right-0 top-0 mt-2 mr-3">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <!-- Nivel Inferior: Navegación -->
+            <nav class="flex justify-center py-2">
+                <ul class="flex space-x-4 md:space-x-8">
+                    <li><a href="index.html" class="text-gray-300 hover:text-white font-bold">Inicio</a></li>
+                    <li><a href="books.html" class="text-gray-300 hover:text-white">Libros</a></li>
+                    <li><a href="bio.html" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
+                    <li><a href="blog.html" class="text-gray-300 hover:text-white">Blog</a></li>
+                    <li><a href="#" id="horario-link" class="text-gray-300 hover:text-white">Horario</a></li> 
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal de Detalles del Libro -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        <div id="book-details-container" class="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-lg shadow-lg">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1">
+                    <img id="book-cover-img" src="assets/books/placeholder.png" alt="Portada del Libro" class="w-full h-auto object-contain rounded-md shadow-md max-h-[70vh]">
+                </div>
+                <div class="md:col-span-2 flex flex-col">
+                    <h1 id="book-title" class="text-3xl md:text-4xl font-bold mb-2">Título del Libro</h1>
+                    <p class="text-xl text-gray-700 dark:text-gray-300 mb-4">por <span id="book-author" class="font-semibold">Autor</span></p>
+                    <div class="mb-6 prose dark:prose-invert max-w-none">
+                        <h2 class="text-2xl font-semibold mb-2">Descripción</h2>
+                        <p id="book-description">Descripción detallada del libro...</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+                        <div><strong>Categorías:</strong> <span id="book-categories">N/A</span></div>
+                        <div><strong>Año de Publicación:</strong> <span id="book-year">N/A</span></div>
+                        <div><strong>Editorial:</strong> <span id="book-publisher">N/A</span></div>
+                        <div><strong>ISBN:</strong> <span id="book-isbn">N/A</span></div>
+                        <div><strong>Nº de Páginas:</strong> <span id="book-pages">N/A</span></div>
+                        <div><strong>Idioma:</strong> <span id="book-language">N/A</span></div>
+                        <div><strong>Valoración:</strong> <span id="book-rating">N/A</span> ⭐</div>
+                        <div><strong>Stock:</strong> <span id="book-stock" class="font-bold">Disponible</span></div>
+                    </div>
+                    <div class="mt-auto">
+                        <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-6"><span id="book-price">0.00</span> €</p>
+                        <div class="flex items-center space-x-4">
+                            <button id="add-to-cart-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg flex items-center text-lg">
+                                <img src="assets/add-to-cart.png" alt="" class="w-5 h-5 mr-2 filter invert brightness-0"> Añadir al Carrito
+                            </button>
+                            <button id="toggle-wishlist-btn" class="p-3 rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700" title="Añadir a la lista de deseos">
+                                <img id="wishlist-icon-details" src="assets/wishlist.png" alt="Wishlist" class="w-6 h-6">
+                            </button>
+                        </div>
+                        <p id="out-of-stock-message" class="text-red-500 font-semibold mt-4" style="display: none;">¡Este artículo está agotado!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modales copiados de index.html -->
+    <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2>
+                <button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto">
+                <!-- Los libros de la lista de deseos se renderizarán aquí -->
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="contact-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Información de Contacto</h2>
+                <button id="close-contact-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-5">
+                <div class="flex items-center space-x-3">
+                    <img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0">
+                    <span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0">
+                    <a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1">
+                    <span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2>
+                <button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-3 text-gray-700 dark:text-gray-300">
+                <p><strong>Lunes a Viernes:</strong> 9:00 AM - 8:00 PM</p>
+                <p><strong>Sábados:</strong> 10:00 AM - 6:00 PM</p>
+                <p><strong>Domingos y Festivos:</strong> Cerrado</p>
+                <p class="mt-4 text-sm italic">Horario sujeto a cambios en fechas especiales. Consulta nuestras redes sociales.</p>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-lg fixed right-0 top-0 h-full m-0 transform transition-transform duration-300 ease-in-out translate-x-full" data-status="closed">
+        <div class="bg-white dark:bg-gray-800 h-full flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Carrito</h2>
+                <button id="close-cart-modal-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar Carrito">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="cart-items-container" class="p-4 flex-grow overflow-y-auto">
+                <!-- Los artículos del carrito se renderizarán aquí -->
+            </div>
+            <div class="p-4 border-t dark:border-gray-700 space-y-3">
+                <div class="flex justify-between items-center font-semibold text-lg">
+                    <span class="text-gray-800 dark:text-white">Total:</span>
+                    <span id="cart-total-price" class="text-blue-600 dark:text-blue-400">0.00 €</span>
+                </div>
+                <button id="go-to-checkout-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg">Proceder al Pago</button>
+                <button id="empty-cart-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg text-sm">Vaciar Carrito</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+                    Cancelar
+                </button>
+                <button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800">
+                    Sí, Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </dialog>
+    <!-- Fin Modales -->
+
+    <!-- Footer copiado de index.html -->
+    <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div>
+                    <h5 class="font-bold text-lg mb-2 text-white">ENTRE HOJAS</h5>
+                    <p>Tu refugio literario en el corazón de la ciudad. Descubre, lee, sueña.</p>
+                </div>
+                <div>
+                    <h5 class="font-bold text-lg mb-2 text-white">Enlaces Rápidos</h5>
+                    <ul>
+                        <li><a href="index.html" class="hover:text-white">Inicio</a></li>
+                        <li><a href="books.html" class="hover:text-white">Libros</a></li>
+                        <li><a href="bio.html" class="hover:text-white">Quiénes Somos</a></li>
+                        <li><a href="blog.html" class="hover:text-white">Blog</a></li>
+                        <li><a href="#" id="horario-link-footer" class="hover:text-white">Horario</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 pt-6">
+                <p>&copy; <script>document.write(new Date().getFullYear());</script> Entre Hojas. Todos los derechos reservados.</p>
+                <p class="text-sm">Diseñado con <span style="color: #e25555;">&hearts;</span> por apasionados de la lectura.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="js/app.js"></script> 
+    <script src="js/book-details.js"></script>
+</body>
+</html> 

@@ -954,38 +954,47 @@ function updateUserUI() {
 
     if (authToken && userDataString) {
             const userData = JSON.parse(userDataString);
-        if (userGreeting) userGreeting.textContent = `Hola, ${userData.name || userData.nombre || 'Usuario'}!`;
+        if (userGreeting) {
+            userGreeting.textContent = `Hola, ${userData.name || userData.nombre || 'Usuario'}!`;
+            userGreeting.classList.remove('hidden'); // Asegurar que el saludo sea visible
+            userGreeting.style.display = 'block'; // O 'flex', dependiendo de cómo deba mostrarse
+        }
         if (loginLinkMenu) loginLinkMenu.style.display = 'none';
         if (registerLinkMenu) registerLinkMenu.style.display = 'none';
-        if (profileLinkMenu) profileLinkMenu.style.display = 'flex';
+        if (profileLinkMenu) {
+            profileLinkMenu.style.display = 'flex'; // o 'block'
+            profileLinkMenu.href = 'profile.html'; // Redirigir a profile.html
+        }
         if (ordersLinkMenu) ordersLinkMenu.style.display = 'flex';
         if (logoutLinkMenu) logoutLinkMenu.style.display = 'flex';
         if (userIcon) userIcon.classList.remove('text-gray-400', 'hover:text-white');
         if (userIcon) userIcon.classList.add('text-sky-400', 'hover:text-sky-300');
 
-        // Si el usuario está logueado, obtener su wishlist (y carrito) del servidor
-        fetchUserWishlist(); // Esto actualizará state.wishlist y la UI de las tarjetas
-        // fetchUserCart();     // Asumiendo que existe una función similar para el carrito
+        fetchUserWishlist(); 
+        // fetchUserCart(); // Comentado para evitar error hasta que se implemente
         console.log('User is logged in. UI updated. Wishlist/cart sync initiated.');
 
     } else {
-        if (userGreeting) userGreeting.textContent = '';
+        if (userGreeting) {
+            userGreeting.textContent = '';
+            userGreeting.classList.add('hidden');
+            userGreeting.style.display = 'none'; // Ocultar explícitamente
+        }
         if (loginLinkMenu) loginLinkMenu.style.display = 'flex';
         if (registerLinkMenu) registerLinkMenu.style.display = 'flex';
-        if (profileLinkMenu) profileLinkMenu.style.display = 'none';
+        if (profileLinkMenu) {
+            profileLinkMenu.style.display = 'none';
+            profileLinkMenu.href = '#'; // Resetear href si no está logueado
+        }
         if (ordersLinkMenu) ordersLinkMenu.style.display = 'none';
         if (logoutLinkMenu) logoutLinkMenu.style.display = 'none';
         if (userIcon) userIcon.classList.remove('text-sky-400', 'hover:text-sky-300');
         if (userIcon) userIcon.classList.add('text-gray-400', 'hover:text-white');
         
-        // Si el usuario no está logueado, cargar wishlist/carrito de localStorage
-        // state.wishlist se inicializa desde localStorage al principio.
-        // state.cart también.
-        // Solo necesitamos asegurar que la UI refleje esto.
-        updateAllBookCardWishlistStatus(); // Asegura que los iconos de corazón se actualicen
-        updateCartIcon(); // Asegura que el contador del carrito se actualice
-        renderWishlist(); // Actualiza el modal
-        renderCartModal(); // Actualiza el modal del carrito
+        updateAllBookCardWishlistStatus(); 
+        updateCartIcon(); 
+        renderWishlist(); 
+        renderCartModal(); 
         console.log('User is logged out or no token. UI updated for guest. Wishlist/cart from localStorage.');
     }
 }

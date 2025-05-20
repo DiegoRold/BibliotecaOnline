@@ -28,7 +28,7 @@ export const updateUserProfile = async (req, res) => {
 
     try {
         // 1. Verificar si el nuevo email ya está en uso por OTRO usuario
-        const [existingUserByEmail] = await db.promise().query(
+        const [existingUserByEmail] = await db.query(
             'SELECT id FROM usuarios WHERE email = ? AND id != ?',
             [email, userId]
         );
@@ -49,7 +49,7 @@ export const updateUserProfile = async (req, res) => {
         };
 
         // 3. Actualizar el usuario en la base de datos
-        const [updateResult] = await db.promise().query(
+        const [updateResult] = await db.query(
             'UPDATE usuarios SET ? WHERE id = ?',
             [fieldsToUpdate, userId]
         );
@@ -59,13 +59,14 @@ export const updateUserProfile = async (req, res) => {
         }
 
         // 4. Obtener los datos actualizados del usuario para devolverlos (sin password_hash)
-        const [[updatedUser]] = await db.promise().query(
+        const [rowsUpdatedUser] = await db.query(
             `SELECT id, nombre, email, rol, 
                     direccion_calle, direccion_detalle, direccion_cp, 
                     direccion_ciudad, direccion_provincia, direccion_pais 
              FROM usuarios WHERE id = ?`,
             [userId]
         );
+        const updatedUser = rowsUpdatedUser[0];
 
         res.status(200).json({
             ...updatedUser,
@@ -75,6 +76,32 @@ export const updateUserProfile = async (req, res) => {
     } catch (error) {
         console.error('Error al actualizar perfil:', error);
         res.status(500).json({ message: 'Error interno del servidor al actualizar el perfil.' });
+    }
+};
+
+// Función para obtener el perfil del usuario autenticado
+export const getUserProfile = async (req, res) => {
+    const userId = req.user.id; // Asumimos que verifyToken añade user.id a req
+
+    try {
+        const [rows] = await db.query(
+            `SELECT id, nombre, email, rol, 
+                    direccion_calle, direccion_detalle, direccion_cp, 
+                    direccion_ciudad, direccion_provincia, direccion_pais 
+             FROM usuarios WHERE id = ?`,
+            [userId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        const user = rows[0]; // Obtener el primer objeto de usuario del array de resultados
+
+        res.status(200).json(user);
+
+    } catch (error) {
+        console.error('Error al obtener el perfil del usuario:', error);
+        res.status(500).json({ message: 'Error interno del servidor al obtener el perfil.' });
     }
 };
 
@@ -94,15 +121,15 @@ export const changeUserPassword = async (req, res) => {
 
     try {
         // 1. Obtener el hash de la contraseña actual del usuario desde la BD
-        const [[user]] = await db.promise().query(
+        const [userRows] = await db.query(
             'SELECT password_hash FROM usuarios WHERE id = ?',
             [userId]
         );
 
-        if (!user) {
-            // Esto no debería pasar si el userId es válido y viene del token
+        if (userRows.length === 0) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
+        const user = userRows[0];
 
         // 2. Comparar la contraseña actual enviada con la almacenada
         const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
@@ -115,7 +142,7 @@ export const changeUserPassword = async (req, res) => {
         const hashedNewPassword = await bcrypt.hash(newPassword, salt);
 
         // 4. Actualizar la contraseña en la BD
-        await db.promise().query(
+        await db.query(
             'UPDATE usuarios SET password_hash = ? WHERE id = ?',
             [hashedNewPassword, userId]
         );

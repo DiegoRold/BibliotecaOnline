@@ -8,6 +8,10 @@ import * as profileController from '../controllers/profileController.js';
 // Importa tu middleware de autenticación (ajusta la ruta si es necesario)
 import verifyToken from '../middlewares/authMiddleware.js';
 
+// Ruta para obtener el perfil del usuario autenticado
+// Esta ruta será accesible como GET http://localhost:3000/api/perfil
+router.get('/perfil', verifyToken, profileController.getUserProfile);
+
 // Ruta para actualizar el perfil del usuario autenticado (nombre, email, dirección)
 // Esta ruta será accesible como PUT http://localhost:3000/api/perfil
 router.put('/perfil', verifyToken, profileController.updateUserProfile);

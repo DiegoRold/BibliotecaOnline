@@ -5,7 +5,8 @@ import {
     getBookByApiId,
     createBook,
     updateBook,
-    deleteBook
+    deleteBook,
+    searchBooksByNameAuthorGenre
 } from '../controllers/bookController.js';
 import authMiddleware, { authorize } from '../middlewares/authMiddleware.js';
 
@@ -18,6 +19,8 @@ router.get('/', (req, res, next) => {
     console.log(`[routes/bookRoutes.js] Petición GET recibida en ruta base ('/'). Query:`, req.query); // Log para verificar si la petición llega aquí
     next(); // Continuar al siguiente manejador (getAllBooks)
 }, getAllBooks);
+
+router.get('/search', searchBooksByNameAuthorGenre);
 
 router.get('/:id', getBookById);
 router.get('/details/:api_id', getBookByApiId);

@@ -84,6 +84,56 @@ export const getBookByApiId = async (req, res) => {
     }
 };
 
+// Nueva función para buscar libros por nombre, autor o género
+export const searchBooksByNameAuthorGenre = async (req, res) => {
+    const { q } = req.query; // Término de búsqueda
+
+    if (!q || q.trim() === '') {
+        return res.status(400).json({ message: 'Por favor, proporciona un término de búsqueda.' });
+    }
+
+    try {
+        const searchTerm = `%${q.trim()}%`;
+
+        // Consulta para buscar en título, autor y categorías (o tags si es el campo correcto)
+        // Asegúrate de que el campo 'categories' o el que uses para género sea adecuado para LIKE
+        // Si 'categories' es un JSON array, esta consulta necesitará ser más compleja (ej. JSON_CONTAINS o buscar en la cadena JSON)
+        // Por simplicidad, se asume que categories es un TEXT o VARCHAR y se busca en él.
+        const searchQuery = `
+            SELECT 
+                id AS numeric_id, api_id AS id, title, author, cover_image_url AS cover, price, stock,
+                rating, description, publication_date, pages, publisher, categories, isbn, tags
+            FROM libros 
+            WHERE title LIKE ? OR author LIKE ? OR categories LIKE ? OR tags LIKE ?
+            AND stock > 0 
+            ORDER BY title;
+        `;
+
+        const [booksFromDB] = await pool.query(searchQuery, [searchTerm, searchTerm, searchTerm, searchTerm]);
+
+        if (booksFromDB.length === 0) {
+            return res.json({ books: [], pagination: {} }); // Devuelve un array vacío si no hay resultados
+        }
+
+        // Asegurar que el precio sea numérico y devolver el mismo formato que getAllBooks
+        const books = booksFromDB.map(book => ({
+            ...book,
+            price: parseFloat(book.price)
+        }));
+
+        // Para la búsqueda no implementaremos paginación compleja por ahora, 
+        // pero mantenemos una estructura similar para la respuesta.
+        res.json({
+            books,
+            pagination: { totalBooks: books.length } // Información básica de paginación
+        });
+
+    } catch (error) {
+        console.error('Error en searchBooksByNameAuthorGenre:', error);
+        res.status(500).json({ message: 'Error interno del servidor al realizar la búsqueda.', error: error.message });
+    }
+};
+
 // --- Funciones solo para Administradores ---
 
 // Crear un nuevo libro (solo admin)

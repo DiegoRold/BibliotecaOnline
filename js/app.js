@@ -20,6 +20,7 @@ let horarioLink, horarioModal, closeHorarioModal;
 let goToBlogBtn, goToBioBtn;
 let goToBooksBtn;
 let recommendationsGrid; // <--- NUEVO: Para la cuadrícula de recomendaciones
+let searchForm; // <--- AÑADIR ESTA LÍNEA PARA EL FORMULARIO DE BÚSQUEDA
 
 // --- Slider Dinámico de Libros ---
 let dynamicSliderElement;
@@ -96,6 +97,7 @@ async function init() {
     goToBooksBtn = document.getElementById('go-to-books-btn');
     dynamicSliderElement = document.getElementById('dynamic-book-slider'); // <--- Slider Element
     recommendationsGrid = document.getElementById('recommendationsGrid'); // <--- NUEVO
+    searchForm = document.getElementById('searchForm'); // <--- AÑADIR ESTA LÍNEA
 
     applyTheme();
     initializeDynamicBookSlider(); // <--- Inicializar el nuevo slider
@@ -114,7 +116,7 @@ async function init() {
         renderWishlist(); 
         renderCartModal(); 
         updateUserUI(); 
-        renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4));
+             renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4));
         console.log('Aplicación inicializada.');
 
     } catch (error) {
@@ -678,6 +680,26 @@ function setupEventListeners() {
     if (emptyCartBtn) emptyCartBtn.addEventListener('click', () => emptyCart());
     if (logoutLinkMenu) logoutLinkMenu.addEventListener('click', (e) => { e.preventDefault(); logoutUser(); }); // <--- Listener para logout
 
+    // Listener para el formulario de búsqueda del header
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevenir el envío tradicional del formulario
+            const searchInput = document.getElementById('searchInput'); // Asumimos que el input tiene id="searchInput"
+            if (searchInput) {
+                const query = searchInput.value.trim();
+                if (query) {
+                    // Redirigir a la página de resultados de búsqueda
+                    window.location.href = `search-results.html?query=${encodeURIComponent(query)}`;
+                } else {
+                    // Opcional: manejar el caso de búsqueda vacía, ej. focus en el input
+                    searchInput.focus();
+                }
+            } else {
+                console.error('Elemento con id "searchInput" no encontrado dentro del searchForm.');
+            }
+        });
+    }
+
     // Listener para el botón del blog
     if (goToBlogBtn) {
         goToBlogBtn.addEventListener('click', () => {
@@ -750,11 +772,11 @@ function setupEventListeners() {
             if(e.detail.title && e.detail.price !== undefined) { // Chequeo mínimo
         addBookToCartApp(
             {
-                id: e.detail.bookId,
-                title: e.detail.title,
-                price: parseFloat(e.detail.price),
-                cover: e.detail.cover,
-                stock: parseInt(e.detail.stock)
+                    id: e.detail.bookId,
+                    title: e.detail.title,
+                    price: parseFloat(e.detail.price),
+                    cover: e.detail.cover,
+                    stock: parseInt(e.detail.stock)
             }
         );
             } else {
@@ -993,7 +1015,7 @@ function renderCurrentImageGroupInSlider() {
 function advanceBookSlider() {
     // Avanzar al siguiente grupo de imágenes
     currentImageGroupIndex = (currentImageGroupIndex + IMAGES_PER_GROUP);
-    
+
     // Si currentImageGroupIndex se pasa del total de imágenes (considerando un ciclo completo),
     // y no es momento de un reseteo total por slideCycleCount, lo ajustamos para que siga en el ciclo.
     if (currentImageGroupIndex >= bookImageFilenames.length) {
@@ -1001,9 +1023,9 @@ function advanceBookSlider() {
     }
 
     slideCycleCount++;
-
+    
     if (slideCycleCount >= TOTAL_SLIDE_CYCLES_BEFORE_RESET) {
-        slideCycleCount = 0;
+        slideCycleCount = 0; 
         currentImageGroupIndex = 0; // Reiniciar al primer grupo de imágenes
         console.log("Slider reiniciado después de 3 ciclos.");
     }

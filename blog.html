@@ -48,43 +48,74 @@
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 flex flex-col min-h-screen">
-    <!-- Header (estructura de bio.html) -->
+    <!-- Header (Copiado de index.html) -->
     <header class="bg-gray-800 shadow-md relative z-10">
         <div class="container mx-auto px-4 pt-2 pb-0">
+            <!-- Nivel Superior: Logo, Título, Búsqueda, Iconos -->
             <div class="flex justify-between items-center border-b pb-2 border-gray-700">
+                <!-- Izquierda: Logo y Título -->
                 <div class="flex items-center space-x-3">
                     <a href="index.html"><img src="assets/logo.png" alt="Logo ENTRE HOJAS" class="h-16 md:h-20 w-auto"></a>
                     <a href="index.html"><h1 class="text-3xl font-bold hidden sm:block text-white">ENTRE HOJAS</h1></a>
                 </div>
+
+                <!-- Centro: Barra de Búsqueda -->
                 <div class="flex-grow mx-4 hidden md:flex justify-center">
-                    <div class="relative w-full max-w-md">
-                        <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <button class="absolute right-0 top-0 mt-2 mr-3">
+                    <form id="searchForm" class="relative w-full max-w-md">
+                        <input type="search" id="searchInput" name="query" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <button type="submit" id="searchButton" class="absolute right-0 top-0 mt-2 mr-3">
                             <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </button>
-                    </div>
+                    </form>
                 </div>
+
+                <!-- Derecha: Iconos -->
                 <div class="flex items-center space-x-2 md:space-x-3">
-                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700 relative" title="Mi Cuenta"><img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert"><div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden"><div id="user-greeting" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hidden"></div><a href="login.html" id="login-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Iniciar Sesión</a><a href="register.html" id="register-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Registrarse</a><a href="#" id="profile-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mi Perfil</a><a href="orders.html" id="orders-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mis Pedidos</a><a href="#" id="logout-link-menu" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Cerrar Sesión</a></div></button>
-                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto"><img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert"></button>
-                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema"><img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert"></button>
-                    <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos"><img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert"></button>
-                    <button id="cart-icon" class="relative p-2 rounded-lg hover:bg-gray-700" title="Mi Compra"><img src="assets/carrito.png" alt="Mi Compra" class="w-7 h-7 md:w-8 md:h-8 filter-invert"><span id="cart-count-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span></button>
+                    <button id="user-icon" class="p-2 rounded-lg hover:bg-gray-700 relative" title="Mi Cuenta">
+                        <img src="assets/usuario.png" alt="Mi Cuenta" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                         <!-- Menú Desplegable Usuario -->
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-20 hidden">
+                            <div id="user-greeting" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 hidden"></div>
+                            <a href="login.html" id="login-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Iniciar Sesión</a>
+                            <a href="register.html" id="register-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">Registrarse</a>
+                            <a href="#" id="profile-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mi Perfil</a>
+                            <a href="orders.html" id="orders-link-menu" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Mis Pedidos</a>
+                            <a href="#" id="logout-link-menu" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 hidden">Cerrar Sesión</a>
+                        </div>
+                    </button>
+                    <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
+                        <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema">
+                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos">
+                        <img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                    </button>
+                    <button id="cart-icon" class="relative p-2 rounded-lg hover:bg-gray-700" title="Mi Compra">
+                        <img src="assets/carrito.png" alt="Mi Compra" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
+                        <span id="cart-count-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span>
+                    </button>
                 </div>
             </div>
+            <!-- Barra de búsqueda para móviles -->
             <div class="mt-2 md:hidden">
-                 <div class="relative w-full">
-                    <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <button class="absolute right-0 top-0 mt-2 mr-3"><svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
-                </div>
+                 <form id="searchFormMobile" class="relative w-full">
+                    <input type="search" id="searchInputMobile" name="query" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button type="submit" id="searchButtonMobile" class="absolute right-0 top-0 mt-2 mr-3">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </button>
+                </form>
             </div>
+
+            <!-- Nivel Inferior: Navegación -->
             <nav class="flex justify-center py-2">
                 <ul class="flex space-x-4 md:space-x-8">
                     <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
                     <li><a href="books.html" class="text-gray-300 hover:text-white">Libros</a></li>
                     <li><a href="bio.html" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
                     <li><a href="blog.html" class="text-gray-300 hover:text-white font-bold">Blog</a></li> <!-- Enlace activo -->
-                    <li><a href="#" id="horario-link" class="text-gray-300 hover:text-white">Horario</a></li>
+                    <li><a href="#" id="horario-link" class="text-gray-300 hover:text-white">Horario</a></li> 
                 </ul>
             </nav>
         </div>
@@ -120,71 +151,69 @@
                     <h2>Ampliamos Nuestro Horario de Fin de Semana</h2>
                     <p class="event-date">A partir del 1 de Diciembre, 2023</p>
                     <p>¡Buenas noticias para los lectores nocturnos y de fin de semana! "Entre Hojas" amplía su horario. A partir de diciembre, abriremos los sábados hasta las 21:00 y los domingos por la mañana de 10:00 a 14:00. ¡Más tiempo para encontrar tu próxima lectura favorita!</p>
-                    <!-- No necesita botón si es solo un anuncio -->
                 </div>
             </article>
-
-            <!-- Más entradas se pueden añadir aquí -->
         </div>
     </main>
 
-    <!-- Footer (estructura de bio.html) -->
-    <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                <div>
-                    <h5 class="font-bold text-lg mb-2 text-white">ENTRE HOJAS</h5>
-                    <p>Tu refugio literario en el corazón de la ciudad. Descubre, lee, sueña.</p>
+    <!-- Footer (Copiado de index.html) -->
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-12">
+        <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <!-- Logo e Información -->
+            <div>
+                <div class="flex justify-center md:justify-start mb-4">
+                    <img src="assets/logo.png" alt="Logo Entre Hojas Blanco" class="h-20 filter-invert">
                 </div>
-                <div>
-                    <h5 class="font-bold text-lg mb-2 text-white">Enlaces Rápidos</h5>
-                    <ul>
-                        <li><a href="index.html" class="hover:text-white">Inicio</a></li>
-                        <li><a href="books.html" class="hover:text-white">Libros</a></li>
-                        <li><a href="bio.html" class="hover:text-white">Quiénes Somos</a></li>
-                        <li><a href="blog.html" class="hover:text-white">Blog</a></li>
-                        <li><a href="#" class="hover:text-white">Contacto</a></li>
-                    </ul>
-                </div>
+                <p class="text-sm mb-2">Tu librería de confianza en Madrid y online.</p>
+                <p class="text-sm">Calle de la Lectura, 42, 28013 Madrid</p>
             </div>
-            <p class="text-sm">&copy; <span id="currentYear"></span> ENTRE HOJAS. Todos los derechos reservados.</p>
-            <p class="text-xs mt-2">Hecho con <span class="text-red-500">&hearts;</span> por amantes de la lectura.</p>
+
+            <!-- Enlaces Rápidos -->
+            <div>
+                <h3 class="text-lg font-semibold text-white mb-4">Enlaces Rápidos</h3>
+                <ul class="space-y-2">
+                    <li><a href="index.html" class="hover:text-white">Inicio</a></li>
+                    <li><a href="books.html" class="hover:text-white">Todos los Libros</a></li>
+                    <li><a href="bio.html" class="hover:text-white">Quiénes Somos</a></li>
+                    <li><a href="blog.html" class="hover:text-white">Blog</a></li>
+                    <li><a href="#" id="footer-horario-link" class="hover:text-white">Horario de Tienda</a></li> 
+                </ul>
+            </div>
+
+            <!-- Redes Sociales y Contacto -->
+            <div>
+                <h3 class="text-lg font-semibold text-white mb-4">Síguenos</h3>
+                <div class="flex justify-center md:justify-start space-x-4 mb-4">
+                    <a href="#" class="hover:text-white"><img src="assets/facebook.png" alt="Facebook" class="w-6 h-6 filter-invert"></a>
+                    <a href="#" class="hover:text-white"><img src="assets/twitter.png" alt="Twitter" class="w-6 h-6 filter-invert"></a>
+                    <a href="#" class="hover:text-white"><img src="assets/instagram.png" alt="Instagram" class="w-6 h-6 filter-invert"></a>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2 mt-6">Contacto Rápido</h3>
+                <p class="text-sm"><a href="tel:+34910123456" class="hover:text-white">Tel: +34 910 123 456</a></p>
+                <p class="text-sm"><a href="mailto:info@entrehojas.com" class="hover:text-white">info@entrehojas.com</a></p>
+            </div>
+        </div>
+        <div class="mt-8 pt-8 border-t border-gray-700 text-center text-sm">
+            <p>&copy; <span id="currentYearFooter"></span> ENTRE HOJAS. Todos los derechos reservados.</p>
+            <p class="mt-1"><a href="legal/privacy.html" class="hover:text-white">Política de Privacidad</a> | <a href="legal/terms.html" class="hover:text-white">Términos de Servicio</a></p>
         </div>
     </footer>
 
-    <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-xs w-full">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
-            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2>
-                <button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
-                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="space-y-3 text-center">
-                <img src="assets/reloj.png" alt="Horario" class="w-16 h-16 mx-auto mb-4 filter dark:invert">
-                <div class="text-gray-700 dark:text-gray-300">
-                    <p class="font-semibold">Lunes - Sábado</p>
-                    <p class="mb-2 text-lg">9:30 a 21:00</p>
-                    <p class="font-semibold">Domingo y Festivos</p>
-                    <p class="text-lg">10:00 a 14:00</p>
-                </div>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- Modales (copiados de bio.html) -->
+    <!-- Modales del Header (Copiados de index.html para funcionalidad) -->
+    <!-- Wishlist Modal -->
     <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl"><div class="bg-white dark:bg-gray-800 rounded-lg p-4"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2><button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar"><svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto"></div></div></dialog>
+    <!-- Contact Modal -->
     <dialog id="contact-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full"><div class="bg-white dark:bg-gray-800 p-6 rounded-lg"><div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600"><h2 class="text-xl font-semibold text-gray-800 dark:text-white">Información de Contacto</h2><button id="close-contact-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar"><svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="space-y-5"><div class="flex items-center space-x-3"><img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0"><span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span></div><div class="flex items-center space-x-3"><img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0"><a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a></div><div class="flex items-start space-x-3"><img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1"><span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span></div></div></div></dialog>
+    <!-- Cart Modal -->
+    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-lg fixed right-0 top-0 h-full m-0 transform transition-transform duration-300 ease-in-out translate-x-full"><div class="bg-white dark:bg-gray-800 h-full flex flex-col"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Compra</h2><button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar Carrito"><svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div id="cart-items-container" class="p-4 flex-grow overflow-y-auto space-y-3"></div><div class="p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800"><div class="flex justify-between items-center mb-3"><span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span><span id="cart-total-price" class="text-lg font-bold text-gray-800 dark:text-white">0.00 €</span></div><button id="go-to-checkout-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2">Proceder al Pago</button><button id="empty-cart-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Vaciar Carrito</button></div></div></dialog>
+    <!-- Modal de Confirmación para Vaciar Carrito -->
     <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md"><div class="bg-white dark:bg-gray-800 rounded-lg p-6"><h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3><p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p><div class="flex justify-end space-x-3"><button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md">Cancelar</button><button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">Sí, Vaciar Carrito</button></div></div></dialog>
-    <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-sm"><div class="bg-white dark:bg-gray-800 rounded-lg"><div class="flex justify-between items-center p-4 border-b dark:border-gray-700"><h2 class="text-xl font-semibold text-gray-800 dark:text-white">Mi Compra</h2><button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar"><svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto"></div><div class="p-4 border-t dark:border-gray-700"><div class="flex justify-between items-center mb-3"><span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span><span id="cart-total-price" class="text-lg font-bold text-gray-800 dark:text-white">0.00 €</span></div><a href="checkout.html" id="checkout-btn" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Finalizar Compra</a><button id="empty-cart-btn" class="mt-2 w-full text-center bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Vaciar Carrito</button></div></div></dialog>
+    <!-- Horario Modal -->
+    <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full"><div class="bg-white dark:bg-gray-800 p-6 rounded-lg"><div class="flex justify-between items-center mb-4 pb-3 border-b dark:border-gray-600"><h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2><button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar"><svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="text-gray-700 dark:text-gray-300 space-y-2"><p><strong>Lunes a Viernes:</strong> 10:00 AM - 8:00 PM</p><p><strong>Sábados:</strong> 10:00 AM - 6:00 PM</p><p><strong>Domingos y Festivos:</strong> Cerrado</p></div></div></dialog>
 
-    <script src="js/components/book-card.js"></script>
+    <script src="js/components/book-card.js"></script> <!-- Aunque no se use directamente aquí, app.js podría tener dependencias o se usa en otras partes -->
     <script src="js/app.js"></script>
     <!-- <script src="js/blog.js"></script> No tenemos aún script específico para el blog -->
-    <script>
-        if (document.getElementById('currentYear')) {
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-        }
-    </script>
+    <!-- El script para el año actual en el footer se maneja ahora desde app.js si es necesario o con id="currentYearFooter" -->
 </body>
 </html> 

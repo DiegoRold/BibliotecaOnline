@@ -3,83 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Libros - Entre Hojas</title>
+    <title>Resultados de Búsqueda - ENTRE HOJAS</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
-    <!-- 
-    <style>
-        /* Estilos locales comentados temporalmente para evitar conflictos */
-        /* 
-        .container { 
-            width: 90%; 
-            max-width: 1200px;
-            margin: 20px auto; 
-            background-color: white; 
-            padding: 20px; 
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-        }
-        h1 { 
-            text-align: center;
-            color: #333;
-        }
-        .books-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .book-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            text-align: center;
-            background-color: #fff;
-        }
-        .book-item img {
-            max-width: 100%;
-            height: 200px; 
-            object-fit: cover; 
-            margin-bottom: 10px;
-        }
-        .book-item h3 {
-            font-size: 1.1em;
-            margin: 10px 0 5px;
-        }
-        .book-item p {
-            font-size: 0.9em;
-            color: #555;
-            margin-bottom: 5px;
-        }
-        .book-item .price {
-            font-weight: bold;
-            color: #27ae60;
-            margin-bottom: 10px;
-        }
-        .pagination {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .pagination button, .pagination span {
-            margin: 0 5px;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-            cursor: pointer;
-        }
-        .pagination button:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-        .pagination .page-number.active {
-            font-weight: bold;
-            background-color: #333;
-            color: white;
-            border-color: #333;
-        }
-        */
-    </style>
-    -->
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 flex flex-col min-h-screen"> <!-- Clase de body de checkout.html -->
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
     <!-- Header (Copiado de index.html) -->
     <header class="bg-gray-800 shadow-md relative z-10">
         <div class="container mx-auto px-4 pt-2 pb-0">
@@ -143,8 +71,8 @@
             <!-- Nivel Inferior: Navegación -->
             <nav class="flex justify-center py-2">
                 <ul class="flex space-x-4 md:space-x-8">
-                    <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
-                    <li><a href="books.html" class="text-gray-300 hover:text-white font-bold">Libros</a></li>
+                    <li><a href="index.html" class="text-gray-300 hover:text-white font-bold">Inicio</a></li>
+                    <li><a href="books.html" class="text-gray-300 hover:text-white">Libros</a></li>
                     <li><a href="bio.html" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
                     <li><a href="blog.html" class="text-gray-300 hover:text-white">Blog</a></li>
                     <li><a href="#" id="horario-link" class="text-gray-300 hover:text-white">Horario</a></li> 
@@ -153,19 +81,23 @@
         </div>
     </header>
 
-    <!-- Mensaje Llamativo Pedidos a Reembolso (igual que en index.html) -->
-    <div class="bg-yellow-400 text-black p-4 text-center font-bold text-lg shadow-md">
-        <p>ATENCIÓN: ¡TODOS LOS PEDIDOS SE REALIZAN A REEMBOLSO!</p>
-    </div>
-
-    <!-- Contenido específico de books.html -->
-    <main class="container mx-auto px-4 py-8 flex-grow">
-        <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">Nuestros Libros</h1>
-        <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Los libros se cargarán aquí mediante JavaScript -->
+    <!-- Contenido Principal de Resultados de Búsqueda -->
+    <main class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">Resultados de Búsqueda</h1>
+        <div id="search-query-display" class="mb-4">
+            <p>Buscando: <span id="query-term" class="font-semibold"></span></p>
         </div>
-        <div id="pagination" class="flex justify-center items-center space-x-2 mt-8">
-            <!-- La paginación se generará aquí -->
+        
+        <div id="results-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Los resultados de la búsqueda se insertarán aquí por JavaScript -->
+        </div>
+        
+        <div id="loading-indicator" class="text-center py-4" style="display: none;">
+            <p>Cargando resultados...</p>
+        </div>
+
+        <div id="no-results-message" class="text-center py-4" style="display: none;">
+            <p>No se encontraron libros para tu búsqueda.</p>
         </div>
     </main>
 
@@ -212,7 +144,7 @@
         </div>
     </footer>
 
-    <!-- Modales del Header (Copiados de index.html para funcionalidad) -->
+    <!-- Modales (Copiados de index.html por si js/app.js los necesita) -->
     <!-- Wishlist Modal -->
     <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl">
         <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
@@ -242,9 +174,18 @@
                 </button>
             </div>
             <div class="space-y-5">
-                <div class="flex items-center space-x-3"><img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0"><span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span></div>
-                <div class="flex items-center space-x-3"><img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0"><a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a></div>
-                <div class="flex items-start space-x-3"><img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1"><span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span></div>
+                <div class="flex items-center space-x-3">
+                    <img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0">
+                    <span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0">
+                    <a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1">
+                    <span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span>
+                </div>
             </div>
         </div>
     </dialog>
@@ -262,7 +203,7 @@
                 <!-- Los artículos del carrito se insertarán aquí -->
             </div>
             <div class="p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                 <div class="flex justify-between items-center mb-3">
+                <div class="flex justify-between items-center mb-3">
                     <span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span>
                     <span id="cart-total-price" class="text-lg font-bold text-gray-800 dark:text-white">0.00 €</span>
                 </div>
@@ -305,10 +246,76 @@
         </div>
     </dialog>
 
-    <!-- Scripts -->
     <script src="js/components/book-card.js"></script>
-    <script src="js/app.js"></script> <!-- Ya estaba, esencial para el header -->
-    <script src="js/books.js"></script> <!-- Script específico para la página de libros -->
-    <!-- El script para el año ya no es necesario aquí si app.js lo maneja o el footer tiene id="currentYearFooter" y app.js tiene lógica para ese id -->
+    <!-- Script para la lógica de esta página específica (resultados de búsqueda) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Script para el año actual en el footer
+            // Se moverá a app.js o se manejará de forma centralizada si es posible,
+            // pero lo dejamos aquí por ahora para asegurar que el footer nuevo funcione.
+            if (document.getElementById('currentYearFooter')) {
+                document.getElementById('currentYearFooter').textContent = new Date().getFullYear();
+            }
+
+            const queryParams = new URLSearchParams(window.location.search);
+            const query = queryParams.get('query');
+            const queryTermEl = document.getElementById('query-term');
+            const resultsContainer = document.getElementById('results-container');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const noResultsMessage = document.getElementById('no-results-message');
+            
+            if (queryTermEl && query) {
+                queryTermEl.textContent = query;
+            } else if (queryTermEl) {
+                queryTermEl.textContent = "Ningún término especificado.";
+                resultsContainer.innerHTML = '';
+                noResultsMessage.style.display = 'block';
+                return;
+            }
+
+            if (!query) {
+                resultsContainer.innerHTML = '<p>No se ha especificado un término de búsqueda.</p>';
+                return;
+            }
+
+            if (loadingIndicator) loadingIndicator.style.display = 'block';
+            if (resultsContainer) resultsContainer.innerHTML = '';
+            if (noResultsMessage) noResultsMessage.style.display = 'none';
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/libros/search?q=${encodeURIComponent(query)}`);
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    throw new Error(errorData.message || `Error del servidor: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.books && data.books.length > 0) {
+                    data.books.forEach(book => {
+                        const bookCardElement = document.createElement('book-card');
+                        bookCardElement.setAttribute('id', book.id);
+                        bookCardElement.setAttribute('title', book.title || '');
+                        bookCardElement.setAttribute('author', book.author || '');
+                        bookCardElement.setAttribute('cover', book.cover || 'assets/books/placeholder.png');
+                        bookCardElement.setAttribute('price', book.price ? String(book.price) : '0');
+                        bookCardElement.setAttribute('stock', book.stock ? String(book.stock) : '0');
+                        resultsContainer.appendChild(bookCardElement);
+                    });
+                } else {
+                    if (noResultsMessage) noResultsMessage.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error al buscar libros:', error);
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                if (resultsContainer) resultsContainer.innerHTML = `<p class="text-red-500 text-center">Error al cargar los resultados: ${error.message}</p>`;
+            }
+        });
+    </script>
+    <!-- Main Application Script (para funcionalidades del header/footer) -->
+    <script src="js/app.js"></script>
 </body>
 </html> 

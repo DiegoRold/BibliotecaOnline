@@ -8,7 +8,6 @@ import {
     createOrder
 } from '../controllers/orderController.js';
 import authMiddleware, { authorize } from '../middlewares/authMiddleware.js';
-import authenticateToken from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -21,8 +20,8 @@ router.get('/', authMiddleware, getUserOrders);
 router.get('/:id', authMiddleware, getOrderById);
 
 // Ruta para crear un nuevo pedido
-// POST /api/orders
-router.post('/', authenticateToken, createOrder);
+// POST /api/pedidos (la ruta base ya es /api/pedidos por como se monta en server.js)
+router.post('/', authMiddleware, createOrder);
 
 // Rutas para Administradores (requieren autenticación y rol de admin)
 

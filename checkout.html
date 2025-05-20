@@ -21,12 +21,7 @@
 
                 <!-- Centro: Barra de Búsqueda (Opcional en checkout) -->
                 <div class="flex-grow mx-4 hidden md:flex justify-center">
-                    <!-- <div class="relative w-full max-w-md">
-                        <input type="search" placeholder="Buscar libros, autores, ISBN..." class="w-full px-4 py-2 border border-gray-600 bg-gray-700 text-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <button class="absolute right-0 top-0 mt-2 mr-3">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                        </button>
-                    </div> -->
+                   
                 </div>
 
                 <!-- Derecha: Iconos -->
@@ -44,9 +39,6 @@
                     </button>
                     <button id="contact-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Contacto">
                         <img src="assets/contacto.png" alt="Contacto" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
-                    </button>
-                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-700" title="Cambiar tema">
-                        <img src="assets/modo-oscuro.png" alt="Cambiar tema" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
                     </button>
                     <button id="wishlist-header-icon" class="p-2 rounded-lg hover:bg-gray-700" title="Mi Lista de Deseos">
                         <img src="assets/lista-de-deseos.png" alt="Mi Lista de Deseos" class="w-7 h-7 md:w-8 md:h-8 filter-invert">
@@ -105,11 +97,85 @@
                     </div>
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-700 dark:text-gray-300">Gastos de Envío:</span>
-                        <span class="text-gray-800 dark:text-white">GRATIS</span> <!-- Placeholder, ajustar si hay lógica de envío -->
+                        <span id="checkout-shipping-costs" class="text-gray-800 dark:text-white">GRATIS</span>
                     </div>
                     <div class="flex justify-between items-center text-xl font-bold text-gray-800 dark:text-white mt-4 pt-4 border-t dark:border-gray-600">
                         <span>Total General:</span>
                         <span id="checkout-grand-total">0.00 €</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Opciones de Envío -->
+            <div id="shipping-options-section" class="mt-8">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Opciones de Envío</h2>
+                <div class="space-y-4">
+                    <div id="auth-required-for-shipping" class="hidden p-4 text-sm text-yellow-700 bg-yellow-100 rounded-lg dark:bg-yellow-200 dark:text-yellow-800" role="alert">
+                        Debes <a href="login.html" class="font-bold hover:underline">iniciar sesión</a> o <a href="register.html" class="font-bold hover:underline">registrarte</a> para ver las opciones de envío a domicilio.
+                    </div>
+
+                    <div>
+                        <label for="shipping-store-pickup" class="flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                            <input type="radio" id="shipping-store-pickup" name="shippingOption" value="storePickup" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" checked>
+                            <span class="ml-3 text-gray-700 dark:text-gray-300">
+                                <span class="block font-medium">Recogida en Tienda</span>
+                                <span class="block text-sm text-gray-500 dark:text-gray-400">Gratis - Recoge tu pedido en nuestra tienda física.</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div id="home-delivery-option-group" class="hidden">
+                        <label for="shipping-my-address" class="flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                            <input type="radio" id="shipping-my-address" name="shippingOption" value="myAddress" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="ml-3 text-gray-700 dark:text-gray-300">
+                                <span class="block font-medium">Enviar a mi dirección</span>
+                                <span class="block text-sm text-gray-500 dark:text-gray-400">Coste: 4.99 €</span>
+                                <div id="my-address-details" class="mt-1 text-xs text-gray-500 dark:text-gray-400"></div>
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div id="other-address-option-group" class="hidden">
+                        <label for="shipping-other-address" class="flex items-center p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                            <input type="radio" id="shipping-other-address" name="shippingOption" value="otherAddress" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="ml-3 text-gray-700 dark:text-gray-300">
+                                <span class="block font-medium">Enviar a otra dirección</span>
+                                <span class="block text-sm text-gray-500 dark:text-gray-400">Coste: 4.99 €</span>
+                            </span>
+                        </label>
+                        <div id="other-address-form" class="hidden mt-4 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                            <h3 class="text-md font-semibold text-gray-800 dark:text-white mb-3">Introduce la nueva dirección de envío:</h3>
+                            <div class="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4">
+                                <div>
+                                    <label for="other-address-name" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Nombre Completo</label>
+                                    <input type="text" name="other-address-name" id="other-address-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div>
+                                    <label for="other-address-street" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Calle y Número</label>
+                                    <input type="text" name="other-address-street" id="other-address-street" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div>
+                                    <label for="other-address-apartment" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Piso, Puerta, Detalles (opcional)</label>
+                                    <input type="text" name="other-address-apartment" id="other-address-apartment" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div>
+                                    <label for="other-address-zip" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Código Postal</label>
+                                    <input type="text" name="other-address-zip" id="other-address-zip" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div>
+                                    <label for="other-address-city" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Ciudad</label>
+                                    <input type="text" name="other-address-city" id="other-address-city" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div>
+                                    <label for="other-address-state" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Provincia</label>
+                                    <input type="text" name="other-address-state" id="other-address-state" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label for="other-address-country" class="block text-sm font-medium text-gray-700 dark:text-gray-200">País</label>
+                                    <input type="text" name="other-address-country" id="other-address-country" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

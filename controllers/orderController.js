@@ -5,7 +5,7 @@ export const getUserOrders = async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const userId = req.user.userId; // Obtenido del middleware 'protect'
+        const userId = req.user.id; // Cambiado de req.user.userId
 
         const [orders] = await connection.query(
             'SELECT * FROM pedidos WHERE usuario_id = ? ORDER BY fecha_pedido DESC',
@@ -30,7 +30,7 @@ export const getOrderById = async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const userId = req.user.userId;
+        const userId = req.user.id; // Cambiado de req.user.userId
         const orderId = parseInt(req.params.id, 10);
 
         if (isNaN(orderId)) {
@@ -78,7 +78,7 @@ export const createOrder = async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const userId = req.user.userId;
+        const userId = req.user.id; // Cambiado de req.user.userId
         const { items, totalAmount } = req.body;
 
         if (!items || items.length === 0) {

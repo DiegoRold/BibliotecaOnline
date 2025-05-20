@@ -4,7 +4,7 @@ import validator from 'validator'; // Para validaciones, ej. email
 
 // Función para actualizar el perfil del usuario (nombre, email, dirección)
 export const updateUserProfile = async (req, res) => {
-    const userId = req.user.id; // Asumimos que verifyToken añade user.id a req
+    const userId = req.user.id; // Cambiado de req.user.userId
     const {
         nombre,
         email,
@@ -81,7 +81,7 @@ export const updateUserProfile = async (req, res) => {
 
 // Función para obtener el perfil del usuario autenticado
 export const getUserProfile = async (req, res) => {
-    const userId = req.user.id; // Asumimos que verifyToken añade user.id a req
+    const userId = req.user.id; // Cambiado de req.user.userId
 
     try {
         const [rows] = await db.query(
@@ -107,7 +107,7 @@ export const getUserProfile = async (req, res) => {
 
 // Función para cambiar la contraseña del usuario
 export const changeUserPassword = async (req, res) => {
-    const userId = req.user.id; // Asumimos que verifyToken añade user.id a req
+    const userId = req.user.id; // Cambiado de req.user.userId
     const { currentPassword, newPassword } = req.body;
 
     // --- INICIO VALIDACIONES --- 

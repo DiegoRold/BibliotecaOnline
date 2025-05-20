@@ -260,3 +260,143 @@ function loadCartSummary(cart) {
     subtotalEl.textContent = `${currentSubtotal.toFixed(2)} €`;
     grandTotalEl.textContent = `${currentSubtotal.toFixed(2)} €`;
 } 
+
+// --- LÓGICA DE PAGO ---
+async function handleProceedToPayment() {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        if (authRequiredModal) authRequiredModal.showModal();
+        return;
+    }
+
+    const selectedShippingOption = document.querySelector('input[name="shippingOption"]:checked');
+    if (!selectedShippingOption) {
+        alert('Por favor, selecciona una opción de envío.');
+        return;
+    }
+
+    // Validar el formulario de "otra dirección" si está seleccionado
+    let shippingAddressData = null;
+    const shippingMethodValue = selectedShippingOption.value;
+
+    if (shippingMethodValue === 'myAddress') {
+        if (!currentUserData || !currentUserData.direccion_calle) {
+            alert('No tienes una dirección guardada. Por favor, selecciona \'Enviar a otra dirección\' o actualiza tu perfil.');
+            return;
+        }
+        shippingAddressData = {
+            name: currentUserData.nombre,
+            street: currentUserData.direccion_calle,
+            apartment: currentUserData.direccion_detalle || '',
+            zip: currentUserData.direccion_cp,
+            city: currentUserData.direccion_ciudad,
+            state: currentUserData.direccion_provincia || '',
+            country: currentUserData.direccion_pais
+        };
+    } else if (shippingMethodValue === 'otherAddress') {
+        const name = document.getElementById('other-address-name').value.trim();
+        const street = document.getElementById('other-address-street').value.trim();
+        const zip = document.getElementById('other-address-zip').value.trim();
+        const city = document.getElementById('other-address-city').value.trim();
+        const country = document.getElementById('other-address-country').value.trim();
+        
+        if (!name || !street || !zip || !city || !country) {
+            alert('Por favor, completa todos los campos obligatorios de la dirección de envío.');
+            return;
+        }
+        shippingAddressData = {
+            name: name,
+            street: street,
+            apartment: document.getElementById('other-address-apartment').value.trim(),
+            zip: zip,
+            city: city,
+            state: document.getElementById('other-address-state').value.trim(),
+            country: country
+        };
+    } else if (shippingMethodValue === 'storePickup') {
+        shippingAddressData = { name: 'Recogida en Tienda' }; 
+    }
+
+    // Preparar el payload para el endpoint createOrder existente
+    const orderPayload = {
+        items: cart.map(item => ({
+            book_id: item.id, // IMPORTANTE: Este debe ser el api_id (ej. ISBN) que createOrder espera
+            quantity: parseInt(item.quantity, 10),
+            price: parseFloat(item.price),
+            title: item.title || item.name // Asegúrate que el título esté presente
+        })),
+        totalAmount: parseFloat(checkoutGrandTotalEl.textContent.replace(/[^\d,-]/g, '').replace(',', '.'))
+        // El backend createOrder actual no usa explícitamente dirección, gastos de envío, etc.
+        // Si se añaden esas columnas a la tabla 'pedidos' y se modifica el INSERT en createOrder,
+        // se podrían añadir aquí: 
+        // shippingDetails: shippingAddressData, 
+        // shippingCost: parseFloat(checkoutShippingCostsEl.textContent.toLowerCase() === 'gratis' ? 0 : checkoutShippingCostsEl.textContent.replace(/[^\d,-]/g, '').replace(',', '.')),
+        // paymentMethod: 'reembolso'
+    };
+
+    console.log('Procesando pedido con payload:', JSON.stringify(orderPayload, null, 2));
+
+    const confirmPurchaseModal = document.getElementById('confirm-purchase-modal');
+    const confirmationTotalPriceEl = document.getElementById('confirmation-total-price');
+    const cancelPurchaseBtn = document.getElementById('cancel-purchase-btn');
+    const confirmPurchaseActionBtn = document.getElementById('confirm-purchase-action-btn');
+
+    if (confirmationTotalPriceEl) confirmationTotalPriceEl.textContent = formatPrice(orderPayload.totalAmount);
+    if (confirmPurchaseModal) confirmPurchaseModal.showModal();
+
+    // Event listeners para el modal de confirmación (se asignan una vez por clic para evitar duplicados)
+    const newCancelBtn = cancelPurchaseBtn.cloneNode(true);
+    cancelPurchaseBtn.parentNode.replaceChild(newCancelBtn, cancelPurchaseBtn);
+    newCancelBtn.addEventListener('click', () => confirmPurchaseModal.close());
+
+    const newConfirmBtn = confirmPurchaseActionBtn.cloneNode(true);
+    confirmPurchaseActionBtn.parentNode.replaceChild(newConfirmBtn, confirmPurchaseActionBtn);
+    newConfirmBtn.addEventListener('click', async () => {
+        confirmPurchaseModal.close();
+        try {
+            const response = await fetch(`${API_BASE_URL}/pedidos`, { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify(orderPayload)
+            });
+
+            const responseData = await response.json(); // Leer como JSON directamente
+
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Error al procesar el pedido.');
+            }
+            
+            const orderId = responseData.orderId; 
+            console.log('Pedido confirmado con éxito. ID:', orderId);
+
+            localStorage.removeItem('cart'); 
+            if(window.updateCartCount) window.updateCartCount(0); 
+            if(window.renderCartModal) window.renderCartModal(); 
+            currentSubtotal = 0; // Resetear subtotal local
+            cart = []; // Resetear carrito local
+            renderCartSummary(); 
+            updateShippingCosts(); 
+
+            const purchaseSuccessModal = document.getElementById('purchase-success-modal');
+            const orderNumberDisplay = document.getElementById('order-number-display');
+            const closePurchaseSuccessModal = document.getElementById('close-purchase-success-modal');
+            
+            if(orderNumberDisplay) orderNumberDisplay.textContent = orderId;
+            if(purchaseSuccessModal) purchaseSuccessModal.showModal();
+            
+            const newCloseSuccessBtn = closePurchaseSuccessModal.cloneNode(true);
+            closePurchaseSuccessModal.parentNode.replaceChild(newCloseSuccessBtn, closePurchaseSuccessModal);
+            newCloseSuccessBtn.addEventListener('click', () => {
+                purchaseSuccessModal.close();
+                window.location.href = 'index.html'; // Redirigir a inicio como se especificó
+            });
+
+        } catch (error) {
+            alert(`Error al procesar el pedido: ${error.message}`);
+            console.error('Error al procesar el pedido:', error);
+        }
+    });
+} 

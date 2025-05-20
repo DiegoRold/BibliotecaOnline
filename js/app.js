@@ -186,46 +186,94 @@ function renderBookCard(book) {
 }
 
 function renderWishlist() {
-    if (!wishlistContent) return;
+    if (!wishlistContent) {
+        console.warn("[app.js renderWishlist] wishlistContent element not found. Aborting.");
+        return;
+    }
     wishlistContent.innerHTML = ''; 
-    console.log("[app.js renderWishlist] Rendering. state.wishlist:", JSON.stringify(state.wishlist));
+    console.log("[app.js renderWishlist] Rendering. state.wishlist (book IDs):", JSON.stringify(state.wishlist));
 
-    if (state.wishlist.length === 0) {
-        wishlistContent.innerHTML = '<p>Tu lista de deseos está vacía.</p>';
+    if (!state.wishlist || state.wishlist.length === 0) {
+        wishlistContent.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Tu lista de deseos está vacía.</p>';
         return;
     }
 
     if (!allBooks || allBooks.length === 0) {
         console.warn("[app.js renderWishlist] allBooks está vacío. No se pueden renderizar items de wishlist.");
-        wishlistContent.innerHTML = '<p>Error al cargar datos de libros para la wishlist.</p>';
+        wishlistContent.innerHTML = '<p class="text-red-500 text-center py-4">Error al cargar datos de libros para la wishlist. Intenta refrescar la página.</p>';
         return;
     }
 
-    state.wishlist.forEach(bookIdInWishlist => { // es api_id (ej: "book-1")
-        console.log(`[app.js renderWishlist] Searching for bookId (api_id) '${bookIdInWishlist}' in allBooks.`);
-        const book = allBooks.find(b => b.id === bookIdInWishlist); // b.id ES el api_id
+    const ul = document.createElement('ul');
+    ul.className = 'space-y-4';
+
+    state.wishlist.forEach(bookId => {
+        const book = allBooks.find(b => b.id === bookId);
         if (book) {
-            console.log(`[app.js renderWishlist] Book found for ID '${bookIdInWishlist}':`, JSON.stringify(book));
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'flex items-center space-x-2 py-3 border-b';
-            const coverUrl = book.cover_image_url || book.cover || 'assets/books/placeholder.png';
-            const price = typeof book.price === 'number' && !isNaN(book.price) ? book.price.toFixed(2) : 'N/A';
-            itemDiv.innerHTML = `
-                <img src="${coverUrl}" alt="${book.title}" class="w-12 h-16 object-cover">
-                <div><h4>${book.title}</h4><p>${book.author || 'N/A'}</p></div>
-                <div>${price} €</div>
-                <button data-book-id="${book.id}" class="remove-wishlist-item-btn">Quitar</button>
-            `; // Usar book.id (que es api_id) para data-book-id
-            wishlistContent.appendChild(itemDiv);
+            const li = document.createElement('li');
+            li.className = 'flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md shadow';
+            
+            const bookInfoDiv = document.createElement('div');
+            bookInfoDiv.className = 'flex items-center space-x-3';
+
+            const img = document.createElement('img');
+            img.src = book.cover_image_url || book.cover || 'assets/books/placeholder.png';
+            img.alt = book.title;
+            img.className = 'w-16 h-24 object-cover rounded';
+            bookInfoDiv.appendChild(img);
+
+            const textDiv = document.createElement('div');
+            const title = document.createElement('h4');
+            title.textContent = book.title;
+            title.className = 'font-semibold text-gray-800 dark:text-white';
+            textDiv.appendChild(title);
+
+            const author = document.createElement('p');
+            author.textContent = `Por: ${book.author}`;
+            author.className = 'text-sm text-gray-600 dark:text-gray-400';
+            textDiv.appendChild(author);
+            
+            bookInfoDiv.appendChild(textDiv);
+            li.appendChild(bookInfoDiv);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'flex items-center space-x-2';
+
+            // Botón "Mover al Carrito"
+            const moveToCartBtn = document.createElement('button');
+            moveToCartBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+            `;
+            moveToCartBtn.title = 'Mover al carrito';
+            moveToCartBtn.className = 'p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
+            moveToCartBtn.onclick = () => moveWishlistItemToCart(book.id);
+            actionsDiv.appendChild(moveToCartBtn);
+
+            // Botón "Quitar de la Lista de Deseos"
+            const removeFromWishlistBtn = document.createElement('button');
+            removeFromWishlistBtn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            `;
+            removeFromWishlistBtn.title = 'Quitar de la lista de deseos';
+            removeFromWishlistBtn.className = 'p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
+            removeFromWishlistBtn.onclick = () => toggleWishlistItemApp(book.id); // toggleWishlistItemApp se encarga de quitarlo
+            actionsDiv.appendChild(removeFromWishlistBtn);
+
+            li.appendChild(actionsDiv);
+            ul.appendChild(li);
         } else {
-            console.warn(`[app.js renderWishlist] Libro con ID (api_id) '${bookIdInWishlist}' en wishlist PERO NO ENCONTRADO en allBooks.`);
+            console.warn(`[app.js renderWishlist] Libro con ID: ${bookId} no encontrado en allBooks. Será omitido.`);
+            // Opcionalmente, eliminar el ID de state.wishlist si el libro ya no existe
+            // state.wishlist = state.wishlist.filter(id => id !== bookId);
+            // localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
         }
     });
-
-    wishlistContent.querySelectorAll('.remove-wishlist-item-btn').forEach(button => 
-        button.addEventListener('click', e => toggleWishlistItemApp(e.currentTarget.dataset.bookId))
-    );
-    // Añadir listeners para 'move-to-cart-btn' si es necesario
+    wishlistContent.appendChild(ul);
+    console.log("[app.js renderWishlist] Wishlist rendered with items:", state.wishlist.length);
 }
 
 function renderCartModal() {
@@ -579,26 +627,26 @@ function moveCartItemToWishlist(bookId) {
     console.log(`Libro ID ${bookId} movido del carrito a la lista de deseos.`);
 }
 
-// Nueva función para mover de wishlist a carrito
-function moveWishlistItemToCart(bookId) {
+// NUEVA FUNCIÓN: Mover un item de la Wishlist al Carrito
+async function moveWishlistItemToCart(bookId) {
+    console.log(`[app.js moveWishlistItemToCart] Intentando mover libro con ID: ${bookId} de wishlist a carrito.`);
     const book = allBooks.find(b => b.id === bookId);
-    if (!book) {
-        console.error(`Libro con ID ${bookId} no encontrado al intentar mover de wishlist a carrito.`);
-        return;
-    }
 
-    // 1. Añadir al carrito
-    // Necesitamos todos los detalles del libro para addBookToCart
-    addBookToCartApp(book);
+    if (book) {
+        // 1. Añadir al carrito
+        addBookToCartApp(book); // Esta función ya maneja la lógica de la API si es necesario y actualiza el estado local.
 
-    // 2. Eliminar de la wishlist (toggleWishlistItemApp se encarga de la lógica de backend/localStorage y UI)
-    // Solo lo hacemos si realmente está en la wishlist para evitar un toggle innecesario si algo falló antes.
-    if (state.wishlist.includes(bookId)) {
-        toggleWishlistItemApp(bookId);
+        // 2. Quitar de la wishlist
+        // toggleWishlistItemApp se encarga de la lógica de quitar si ya está,
+        // y también de la actualización con la API si está implementado.
+        await toggleWishlistItemApp(bookId); 
+
+        // 3. Actualizar vistas (renderWishlist es llamado por toggleWishlistItemApp, renderCartModal por addBookToCartApp)
+        // No es necesario llamarlos explícitamente aquí si las funciones internas ya lo hacen.
+        console.log(`[app.js moveWishlistItemToCart] Libro ${bookId} movido al carrito y eliminado de la wishlist.`);
+    } else {
+        console.error(`[app.js moveWishlistItemToCart] Libro con ID: ${bookId} no encontrado en allBooks.`);
     }
-    
-    console.log(`Libro ID ${bookId} movido de la lista de deseos al carrito.`);
-    // renderWishlist() y renderCartModal() serán llamados por toggleWishlistItemApp y fetchUserCart (dentro de addBookToCartApp)
 }
 
 function emptyCart() {
@@ -917,7 +965,7 @@ function updateUserUI() {
 
         // Si el usuario está logueado, obtener su wishlist (y carrito) del servidor
         fetchUserWishlist(); // Esto actualizará state.wishlist y la UI de las tarjetas
-        fetchUserCart();     // Asumiendo que existe una función similar para el carrito
+        // fetchUserCart();     // Asumiendo que existe una función similar para el carrito
         console.log('User is logged in. UI updated. Wishlist/cart sync initiated.');
 
     } else {
@@ -1058,13 +1106,34 @@ document.addEventListener('cartUpdated', (event) => {
 
 function renderBookCardsSlider(books) {
   const slider = document.getElementById('book-cards-slider');
-  if (!slider) return;
-  slider.innerHTML = '';
-  // Solo mostrar 4 libros
-  books.slice(0, 4).forEach(book => {
+  console.log('[app.js renderBookCardsSlider] Iniciando. Buscando slider:', slider);
+  if (!slider) {
+    console.error('[app.js renderBookCardsSlider] Elemento con ID "book-cards-slider" NO encontrado en el DOM.');
+    return;
+  }
+  slider.innerHTML = ''; // Limpiar por si acaso
+  console.log('[app.js renderBookCardsSlider] Libros recibidos para el slider:', books);
+
+  if (!books || books.length === 0) {
+    console.warn('[app.js renderBookCardsSlider] No se recibieron libros o el array está vacío. El slider quedará vacío.');
+    slider.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-300 py-4">No hay recomendaciones disponibles en este momento.</p>';
+    return;
+  }
+
+  // Solo mostrar 4 libros (o menos si hay menos de 4)
+  const booksToShow = books.slice(0, 4);
+  console.log('[app.js renderBookCardsSlider] Libros a mostrar (después de slice):', booksToShow);
+
+  booksToShow.forEach(book => {
+    if (!book || !book.id) {
+        console.warn('[app.js renderBookCardsSlider] Libro inválido o sin ID encontrado, saltando:', book);
+        return; // Saltar este libro si es inválido
+    }
+    console.log("[app.js renderBookCardsSlider] Creando tarjeta para el libro:", book.title, book.id);
     const card = renderBookCard(book);
     slider.appendChild(card);
   });
+  console.log('[app.js renderBookCardsSlider] Slider de recomendaciones renderizado con', booksToShow.length, 'tarjetas.');
 }
 
 // --- NUEVAS FUNCIONES DE API PARA WISHLIST ---

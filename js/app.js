@@ -338,74 +338,76 @@ async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
     let apiId, numericId, bookTitle;
 
     if (fromDetailsPage && typeof bookOrBookId === 'object' && bookOrBookId !== null) {
-        apiId = bookOrBookId.id; // Este es el api_id (ej: "book-1")
-        numericId = bookOrBookId.numeric_id; // Este es el id numérico de la BD
+        apiId = bookOrBookId.id;
+        numericId = bookOrBookId.numeric_id;
         bookTitle = bookOrBookId.title;
-        console.log(`[app.js toggleWishlistItemApp fromDetails] apiId: ${apiId}, numericId: ${numericId}`);
+        // console.log(`[app.js toggleWishlistItemApp fromDetails] apiId: ${apiId}, numericId: ${numericId}`);
     } else if (!fromDetailsPage && typeof bookOrBookId === 'string') {
-        apiId = bookOrBookId; // Este es el api_id (ej: "book-1")
+        apiId = bookOrBookId;
         const bookFromAllBooks = allBooks.find(b => b.id === apiId);
         if (bookFromAllBooks) {
-            numericId = bookFromAllBooks.numeric_id; // id numérico de la BD
+            numericId = bookFromAllBooks.numeric_id;
             bookTitle = bookFromAllBooks.title;
         } else {
             console.error(`[app.js toggleWishlistItemApp fromCard] Libro con api_id '${apiId}' no encontrado en allBooks.`);
-            // Considerar mostrar un error al usuario o manejarlo de otra forma
+            showNotification('Error: Libro no encontrado.', 'error'); // Notificación de error
             return; 
         }
-        console.log(`[app.js toggleWishlistItemApp fromCard] apiId: ${apiId}, numericId: ${numericId}`);
+        // console.log(`[app.js toggleWishlistItemApp fromCard] apiId: ${apiId}, numericId: ${numericId}`);
     } else {
         console.error('[app.js toggleWishlistItemApp] Argumentos inválidos:', bookOrBookId, fromDetailsPage);
+        showNotification('Error: No se pudo procesar la acción.', 'error'); // Notificación de error
         return;
     }
 
     if (!apiId) {
         console.error('[app.js toggleWishlistItemApp] No se pudo determinar el apiId del libro.');
+        showNotification('Error: Identificador de libro no válido.', 'error'); // Notificación de error
         return;
     }
 
     const isInWishlist = state.wishlist.includes(apiId);
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('authToken'); // <--- Corregido a authToken
 
     try {
         if (token) {
-            // Usuario autenticado: usar API (y numericId)
-            // TODO: Asegurarse que addToWishlistAPI/removeFromWishlistAPI usan numericId y funcionan correctamente.
             if (!numericId) {
                 console.error(`[app.js toggleWishlistItemApp] Usuario autenticado pero numericId no disponible para apiId: ${apiId}. No se puede llamar a la API.`);
-                // Podríamos intentar buscarlo de nuevo si es crucial, o fallar.
-                return; // O manejar como error
-            }
-            if (isInWishlist) {
-                await removeFromWishlistAPI(numericId); 
-                console.log(`[API] Libro ${numericId} (${bookTitle}) quitado de wishlist de usuario.`);
+                // Fallback a actualizar solo localmente si numericId no está, o mostrar error.
+                // Por ahora, mostramos error y no procedemos con API call si numericId es esencial.
+                showNotification('Error de datos del libro, no se pudo contactar al servidor.', 'error');
+                // Considerar no continuar si la llamada a la API es crítica
             } else {
-                await addToWishlistAPI(numericId);
-                console.log(`[API] Libro ${numericId} (${bookTitle}) añadido a wishlist de usuario.`);
+                if (isInWishlist) {
+                    await removeFromWishlistAPI(numericId); 
+                    // console.log(`[API] Libro ${numericId} (${bookTitle}) quitado de wishlist de usuario.`);
+                } else {
+                    await addToWishlistAPI(numericId);
+                    // console.log(`[API] Libro ${numericId} (${bookTitle}) añadido a wishlist de usuario.`);
+                }
             }
-            // Después de la llamada a la API, el estado local de la wishlist (state.wishlist)
-            // debería actualizarse basándose en la respuesta de la API o volviendo a hacer fetch.
-            // Por ahora, actualizamos localmente y luego el fetch síncrona el estado real.
-            // Idealmente, fetchUserWishlist() se llamaría aquí para re-sincronizar.
         }
 
-        // Actualización local para invitado o como reflejo inmediato para usuario registrado
+        let message = '';
         if (isInWishlist) {
             state.wishlist = state.wishlist.filter(id => id !== apiId);
+            message = `"${bookTitle || 'El libro'}" eliminado de tu lista de deseos.`;
         } else {
             state.wishlist.push(apiId);
+            message = `"${bookTitle || 'El libro'}" añadido a tu lista de deseos.`;
         }
         localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
-        console.log(`[app.js toggleWishlistItemApp] Wishlist actualizada para ${apiId}. Nueva wishlist (local):`, state.wishlist);
+        // console.log(`[app.js toggleWishlistItemApp] Wishlist actualizada para ${apiId}. Nueva wishlist (local):`, state.wishlist);
 
         renderWishlist();
         updateBookCardVisualState(apiId, !isInWishlist);
         window.dispatchEvent(new CustomEvent('wishlistUpdated', { detail: { bookId: apiId, isInWishlist: !isInWishlist } }));
         
+        showNotification(message, 'success'); // <--- Notificación de éxito
+        
     } catch (error) {
         console.error('Error al actualizar la lista de deseos:', error);
-        // Considerar revertir el cambio en state.wishlist si la API falló y el usuario está logueado.
-        // Mostrar mensaje de error al usuario.
+        showNotification(`Error al actualizar tu lista de deseos: ${error.message || 'Inténtalo de nuevo.'}`, 'error'); // <--- Notificación de error
     }
 }
 window.toggleWishlistItemApp = toggleWishlistItemApp; // Exponer globalmente
@@ -425,6 +427,56 @@ function updateBookCardVisualState(bookId, isNowInWishlist) {
     // No es necesario manipular el src del icono directamente aquí si el book-card lo hace en su render.
 }
 
+// --- NUEVA FUNCIÓN PARA MOSTRAR NOTIFICACIONES ---
+function showNotification(message, type = 'success', duration = 3000) {
+    const container = document.getElementById('notification-container');
+    if (!container) {
+        console.warn('Contenedor de notificaciones no encontrado. Usando alert como fallback.');
+        alert(message); 
+        return;
+    }
+
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    // Clases base y para animación de entrada inicial (fuera de la pantalla y transparente)
+    notification.className = 'p-4 rounded-md shadow-lg text-white transition-all duration-500 ease-in-out transform translate-x-full opacity-0';
+
+    if (type === 'success') {
+        notification.classList.add('bg-green-500');
+    } else if (type === 'error') {
+        notification.classList.add('bg-red-500');
+    } else if (type === 'info') {
+        notification.classList.add('bg-blue-500');
+    } else { // Default
+        notification.classList.add('bg-gray-700');
+    }
+
+    container.appendChild(notification);
+
+    // Forzar reflujo para asegurar que la animación de entrada se ejecute
+    void notification.offsetWidth; 
+
+    // Animación de entrada: mover a la posición y hacer visible
+    requestAnimationFrame(() => {
+        notification.classList.remove('translate-x-full', 'opacity-0');
+        notification.classList.add('translate-x-0', 'opacity-100');
+    });
+
+    // Programar desaparición
+    setTimeout(() => {
+        // Animación de salida: mover fuera de la pantalla y hacer transparente
+        notification.classList.remove('translate-x-0', 'opacity-100');
+        notification.classList.add('translate-x-full', 'opacity-0'); // O a la dirección opuesta si prefieres
+
+        // Eliminar del DOM después de que la animación de salida termine
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500); // Coincide con la duración de la transición CSS
+    }, duration);
+}
+
 /**
  * Añade un libro al carrito.
  * @param {object} bookObject - El objeto libro completo con todas sus propiedades (incluyendo id, numeric_id, title, price, cover, stock).
@@ -432,42 +484,39 @@ function updateBookCardVisualState(bookId, isNowInWishlist) {
 function addBookToCartApp(bookObject) {
     if (!bookObject || typeof bookObject !== 'object' || !bookObject.id) {
         console.error('[app.js addBookToCartApp] Objeto libro inválido:', bookObject);
-        alert('Error: No se pudo añadir el libro al carrito (datos incompletos).');
+        showNotification('Error: No se pudo añadir el libro al carrito (datos incompletos).', 'error');
         return;
     }
 
     const { id: apiId, title, price, cover, stock, numeric_id } = bookObject; 
-    // apiId es el que se usa para el carrito local (localStorage)
-    // numeric_id estaría disponible para una API de carrito de usuario registrado
-
     console.log(`[app.js addBookToCartApp] Intentando añadir/incrementar: ${title} (apiId: ${apiId}, numericId: ${numeric_id})`);
 
     const existingItem = state.cart.find(item => item.id === apiId);
-    const numericPrice = parseFloat(price); // Asegurar que el precio es un número
+    const numericPrice = parseFloat(price);
 
     if (existingItem) {
         if (existingItem.quantity < stock) {
             existingItem.quantity++;
             console.log(`[app.js addBookToCartApp] Cantidad incrementada para ${title}. Nueva cantidad: ${existingItem.quantity}`);
         } else {
-            alert('No puedes añadir más unidades de este libro (stock máximo alcanzado en carrito).');
-            return; // No hacer nada más si ya está al límite del stock
+            showNotification(`No puedes añadir más unidades de "${title}" (stock máximo en carrito).`, 'warning');
+            return; 
         }
     } else {
         if (stock > 0) {
             state.cart.push({ 
-                id: apiId, // Usar apiId para consistencia en el carrito local
-                numeric_id: numeric_id, // Guardar por si se necesita para API de usuario
+                id: apiId, 
+                numeric_id: numeric_id, 
                 title,
-                price: !isNaN(numericPrice) ? numericPrice : 0, // Usar precio numérico o 0 si no es válido
+                price: !isNaN(numericPrice) ? numericPrice : 0, 
                 cover: cover || 'assets/books/placeholder.png', 
                 quantity: 1,
                 stock: parseInt(stock, 10)
             });
             console.log(`[app.js addBookToCartApp] Libro ${title} añadido al carrito.`);
         } else {
-            alert('Este libro está agotado y no puede ser añadido al carrito.');
-            return; // No añadir si no hay stock
+            showNotification(`"${title}" está agotado y no puede ser añadido.`, 'warning');
+            return; 
         }
     }
 
@@ -476,8 +525,7 @@ function addBookToCartApp(bookObject) {
     updateCartIcon();
     window.dispatchEvent(new CustomEvent('cartUpdated'));
     
-    // Podríamos mostrar una notificación más elegante que un alert
-    alert(`"${title}" añadido al carrito.`); 
+    showNotification(`"${title}" añadido al carrito.`, 'success');
 }
 window.addBookToCartApp = addBookToCartApp; // Exponer globalmente
 
@@ -1042,19 +1090,28 @@ function clearUserSessionAndUI() {
 
 function logoutUser() {
     console.log('logoutUser called');
-    // Eliminar el token del localStorage (o donde lo estés guardando)
-    localStorage.removeItem('token'); // Asegúrate de que 'token' sea la clave correcta
+    // Eliminar el token y los datos del usuario del localStorage
+    localStorage.removeItem('authToken'); // <--- Cambiado de 'token' a 'authToken'
+    localStorage.removeItem('userData');   // <--- Añadido para limpiar userData
 
-    // Opcional: Limpiar otros datos de sesión del localStorage si es necesario
-    // localStorage.removeItem('userData'); 
-    // localStorage.removeItem('cart'); // Considera si el carrito debe persistir o no para usuarios no logueados
+    // Opcional: Considerar si el carrito debe persistir o no para usuarios no logueados.
+    // Si el carrito es específico del usuario y no debe persistir para invitados, límpialo también:
+    // state.cart = [];
+    // localStorage.removeItem('cart'); 
+    // console.log('Cart cleared for guest state.');
 
-    console.log('Token eliminado y sesión cerrada localmente.');
+    console.log('AuthToken y userData eliminados. Sesión cerrada localmente.');
 
     // Actualizar la UI para reflejar el estado de logout
-    updateUserUI(); // Esta función debería ocultar enlaces de perfil/pedidos y mostrar login/register
+    // updateUserUI() es llamada por clearUserSessionAndUI, pero llamarla aquí 
+    // directamente asegura la actualización antes de la redirección si clearUserSessionAndUI no fuera llamada.
+    // Sin embargo, es mejor centralizar la lógica. Llamaremos a clearUserSessionAndUI.
+    
+    clearUserSessionAndUI(); // Esta función ya llama a updateUserUI y limpia otros estados.
 
     // Redirigir a la página de inicio
+    // Es importante que la redirección ocurra DESPUÉS de que localStorage se haya limpiado
+    // y la UI (si es necesario en la página actual) se haya actualizado.
     window.location.href = 'index.html'; 
 }
 

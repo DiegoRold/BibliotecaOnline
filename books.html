@@ -217,16 +217,20 @@
     <!-- Horario Modal -->
     <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
-            <div class="flex justify-between items-center mb-4 pb-3 border-b dark:border-gray-600">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2>
                 <button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
                     <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div class="text-gray-700 dark:text-gray-300 space-y-2">
-                <p><strong>Lunes a Viernes:</strong> 10:00 AM - 8:00 PM</p>
-                <p><strong>Sábados:</strong> 10:00 AM - 6:00 PM</p>
-                <p><strong>Domingos y Festivos:</strong> Cerrado</p>
+            <div class="space-y-3 text-center">
+                <img src="assets/reloj.png" alt="Horario" class="w-16 h-16 mx-auto mb-4 filter dark:invert">
+                <div class="text-gray-700 dark:text-gray-300">
+                    <p class="font-semibold">Lunes - Sábado</p>
+                    <p class="mb-2 text-lg">9:30 a 21:00</p>
+                    <p class="font-semibold">Domingo y Festivos</p>
+                    <p class="text-lg">10:00 a 14:00</p>
+                </div>
             </div>
         </div>
     </dialog>
@@ -236,5 +240,9 @@
     <script src="js/app.js"></script> <!-- Ya estaba, esencial para el header -->
     <script src="js/books.js"></script> <!-- Script específico para la página de libros -->
     <!-- El script para el año ya no es necesario aquí si app.js lo maneja o el footer tiene id="currentYearFooter" y app.js tiene lógica para ese id -->
+
+    <!-- Contenedor para Notificaciones Flotantes -->
+    <div id="notification-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
+
 </body>
 </html> 

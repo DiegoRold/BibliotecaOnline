@@ -200,15 +200,65 @@ async function loadRecentActivity() {
 // Listener para el evento DOMContentLoaded para el logout, separado para claridad
 document.addEventListener('DOMContentLoaded', () => {
     const adminLogoutLink = document.getElementById('admin-logout-link');
-    if (adminLogoutLink) {
+    const confirmAdminLogoutModal = document.getElementById('confirm-admin-logout-modal');
+    const cancelAdminLogoutBtn = document.getElementById('cancel-admin-logout-btn');
+    const confirmAdminLogoutActionBtn = document.getElementById('confirm-admin-logout-action-btn');
+
+    if (adminLogoutLink && confirmAdminLogoutModal && cancelAdminLogoutBtn && confirmAdminLogoutActionBtn) {
         adminLogoutLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Admin cerrando sesión...');
-            localStorage.removeItem('authToken'); 
-            localStorage.removeItem('userData'); 
-            // Considera si hay otros items específicos de admin en localStorage para limpiar
-            alert('Sesión de administrador cerrada. Serás redirigido.');
-            window.location.href = 'index.html'; 
+            e.preventDefault(); // Prevenir la redirección inmediata del enlace
+            if (confirmAdminLogoutModal.showModal) {
+                confirmAdminLogoutModal.showModal(); // Mostrar el modal de confirmación
+            } else {
+                // Fallback si showModal no está soportado (muy improbable en navegadores modernos)
+                console.error('El API de Dialog no está soportado por este navegador.');
+                // Como fallback, realizar la acción de logout directamente como antes
+                performAdminLogout(); 
+            }
         });
+
+        cancelAdminLogoutBtn.addEventListener('click', () => {
+            if (confirmAdminLogoutModal.close) {
+                confirmAdminLogoutModal.close();
+            }
+        });
+
+        confirmAdminLogoutActionBtn.addEventListener('click', () => {
+            performAdminLogout();
+            if (confirmAdminLogoutModal.close) {
+                confirmAdminLogoutModal.close();
+            }
+        });
+
+        // Opcional: Cerrar el modal si se hace clic fuera (en el backdrop)
+        confirmAdminLogoutModal.addEventListener('click', (event) => {
+            if (event.target === confirmAdminLogoutModal) {
+                confirmAdminLogoutModal.close();
+            }
+        });
+
+    } else {
+        console.warn('No se encontraron todos los elementos necesarios para el modal de logout de admin.');
+        // Si faltan elementos del modal, el enlace de logout podría seguir usando la alerta como fallback (si no se elimina esa parte)
+        // O añadir un listener de logout directo aquí si se quiere asegurar el funcionamiento básico
+        if (adminLogoutLink && !confirmAdminLogoutModal) { // Solo si el modal es el que falta
+             adminLogoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                performAdminLogout(); // Usar la función de logout directamente si no hay modal
+            });
+        }
     }
-}); 
+});
+
+function performAdminLogout() {
+    console.log('Admin cerrando sesión...');
+    localStorage.removeItem('authToken'); 
+    localStorage.removeItem('userData'); 
+    // Considera si hay otros items específicos de admin en localStorage para limpiar
+    // alert('Sesión de administrador cerrada. Serás redirigido.'); // Eliminamos la alerta
+    
+    // Opcional: Mostrar una notificación más sutil aquí si se desea, antes de redirigir
+    // Por ejemplo, usando una librería de notificaciones o un mensaje en la propia página.
+    
+    window.location.href = 'index.html'; 
+} 

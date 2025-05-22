@@ -206,8 +206,25 @@
     <!-- Modal de Confirmación para Vaciar Carrito -->
     <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md"><div class="bg-white dark:bg-gray-800 rounded-lg p-6"><h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3><p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p><div class="flex justify-end space-x-3"><button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md">Cancelar</button><button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md">Sí, Vaciar Carrito</button></div></div></dialog>
     <!-- Horario Modal -->
-    <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full"><div class="bg-white dark:bg-gray-800 p-6 rounded-lg"><div class="flex justify-between items-center mb-4 pb-3 border-b dark:border-gray-600"><h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2><button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar"><svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="text-gray-700 dark:text-gray-300 space-y-2"><p><strong>Lunes a Viernes:</strong> 10:00 AM - 8:00 PM</p><p><strong>Sábados:</strong> 10:00 AM - 6:00 PM</p><p><strong>Domingos y Festivos:</strong> Cerrado</p></div></div></dialog>
-
+    <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2>
+                <button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-3 text-center">
+                <img src="assets/reloj.png" alt="Horario" class="w-16 h-16 mx-auto mb-4 filter dark:invert">
+                <div class="text-gray-700 dark:text-gray-300">
+                    <p class="font-semibold">Lunes - Sábado</p>
+                    <p class="mb-2 text-lg">9:30 a 21:00</p>
+                    <p class="font-semibold">Domingo y Festivos</p>
+                    <p class="text-lg">10:00 a 14:00</p>
+                </div>
+            </div>
+        </div>
+    </dialog>
     <script src="js/components/book-card.js"></script> <!-- Aunque no se use directamente aquí, app.js podría tener dependencias o se usa en otras partes -->
     <script src="js/app.js"></script>
     <!-- <script src="js/blog.js"></script> No tenemos aún script específico para el blog -->

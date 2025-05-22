@@ -1015,13 +1015,20 @@ function clearUserSessionAndUI() {
 
 function logoutUser() {
     console.log('logoutUser called');
-    // Aquí podrías añadir una llamada a un endpoint de logout en el backend si lo tienes,
-    // por ejemplo, para invalidar el token en el servidor si es necesario.
-    // await fetchWithAuth('/api/auth/logout', { method: 'POST' });
-    
-    clearUserSessionAndUI();
-    // Opcional: Redirigir a la página de inicio o login
-    // window.location.href = '/login.html';
+    // Eliminar el token del localStorage (o donde lo estés guardando)
+    localStorage.removeItem('token'); // Asegúrate de que 'token' sea la clave correcta
+
+    // Opcional: Limpiar otros datos de sesión del localStorage si es necesario
+    // localStorage.removeItem('userData'); 
+    // localStorage.removeItem('cart'); // Considera si el carrito debe persistir o no para usuarios no logueados
+
+    console.log('Token eliminado y sesión cerrada localmente.');
+
+    // Actualizar la UI para reflejar el estado de logout
+    updateUserUI(); // Esta función debería ocultar enlaces de perfil/pedidos y mostrar login/register
+
+    // Redirigir a la página de inicio
+    window.location.href = 'index.html'; 
 }
 
 // --- NUEVO: LÓGICA DEL SLIDER DINÁMICO DE LIBROS ---

@@ -14,7 +14,7 @@ let cartIcon, wishlistHeaderIcon, cartCountBadge;
 let cartModal, closeCartModalBtn, cartItemsContainer, goToCheckoutBtn, cartTotalPrice, emptyCartBtn;
 let wishlistContent; 
 let userIcon, userDropdown; 
-let userGreeting, loginLinkMenu, registerLinkMenu, profileLinkMenu, ordersLinkMenu, logoutLinkMenu;
+let userGreeting, loginLinkMenu, registerLinkMenu, profileLinkMenu, ordersLinkMenu, logoutLinkMenu, adminLinkMenu;
 let confirmEmptyCartModal, cancelEmptyCartBtn, confirmEmptyCartActionBtn;
 let horarioLink, horarioModal, closeHorarioModal;
 let goToBlogBtn, goToBioBtn;
@@ -86,6 +86,7 @@ async function init() {
     profileLinkMenu = document.getElementById('profile-link-menu');
     ordersLinkMenu = document.getElementById('orders-link-menu');
     logoutLinkMenu = document.getElementById('logout-link-menu');
+    adminLinkMenu = document.getElementById('admin-link-menu');
     confirmEmptyCartModal = document.getElementById('confirm-empty-cart-modal');
     cancelEmptyCartBtn = document.getElementById('cancel-empty-cart-btn');
     confirmEmptyCartActionBtn = document.getElementById('confirm-empty-cart-action-btn');
@@ -951,45 +952,71 @@ function updateAllBookCardWishlistStatus() {
 function updateUserUI() {
     const authToken = localStorage.getItem('authToken');
     const userDataString = localStorage.getItem('userData');
+    
+    // Asegurarse de que adminLinkMenu esté definido antes de intentar modificarlo
+    if (!adminLinkMenu) {
+        adminLinkMenu = document.getElementById('admin-link-menu'); // Intento tardío de asignación
+    }
 
     if (authToken && userDataString) {
-            const userData = JSON.parse(userDataString);
+        const userData = JSON.parse(userDataString);
         if (userGreeting) {
             userGreeting.textContent = `Hola, ${userData.name || userData.nombre || 'Usuario'}!`;
-            userGreeting.classList.remove('hidden'); // Asegurar que el saludo sea visible
-            userGreeting.style.display = 'block'; // O 'flex', dependiendo de cómo deba mostrarse
+            userGreeting.classList.remove('hidden');
+            userGreeting.style.display = 'block';
         }
         if (loginLinkMenu) loginLinkMenu.style.display = 'none';
         if (registerLinkMenu) registerLinkMenu.style.display = 'none';
+        
         if (profileLinkMenu) {
-            profileLinkMenu.style.display = 'flex'; // o 'block'
-            profileLinkMenu.href = 'profile.html'; // Redirigir a profile.html
+            profileLinkMenu.style.display = 'flex'; 
+            profileLinkMenu.href = 'profile.html'; 
         }
         if (ordersLinkMenu) ordersLinkMenu.style.display = 'flex';
         if (logoutLinkMenu) logoutLinkMenu.style.display = 'flex';
-        if (userIcon) userIcon.classList.remove('text-gray-400', 'hover:text-white');
-        if (userIcon) userIcon.classList.add('text-sky-400', 'hover:text-sky-300');
+
+        // Mostrar enlace de Gestión Admin si el usuario es administrador
+        if (adminLinkMenu) { // Comprobar si el elemento existe
+            if (userData.rol === 'admin') {
+                adminLinkMenu.style.display = 'flex'; // o 'block' según el layout
+                adminLinkMenu.classList.remove('hidden');
+            } else {
+                adminLinkMenu.style.display = 'none';
+                adminLinkMenu.classList.add('hidden');
+            }
+        }
+
+        if (userIcon) {
+            userIcon.classList.remove('text-gray-400', 'hover:text-white');
+            userIcon.classList.add('text-sky-400', 'hover:text-sky-300');
+        }
 
         fetchUserWishlist(); 
-        // fetchUserCart(); // Comentado para evitar error hasta que se implemente
+        // fetchUserCart();
         console.log('User is logged in. UI updated. Wishlist/cart sync initiated.');
 
     } else {
         if (userGreeting) {
             userGreeting.textContent = '';
             userGreeting.classList.add('hidden');
-            userGreeting.style.display = 'none'; // Ocultar explícitamente
+            userGreeting.style.display = 'none';
         }
         if (loginLinkMenu) loginLinkMenu.style.display = 'flex';
         if (registerLinkMenu) registerLinkMenu.style.display = 'flex';
         if (profileLinkMenu) {
             profileLinkMenu.style.display = 'none';
-            profileLinkMenu.href = '#'; // Resetear href si no está logueado
+            profileLinkMenu.href = '#';
         }
         if (ordersLinkMenu) ordersLinkMenu.style.display = 'none';
         if (logoutLinkMenu) logoutLinkMenu.style.display = 'none';
-        if (userIcon) userIcon.classList.remove('text-sky-400', 'hover:text-sky-300');
-        if (userIcon) userIcon.classList.add('text-gray-400', 'hover:text-white');
+        if (adminLinkMenu) { // Ocultar también si no está logueado
+            adminLinkMenu.style.display = 'none';
+            adminLinkMenu.classList.add('hidden');
+        }
+        if (userIcon) {
+            userIcon.classList.remove('text-sky-400', 'hover:text-sky-300');
+            userIcon.classList.add('text-gray-400', 'hover:text-white');
+        }
         
         updateAllBookCardWishlistStatus(); 
         updateCartIcon(); 

@@ -100,4 +100,17 @@ export const loginUser = async (req, res) => {
         console.error('Error en loginUser:', error);
         res.status(500).json({ message: 'Error interno del servidor al iniciar sesión.', error: error.message });
     }
+};
+
+// Nueva función para verificar el rol de administrador
+export const verifyAdmin = async (req, res) => {
+    // authMiddleware ya ha verificado el token y añadido req.user
+    // req.user contiene el payload del token, incluyendo el rol.
+    if (req.user && req.user.rol === 'admin') {
+        res.status(200).json({ isAdmin: true });
+    } else {
+        // Si no hay req.user (algo salió mal en authMiddleware y no debería llegar aquí)
+        // o el rol no es 'admin'
+        res.status(403).json({ isAdmin: false, message: 'Acceso denegado. El usuario no es administrador.' });
+    }
 }; 

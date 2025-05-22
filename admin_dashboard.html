@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - Biblioteca Online</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin_styles.css"> <!-- Estilos personalizados para el admin -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script> <!-- Chart.js para gráficos -->
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 dark:bg-gray-900 text-white p-6 space-y-6 shadow-lg">
+            <div class="text-2xl font-semibold text-center">Admin Panel</div>
+            <nav class="space-y-2">
+                <a href="admin_dashboard.html" class="block py-2.5 px-4 rounded transition duration-200 bg-sky-500 text-white hover:bg-sky-600">Dashboard</a>
+                <a href="#manage-books" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Libros</a>
+                <a href="#manage-users" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Usuarios</a>
+                <a href="#manage-orders" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Pedidos</a>
+                <a href="#settings" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Configuración</a>
+                <a href="index.html" id="admin-logout-link" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-red-700 text-red-400">Cerrar Sesión (Admin)</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-sky-700 dark:text-sky-500">Dashboard de Administrador</h1>
+                <p class="text-gray-600 dark:text-gray-400">Bienvenido al panel de control</p>
+            </header>
+
+            <!-- KPIs Section -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Total de Usuarios</h2>
+                    <p id="kpi-total-users" class="text-4xl font-bold text-sky-600 dark:text-sky-400 mt-2">--</p>
+                    <a href="#manage-users" class="text-sm text-sky-500 hover:underline mt-2 block">Ver todos los usuarios</a>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Total de Libros</h2>
+                    <p id="kpi-total-books" class="text-4xl font-bold text-sky-600 dark:text-sky-400 mt-2">--</p>
+                    <a href="#manage-books" class="text-sm text-sky-500 hover:underline mt-2 block">Gestionar catálogo</a>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200">Pedidos Pendientes</h2>
+                    <p id="kpi-pending-orders" class="text-4xl font-bold text-orange-500 dark:text-orange-400 mt-2">--</p>
+                    <a href="#manage-orders" class="text-sm text-orange-500 hover:underline mt-2 block">Ver pedidos</a>
+                </div>
+                <!-- Puedes añadir más KPIs aquí -->
+            </section>
+
+            <!-- Charts and Quick Links Section -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Chart Placeholder -->
+                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Visión General (Gráfico)</h2>
+                    <div style="height: 300px;">
+                         <canvas id="overviewChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Gráfico de ejemplo. Se implementará con datos reales.</p>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Accesos Rápidos</h2>
+                    <ul class="space-y-3">
+                        <li><a href="#add-new-book" class="flex items-center p-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"><span class="mr-2">➕</span> Añadir Nuevo Libro</a></li>
+                        <li><a href="#view-reports" class="flex items-center p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"><span class="mr-2">📊</span> Ver Reportes</a></li>
+                        <li><a href="#user-activity" class="flex items-center p-3 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors"><span class="mr-2">👥</span> Actividad de Usuarios</a></li>
+                        <li><a href="#system-health" class="flex items-center p-3 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"><span class="mr-2">⚙️</span> Estado del Sistema</a></li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Placeholder para más secciones -->
+            <section class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                 <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Actividad Reciente</h2>
+                 <div id="recent-activity-log" class="text-sm text-gray-600 dark:text-gray-400">
+                     <p>Cargando actividad reciente...</p>
+                     <!-- Ejemplo: -->
+                     <!-- <p>Nuevo usuario registrado: Juan Pérez</p> -->
+                     <!-- <p>Nuevo pedido: #12345</p> -->
+                 </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="js/admin_dashboard.js"></script>
+</body>
+</html> 

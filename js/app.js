@@ -116,7 +116,7 @@ async function init() {
         updateCartIcon(); 
         renderWishlist(); 
         renderCartModal(); 
-        updateUserUI(); 
+        await updateUserUI(); 
              renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4));
         console.log('Aplicación inicializada.');
 
@@ -489,43 +489,71 @@ function addBookToCartApp(bookObject) {
     }
 
     const { id: apiId, title, price, cover, stock, numeric_id } = bookObject; 
-    console.log(`[app.js addBookToCartApp] Intentando añadir/incrementar: ${title} (apiId: ${apiId}, numericId: ${numeric_id})`);
+    console.log(`[app.js addBookToCartApp] Intentando añadir: ${title} (apiId: ${apiId}, stock: ${stock})`);
 
-    const existingItem = state.cart.find(item => item.id === apiId);
+    const authToken = localStorage.getItem('authToken');
+    const existingItemInLocalState = state.cart.find(item => item.id === apiId);
     const numericPrice = parseFloat(price);
+    const quantityUserWantsToAdd = 1; // Asumimos que cada acción de "añadir al carrito" es para 1 unidad.
+                                    // Si tuvieras un input de cantidad, aquí usarías ese valor.
 
-    if (existingItem) {
-        if (existingItem.quantity < stock) {
-            existingItem.quantity++;
-            console.log(`[app.js addBookToCartApp] Cantidad incrementada para ${title}. Nueva cantidad: ${existingItem.quantity}`);
-        } else {
-            showNotification(`No puedes añadir más unidades de "${title}" (stock máximo en carrito).`, 'warning');
-            return; 
+    // Verificación de stock antes de cualquier acción (local y antes de API)
+    if (existingItemInLocalState) {
+        if (existingItemInLocalState.quantity + quantityUserWantsToAdd > stock) {
+            showNotification(`No puedes añadir más unidades de "${title}" (stock máximo: ${stock}).`, 'warning');
+            return;
         }
     } else {
-        if (stock > 0) {
+        if (quantityUserWantsToAdd > stock) {
+            showNotification(`No hay suficiente stock para "${title}" (stock disponible: ${stock}).`, 'warning');
+            return;
+        }
+    }
+
+    if (authToken) {
+        // Usuario logueado: llamar al backend para añadir y luego resincronizar
+        console.log(`[app.js addBookToCartApp] Usuario logueado. Llamando a POST /api/cart para apiId: ${apiId}, quantity: ${quantityUserWantsToAdd}`);
+        fetchWithAuth(`http://localhost:3000/api/cart`, {
+            method: 'POST',
+            body: JSON.stringify({ book_id: apiId, quantity: quantityUserWantsToAdd })
+        })
+        .then(response => response.json()) // fetchWithAuth debería haber manejado errores de red/status no-OK
+        .then(data => {
+            console.log('[app.js addBookToCartApp] Respuesta de POST /api/cart:', data);
+            if (data.message) { // Asumiendo que el backend siempre devuelve un mensaje
+                 showNotification(data.message, 'success'); // Usar mensaje del backend
+            } else {
+                 showNotification(`"${title}" procesado en el carrito.`, 'success');
+            }
+            fetchUserCart(); // <-- CLAVE: Resincronizar con el estado del backend
+        })
+        .catch(error => {
+            console.error('Error al añadir libro al carrito (backend):', error);
+            alert(error.message || 'Error al guardar el libro en el carrito.');
+            fetchUserCart(); // Sincronizar incluso en error para asegurar consistencia
+        });
+    } else {
+        // Usuario invitado: actualizar localmente y en localStorage (lógica optimista)
+        if (existingItemInLocalState) {
+            existingItemInLocalState.quantity += quantityUserWantsToAdd;
+            console.log(`[app.js addBookToCartApp] Cantidad incrementada para ${title} (local). Nueva cantidad: ${existingItemInLocalState.quantity}`);
+        } else {
             state.cart.push({ 
                 id: apiId, 
                 numeric_id: numeric_id, 
                 title,
                 price: !isNaN(numericPrice) ? numericPrice : 0, 
                 cover: cover || 'assets/books/placeholder.png', 
-                quantity: 1,
+                quantity: quantityUserWantsToAdd,
                 stock: parseInt(stock, 10)
             });
-            console.log(`[app.js addBookToCartApp] Libro ${title} añadido al carrito.`);
-        } else {
-            showNotification(`"${title}" está agotado y no puede ser añadido.`, 'warning');
-            return; 
+            console.log(`[app.js addBookToCartApp] Libro ${title} añadido al carrito (local).`);
         }
+        localStorage.setItem('cart', JSON.stringify(state.cart));
+        renderCartModal();
+        updateCartIcon();
+        showNotification(`"${title}" añadido al carrito.`, 'success');
     }
-
-    localStorage.setItem('cart', JSON.stringify(state.cart));
-    renderCartModal();
-    updateCartIcon();
-    window.dispatchEvent(new CustomEvent('cartUpdated'));
-    
-    showNotification(`"${title}" añadido al carrito.`, 'success');
 }
 window.addBookToCartApp = addBookToCartApp; // Exponer globalmente
 
@@ -997,13 +1025,13 @@ function updateAllBookCardWishlistStatus() {
     });
 }
 
-function updateUserUI() {
+// Convertir updateUserUI a async y llamar a await fetchUserCart()
+async function updateUserUI() {
     const authToken = localStorage.getItem('authToken');
     const userDataString = localStorage.getItem('userData');
     
-    // Asegurarse de que adminLinkMenu esté definido antes de intentar modificarlo
     if (!adminLinkMenu) {
-        adminLinkMenu = document.getElementById('admin-link-menu'); // Intento tardío de asignación
+        adminLinkMenu = document.getElementById('admin-link-menu');
     }
 
     if (authToken && userDataString) {
@@ -1023,10 +1051,9 @@ function updateUserUI() {
         if (ordersLinkMenu) ordersLinkMenu.style.display = 'flex';
         if (logoutLinkMenu) logoutLinkMenu.style.display = 'flex';
 
-        // Mostrar enlace de Gestión Admin si el usuario es administrador
-        if (adminLinkMenu) { // Comprobar si el elemento existe
+        if (adminLinkMenu) {
             if (userData.rol === 'admin') {
-                adminLinkMenu.style.display = 'flex'; // o 'block' según el layout
+                adminLinkMenu.style.display = 'flex';
                 adminLinkMenu.classList.remove('hidden');
             } else {
                 adminLinkMenu.style.display = 'none';
@@ -1039,11 +1066,18 @@ function updateUserUI() {
             userIcon.classList.add('text-sky-400', 'hover:text-sky-300');
         }
 
-        fetchUserWishlist(); 
-        // fetchUserCart();
-        console.log('User is logged in. UI updated. Wishlist/cart sync initiated.');
+        await fetchUserWishlist(); 
+        await fetchUserCart(); // <<< LLAMADA AÑADIDA Y AWAIT
+        console.log('User is logged in. UI updated. Wishlist and cart sync initiated.');
+
+        // Estas renderizaciones deben ocurrir DESPUÉS de que wishlist y cart se hayan cargado
+        updateAllBookCardWishlistStatus(); // Asegurar que esto se llame después de fetchUserWishlist
+        updateCartIcon(); // Asegurar que esto se llame después de fetchUserCart
+        renderWishlist(); // Asegurar que esto se llame después de fetchUserWishlist
+        renderCartModal(); // Asegurar que esto se llame después de fetchUserCart
 
     } else {
+        // Usuario deslogueado
         if (userGreeting) {
             userGreeting.textContent = '';
             userGreeting.classList.add('hidden');
@@ -1057,7 +1091,7 @@ function updateUserUI() {
         }
         if (ordersLinkMenu) ordersLinkMenu.style.display = 'none';
         if (logoutLinkMenu) logoutLinkMenu.style.display = 'none';
-        if (adminLinkMenu) { // Ocultar también si no está logueado
+        if (adminLinkMenu) {
             adminLinkMenu.style.display = 'none';
             adminLinkMenu.classList.add('hidden');
         }
@@ -1066,6 +1100,11 @@ function updateUserUI() {
             userIcon.classList.add('text-gray-400', 'hover:text-white');
         }
         
+        // Para invitado, wishlist y cart se cargan de localStorage al inicio.
+        // Las funciones de renderizado usarán ese estado.
+        state.wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        state.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
         updateAllBookCardWishlistStatus(); 
         updateCartIcon(); 
         renderWishlist(); 
@@ -1256,7 +1295,74 @@ async function removeFromWishlistAPI(numericBookId) {
     // return await response.json(); 
     return Promise.resolve({ message: "Libro quitado de wishlist (API)" }); // Placeholder
 }
-// --- FIN NUEVAS FUNCIONES ---
+
+// NUEVA FUNCIÓN FETCHUSERCART
+async function fetchUserCart() {
+    console.log("[app.js fetchUserCart] Called to sync cart from backend.");
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        console.log("[app.js fetchUserCart] No auth token, cart will remain local (from localStorage).");
+        // Para un invitado, el carrito ya está cargado desde localStorage al inicio.
+        // Aseguramos que la UI se renderice con el estado actual.
+        state.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        updateCartIcon();
+        renderCartModal();
+        return;
+    }
+
+    try {
+        const response = await fetchWithAuth('/api/cart'); // GET request por defecto
+        if (!response.ok) {
+            if (response.status === 401) {
+                // fetchWithAuth ya maneja el logoutUser si hay 401
+                console.warn('[app.js fetchUserCart] Unauthorized (401) fetching cart. Logout should have been triggered.');
+                // Si el logout no limpió el carrito, lo hacemos aquí para reflejar un estado vacío post-error.
+                state.cart = []; 
+            } else {
+                console.error(`[app.js fetchUserCart] Error fetching cart from backend: ${response.status}`);
+                const errorData = await response.json().catch(() => ({ message: 'Failed to parse error response from fetchUserCart' }));
+                console.error('[app.js fetchUserCart] Error data:', errorData);
+                // En caso de otros errores (ej. 500), podríamos mantener el carrito local como fallback
+                // o limpiarlo, dependiendo de la UX deseada. Por ahora, lo mantenemos.
+                // state.cart = JSON.parse(localStorage.getItem('cart') || '[]'); 
+            }
+        } else {
+            const backendCartItems = await response.json();
+            console.log("[app.js fetchUserCart] Cart data from backend:", JSON.stringify(backendCartItems));
+
+            if (Array.isArray(backendCartItems)) {
+                // El backend ahora devuelve objetos de carrito completos gracias a los cambios en cartController.js
+                state.cart = backendCartItems.map(item => ({
+                    ...item, // Copia todas las propiedades devueltas por el backend
+                    price: parseFloat(item.price) || 0, // Asegurar que el precio sea número
+                    stock: parseInt(item.stock) || 0    // Asegurar que el stock sea número
+                }));
+                console.log("[app.js fetchUserCart] state.cart updated from backend:", JSON.stringify(state.cart));
+            } else {
+                console.error("[app.js fetchUserCart] Cart data from backend is not an array:", backendCartItems);
+                state.cart = []; // Resetear si el formato es incorrecto
+            }
+        }
+    } catch (error) {
+        console.error('[app.js fetchUserCart] Critical error in fetchUserCart (e.g., network issue, or error in fetchWithAuth not caught as response.ok):_ ', error);
+        // Si fetchWithAuth lanza un error (ej. Unauthorized que no fue response.status 401), puede ser capturado aquí.
+        // Si el error es 'Unauthorized', logoutUser ya se habrá llamado.
+        // Para otros errores, decidimos si limpiar el carrito o mantener el local.
+        // Por ahora, como fallback conservador, si state.cart no fue limpiado por un logout:
+        // state.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        // Pero es más seguro limpiar si hay un error grave y el usuario está supuestamente logueado.
+        if (localStorage.getItem('authToken')) { // Solo limpiar si se esperaba un carrito de backend
+            state.cart = []; 
+        }
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(state.cart));
+    updateCartIcon();
+    renderCartModal(); 
+    // Disparar un evento global por si otros componentes necesitan reaccionar.
+    // Nota: Ya existe un evento 'cartUpdated'. Considerar si es el mismo o uno nuevo.
+    // window.dispatchEvent(new CustomEvent('cartRefreshedFromBackend', { detail: { cart: state.cart } }));
+}
 
 // Exponer funciones clave globalmente si es necesario para otros scripts como book-details.js
 window.getStateApp = () => JSON.parse(JSON.stringify(state)); // Devuelve una copia para evitar mutación externa directa

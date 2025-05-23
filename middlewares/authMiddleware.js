@@ -15,6 +15,7 @@ const authMiddleware = (req, res, next) => {
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            console.log('[AuthMiddleware] Token decodificado:', decoded);
             // Añadir el payload decodificado (que incluye userId, nombre, email, rol)
             // al objeto request para que esté disponible en los controladores de las rutas protegidas
             req.user = decoded;

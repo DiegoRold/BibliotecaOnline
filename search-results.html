@@ -232,14 +232,13 @@
                 </div>
             </div>
         </div>
+    </dialog>
 
     <script src="js/components/book-card.js"></script>
     <!-- Script para la lógica de esta página específica (resultados de búsqueda) -->
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             // Script para el año actual en el footer
-            // Se moverá a app.js o se manejará de forma centralizada si es posible,
-            // pero lo dejamos aquí por ahora para asegurar que el footer nuevo funcione.
             if (document.getElementById('currentYearFooter')) {
                 document.getElementById('currentYearFooter').textContent = new Date().getFullYear();
             }
@@ -286,9 +285,15 @@
                         bookCardElement.setAttribute('id', book.id);
                         bookCardElement.setAttribute('title', book.title || '');
                         bookCardElement.setAttribute('author', book.author || '');
-                        bookCardElement.setAttribute('cover', book.cover || 'assets/books/placeholder.png');
+                        bookCardElement.setAttribute('cover', book.cover_image_url || book.cover || 'assets/books/placeholder.png');
+                        bookCardElement.setAttribute('year', book.publication_date ? new Date(book.publication_date).getFullYear().toString() : 'N/A');
+                        bookCardElement.setAttribute('category', Array.isArray(book.categories) ? book.categories.join(', ') : (book.categories || 'N/A'));
+                        bookCardElement.setAttribute('rating', book.rating ? book.rating.toString() : 'N/A');
+                        bookCardElement.setAttribute('pages', book.pages ? book.pages.toString() : 'N/A');
+                        bookCardElement.setAttribute('language', book.language || 'N/A');
                         bookCardElement.setAttribute('price', book.price ? String(book.price) : '0');
                         bookCardElement.setAttribute('stock', book.stock ? String(book.stock) : '0');
+                        
                         resultsContainer.appendChild(bookCardElement);
                     });
                 } else {

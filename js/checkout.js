@@ -1,4 +1,7 @@
 let currentCheckoutCart = []; // Variable para mantener el estado actual del carrito para el checkout
+let selectedShippingOption = 'storePickup'; // Valor por defecto
+let shippingCost = 0;
+let currentShippingAddress = null; // Para almacenar la dirección a enviar al backend
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('=== INICIO CHECKOUT ===');
@@ -7,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Verificar si el usuario está logueado (necesario para obtener el token)
     const authToken = localStorage.getItem('authToken');
+    const userDataString = localStorage.getItem('userData');
+    const userData = userDataString ? JSON.parse(userDataString) : null;
     // Aunque el backend lo validará, es buena práctica asegurar que el usuario
     // esté logueado para acceder al checkout, o al menos que la UI lo refleje.
     if (!authToken && !window.location.pathname.includes('login.html')) {
@@ -27,6 +32,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const orderNumberDisplayEl = document.getElementById('order-number-display');
     const proceedToPaymentBtn = document.getElementById('proceed-to-payment-btn');
 
+    // Cache de elementos del DOM para opciones de envío
+    const shippingStorePickupRadio = document.getElementById('shipping-store-pickup');
+    const homeDeliveryOptionGroup = document.getElementById('home-delivery-option-group');
+    const shippingMyAddressRadio = document.getElementById('shipping-my-address');
+    const myAddressDetailsDiv = document.getElementById('my-address-details');
+    const otherAddressOptionGroup = document.getElementById('other-address-option-group');
+    const shippingOtherAddressRadio = document.getElementById('shipping-other-address');
+    const otherAddressForm = document.getElementById('other-address-form');
+    const authRequiredForShippingDiv = document.getElementById('auth-required-for-shipping');
+
+    // Campos del formulario de otra dirección
+    const otherAddressNameInput = document.getElementById('other-address-name');
+    const otherAddressStreetInput = document.getElementById('other-address-street');
+    const otherAddressApartmentInput = document.getElementById('other-address-apartment');
+    const otherAddressZipInput = document.getElementById('other-address-zip');
+    const otherAddressCityInput = document.getElementById('other-address-city');
+    const otherAddressStateInput = document.getElementById('other-address-state');
+    const otherAddressCountryInput = document.getElementById('other-address-country');
+    
+    // Elementos de totales
+    const checkoutShippingCostsEl = document.getElementById('checkout-shipping-costs');
+    const checkoutSubtotalEl = document.getElementById('checkout-subtotal');
+    const checkoutGrandTotalEl = document.getElementById('checkout-grand-total');
+
     // Funciones para manejar los modales
     function showModal(modalElement) {
         if (modalElement) modalElement.showModal();
@@ -44,6 +73,108 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'index.html'; 
     });
 
+    function updateTotals() {
+        let subtotal = 0;
+        currentCheckoutCart.forEach(item => {
+            subtotal += (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0);
+        });
+
+        const currentShippingCost = parseFloat(shippingCost) || 0;
+        const grandTotal = subtotal + currentShippingCost;
+
+        if(checkoutSubtotalEl) checkoutSubtotalEl.textContent = `${subtotal.toFixed(2)} €`;
+        if(checkoutShippingCostsEl) checkoutShippingCostsEl.textContent = currentShippingCost > 0 ? `${currentShippingCost.toFixed(2)} €` : 'GRATIS';
+        if(checkoutGrandTotalEl) checkoutGrandTotalEl.textContent = `${grandTotal.toFixed(2)} €`;
+        if(confirmationTotalPriceEl) confirmationTotalPriceEl.textContent = grandTotal.toFixed(2); // Para el modal de confirmación
+    }
+
+    function initializeShippingOptions() {
+        if (authToken && userData) {
+            console.log('Usuario autenticado, configurando opciones de envío a domicilio.');
+            if(authRequiredForShippingDiv) authRequiredForShippingDiv.classList.add('hidden');
+            if(homeDeliveryOptionGroup) homeDeliveryOptionGroup.classList.remove('hidden');
+            if(otherAddressOptionGroup) otherAddressOptionGroup.classList.remove('hidden');
+
+            // Cargar dirección del perfil del usuario
+            if (myAddressDetailsDiv) {
+                const profileAddress = {
+                    calle: userData.direccion_calle,
+                    detalle: userData.direccion_detalle,
+                    cp: userData.direccion_cp,
+                    ciudad: userData.direccion_ciudad,
+                    provincia: userData.direccion_provincia,
+                    pais: userData.direccion_pais
+                };
+                let addressHtml = '';
+                if (profileAddress.calle) addressHtml += `${profileAddress.calle}<br>`;
+                if (profileAddress.detalle) addressHtml += `${profileAddress.detalle}<br>`;
+                if (profileAddress.cp && profileAddress.ciudad) addressHtml += `${profileAddress.cp} ${profileAddress.ciudad}<br>`;
+                else if (profileAddress.cp) addressHtml += `${profileAddress.cp}<br>`;
+                else if (profileAddress.ciudad) addressHtml += `${profileAddress.ciudad}<br>`;
+                if (profileAddress.provincia) addressHtml += `${profileAddress.provincia}<br>`;
+                if (profileAddress.pais) addressHtml += `${profileAddress.pais}`;
+                
+                myAddressDetailsDiv.innerHTML = addressHtml.trim() ? addressHtml : 'No tienes una dirección guardada en tu perfil.';
+                if (!addressHtml.trim()) { // Si no hay dirección, forzar selección de otra dirección o recogida
+                    if(shippingMyAddressRadio) shippingMyAddressRadio.disabled = true;
+                     myAddressDetailsDiv.innerHTML = 'No tienes una dirección principal. Por favor, añade una en tu perfil o introduce una nueva dirección para el envío.';
+                } else {
+                    if(shippingMyAddressRadio) shippingMyAddressRadio.disabled = false;
+                }
+            }
+        } else {
+            console.log('Usuario no autenticado, mostrando mensaje para iniciar sesión para envío a domicilio.');
+            if(authRequiredForShippingDiv) authRequiredForShippingDiv.classList.remove('hidden');
+            if(homeDeliveryOptionGroup) homeDeliveryOptionGroup.classList.add('hidden');
+            if(otherAddressOptionGroup) otherAddressOptionGroup.classList.add('hidden');
+        }
+
+        // Event listeners para los radio buttons de envío
+        const shippingRadios = document.querySelectorAll('input[name="shippingOption"]');
+        shippingRadios.forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                selectedShippingOption = event.target.value;
+                console.log('Opción de envío cambiada a:', selectedShippingOption);
+                if (selectedShippingOption === 'storePickup') {
+                    shippingCost = 0;
+                    if(otherAddressForm) otherAddressForm.classList.add('hidden');
+                    currentShippingAddress = null;
+                } else if (selectedShippingOption === 'myAddress') {
+                    shippingCost = 4.99; // O el coste que definas
+                    if(otherAddressForm) otherAddressForm.classList.add('hidden');
+                    // Lógica para construir currentShippingAddress desde userData si es válida
+                    if (userData && userData.direccion_calle) { // Asumir que si hay calle, hay dirección válida
+                        currentShippingAddress = {
+                            nombre_completo: userData.nombre, // Asumiendo que userData tiene nombre
+                            direccion_calle: userData.direccion_calle,
+                            direccion_detalle: userData.direccion_detalle || '',
+                            direccion_cp: userData.direccion_cp,
+                            direccion_ciudad: userData.direccion_ciudad,
+                            direccion_provincia: userData.direccion_provincia || '',
+                            direccion_pais: userData.direccion_pais
+                        };
+                    } else {
+                        currentShippingAddress = null; // No hay dirección de perfil válida
+                        // Aquí podrías forzar al usuario a elegir 'otherAddress' o mostrar un error
+                        // Por ahora, si la dirección del perfil no es válida, el envío no se podrá procesar con esta opción
+                        console.warn('Intento de usar dirección de perfil pero no es válida o no existe.');
+                    }
+                } else if (selectedShippingOption === 'otherAddress') {
+                    shippingCost = 4.99; // O el coste que definas
+                    if(otherAddressForm) otherAddressForm.classList.remove('hidden');
+                    currentShippingAddress = null; // Se construirá desde el formulario al confirmar
+                }
+                updateTotals();
+            });
+        });
+
+        // Forzar un change inicial para establecer el estado por defecto
+        if(shippingStorePickupRadio && shippingStorePickupRadio.checked) {
+            shippingStorePickupRadio.dispatchEvent(new Event('change'));
+        }
+        updateTotals(); // Asegurar que los totales se calculen al inicio
+    }
+
     // Lógica del botón "REALIZAR PAGO"
     if (proceedToPaymentBtn) {
         proceedToPaymentBtn.addEventListener('click', () => {
@@ -60,12 +191,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Usuario no autenticado. Mostrando modal de autenticación requerida.');
                 showModal(authRequiredModal);
             } else {
+                // Validar que si es envío a domicilio, haya una dirección
+                if (selectedShippingOption === 'myAddress' && !currentShippingAddress) {
+                    alert('Por favor, selecciona una dirección de envío válida o añade una nueva.');
+                    // Podrías hacer focus en la opción de otra dirección o mostrar un mensaje más específico.
+                    return;
+                }
+                if (selectedShippingOption === 'otherAddress') {
+                    // Validar y construir currentShippingAddress desde el formulario
+                    const name = otherAddressNameInput ? otherAddressNameInput.value.trim() : '';
+                    const street = otherAddressStreetInput ? otherAddressStreetInput.value.trim() : '';
+                    const apartment = otherAddressApartmentInput ? otherAddressApartmentInput.value.trim() : '';
+                    const zip = otherAddressZipInput ? otherAddressZipInput.value.trim() : '';
+                    const city = otherAddressCityInput ? otherAddressCityInput.value.trim() : '';
+                    const state = otherAddressStateInput ? otherAddressStateInput.value.trim() : '';
+                    const country = otherAddressCountryInput ? otherAddressCountryInput.value.trim() : '';
+
+                    if (!name || !street || !zip || !city || !country) {
+                        alert('Por favor, completa todos los campos de la dirección de envío.');
+                        // Podrías resaltar los campos vacíos.
+                        return;
+                    }
+                    currentShippingAddress = {
+                        nombre_completo: name,
+                        direccion_calle: street,
+                        direccion_detalle: apartment,
+                        direccion_cp: zip,
+                        direccion_ciudad: city,
+                        direccion_provincia: state,
+                        direccion_pais: country
+                    };
+                    console.log('Dirección para envío (otra dirección):', currentShippingAddress);
+                }
+
                 console.log('Usuario autenticado. Mostrando modal de confirmación de compra.');
-                let currentTotal = 0;
-                cart.forEach(item => {
-                    currentTotal += (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0);
-                });
-                if (confirmationTotalPriceEl) confirmationTotalPriceEl.textContent = currentTotal.toFixed(2);
+                updateTotals(); // Asegurar que el total en el modal es el correcto
                 showModal(confirmPurchaseModal);
             }
         });
@@ -88,10 +248,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     book_id: item.id,       // Asegúrate de que 'id' aquí es el ID del libro
                     quantity: item.quantity,
                     price: parseFloat(item.price) || 0, // Precio unitario en el momento de la compra
-                    title: item.title       // Título en el momento de la compra
+                    title: item.title,       // Título en el momento de la compra
+                    // Los siguientes campos se mueven al nivel raíz del payload
+                    // deliveryMethod: selectedShippingOption === 'storePickup' ? 'recogida' : 'domicilio',
+                    // shippingAddress: selectedShippingOption !== 'storePickup' ? currentShippingAddress : null 
                 })),
-                totalAmount: parseFloat(currentTotal.toFixed(2))
+                totalAmount: parseFloat(checkoutGrandTotalEl.textContent.replace(' €','')), // Tomar del total general
+                // Añadir deliveryMethod y shippingAddress aquí, en el nivel raíz:
+                deliveryMethod: selectedShippingOption === 'storePickup' ? 'recogida' : 'domicilio',
+                shippingAddress: selectedShippingOption !== 'storePickup' ? currentShippingAddress : null
             };
+
+            console.log('Payload final del pedido:', JSON.stringify(orderPayload, null, 2));
 
             try {
                 console.log('Enviando pedido al backend:', JSON.stringify(orderPayload, null, 2));
@@ -143,8 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: [] } }));
                 console.log('Evento cartUpdated disparado.');
                 
-                const authToken = localStorage.getItem('authToken');
-                if (authToken && typeof fetchWithAuth === 'function') {
+                const authTokenForCartClear = localStorage.getItem('authToken');
+                if (authTokenForCartClear && typeof fetchWithAuth === 'function') {
                     try {
                         await fetchWithAuth('/api/cart', { method: 'DELETE' });
                         console.log('Carrito del backend vaciado.');
@@ -189,6 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCartSummary(initialCart);
     }
     initializeCartView(); // Cargar el resumen al inicio
+
+    initializeShippingOptions(); // Llamar a la nueva función
 
 }); // Fin DOMContentLoaded
 
@@ -259,144 +429,4 @@ function loadCartSummary(cart) {
 
     subtotalEl.textContent = `${currentSubtotal.toFixed(2)} €`;
     grandTotalEl.textContent = `${currentSubtotal.toFixed(2)} €`;
-} 
-
-// --- LÓGICA DE PAGO ---
-async function handleProceedToPayment() {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-        if (authRequiredModal) authRequiredModal.showModal();
-        return;
-    }
-
-    const selectedShippingOption = document.querySelector('input[name="shippingOption"]:checked');
-    if (!selectedShippingOption) {
-        alert('Por favor, selecciona una opción de envío.');
-        return;
-    }
-
-    // Validar el formulario de "otra dirección" si está seleccionado
-    let shippingAddressData = null;
-    const shippingMethodValue = selectedShippingOption.value;
-
-    if (shippingMethodValue === 'myAddress') {
-        if (!currentUserData || !currentUserData.direccion_calle) {
-            alert('No tienes una dirección guardada. Por favor, selecciona \'Enviar a otra dirección\' o actualiza tu perfil.');
-            return;
-        }
-        shippingAddressData = {
-            name: currentUserData.nombre,
-            street: currentUserData.direccion_calle,
-            apartment: currentUserData.direccion_detalle || '',
-            zip: currentUserData.direccion_cp,
-            city: currentUserData.direccion_ciudad,
-            state: currentUserData.direccion_provincia || '',
-            country: currentUserData.direccion_pais
-        };
-    } else if (shippingMethodValue === 'otherAddress') {
-        const name = document.getElementById('other-address-name').value.trim();
-        const street = document.getElementById('other-address-street').value.trim();
-        const zip = document.getElementById('other-address-zip').value.trim();
-        const city = document.getElementById('other-address-city').value.trim();
-        const country = document.getElementById('other-address-country').value.trim();
-        
-        if (!name || !street || !zip || !city || !country) {
-            alert('Por favor, completa todos los campos obligatorios de la dirección de envío.');
-            return;
-        }
-        shippingAddressData = {
-            name: name,
-            street: street,
-            apartment: document.getElementById('other-address-apartment').value.trim(),
-            zip: zip,
-            city: city,
-            state: document.getElementById('other-address-state').value.trim(),
-            country: country
-        };
-    } else if (shippingMethodValue === 'storePickup') {
-        shippingAddressData = { name: 'Recogida en Tienda' }; 
-    }
-
-    // Preparar el payload para el endpoint createOrder existente
-    const orderPayload = {
-        items: cart.map(item => ({
-            book_id: item.id, // IMPORTANTE: Este debe ser el api_id (ej. ISBN) que createOrder espera
-            quantity: parseInt(item.quantity, 10),
-            price: parseFloat(item.price),
-            title: item.title || item.name // Asegúrate que el título esté presente
-        })),
-        totalAmount: parseFloat(checkoutGrandTotalEl.textContent.replace(/[^\d,-]/g, '').replace(',', '.'))
-        // El backend createOrder actual no usa explícitamente dirección, gastos de envío, etc.
-        // Si se añaden esas columnas a la tabla 'pedidos' y se modifica el INSERT en createOrder,
-        // se podrían añadir aquí: 
-        // shippingDetails: shippingAddressData, 
-        // shippingCost: parseFloat(checkoutShippingCostsEl.textContent.toLowerCase() === 'gratis' ? 0 : checkoutShippingCostsEl.textContent.replace(/[^\d,-]/g, '').replace(',', '.')),
-        // paymentMethod: 'reembolso'
-    };
-
-    console.log('Procesando pedido con payload:', JSON.stringify(orderPayload, null, 2));
-
-    const confirmPurchaseModal = document.getElementById('confirm-purchase-modal');
-    const confirmationTotalPriceEl = document.getElementById('confirmation-total-price');
-    const cancelPurchaseBtn = document.getElementById('cancel-purchase-btn');
-    const confirmPurchaseActionBtn = document.getElementById('confirm-purchase-action-btn');
-
-    if (confirmationTotalPriceEl) confirmationTotalPriceEl.textContent = formatPrice(orderPayload.totalAmount);
-    if (confirmPurchaseModal) confirmPurchaseModal.showModal();
-
-    // Event listeners para el modal de confirmación (se asignan una vez por clic para evitar duplicados)
-    const newCancelBtn = cancelPurchaseBtn.cloneNode(true);
-    cancelPurchaseBtn.parentNode.replaceChild(newCancelBtn, cancelPurchaseBtn);
-    newCancelBtn.addEventListener('click', () => confirmPurchaseModal.close());
-
-    const newConfirmBtn = confirmPurchaseActionBtn.cloneNode(true);
-    confirmPurchaseActionBtn.parentNode.replaceChild(newConfirmBtn, confirmPurchaseActionBtn);
-    newConfirmBtn.addEventListener('click', async () => {
-        confirmPurchaseModal.close();
-        try {
-            const response = await fetch(`${API_BASE_URL}/pedidos`, { 
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
-                body: JSON.stringify(orderPayload)
-            });
-
-            const responseData = await response.json(); // Leer como JSON directamente
-
-            if (!response.ok) {
-                throw new Error(responseData.message || 'Error al procesar el pedido.');
-            }
-            
-            const orderId = responseData.orderId; 
-            console.log('Pedido confirmado con éxito. ID:', orderId);
-
-            localStorage.removeItem('cart'); 
-            if(window.updateCartCount) window.updateCartCount(0); 
-            if(window.renderCartModal) window.renderCartModal(); 
-            currentSubtotal = 0; // Resetear subtotal local
-            cart = []; // Resetear carrito local
-            renderCartSummary(); 
-            updateShippingCosts(); 
-
-            const purchaseSuccessModal = document.getElementById('purchase-success-modal');
-            const orderNumberDisplay = document.getElementById('order-number-display');
-            const closePurchaseSuccessModal = document.getElementById('close-purchase-success-modal');
-            
-            if(orderNumberDisplay) orderNumberDisplay.textContent = orderId;
-            if(purchaseSuccessModal) purchaseSuccessModal.showModal();
-            
-            const newCloseSuccessBtn = closePurchaseSuccessModal.cloneNode(true);
-            closePurchaseSuccessModal.parentNode.replaceChild(newCloseSuccessBtn, closePurchaseSuccessModal);
-            newCloseSuccessBtn.addEventListener('click', () => {
-                purchaseSuccessModal.close();
-                window.location.href = 'index.html'; // Redirigir a inicio como se especificó
-            });
-
-        } catch (error) {
-            alert(`Error al procesar el pedido: ${error.message}`);
-            console.error('Error al procesar el pedido:', error);
-        }
-    });
 } 

@@ -116,8 +116,8 @@ function renderOrders(orders, container) {
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm text-gray-600 dark:text-gray-300">${item.cantidad} x ${item.precio_unitario_en_compra.toFixed(2)} €</p>
-                                <p class="font-medium text-gray-800 dark:text-white">${(item.cantidad * item.precio_unitario_en_compra).toFixed(2)} €</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">${item.cantidad} x ${parseFloat(item.precio_unitario_en_compra).toFixed(2)} €</p>
+                                <p class="font-medium text-gray-800 dark:text-white">${(item.cantidad * parseFloat(item.precio_unitario_en_compra)).toFixed(2)} €</p>
                             </div>
                         </div>
                     `).join('')}
@@ -190,10 +190,6 @@ function getEstadoPedidoClass(estado) {
 
 // Función para ver detalles del pedido (se puede expandir según necesidades)
 function verDetallesPedido(orderId) {
-    // Por ahora, solo mostramos un alert con el ID
-    // En el futuro, podríamos:
-    // 1. Abrir un modal con más detalles
-    // 2. Navegar a una página específica de detalles
-    // 3. Expandir/colapsar la información en la misma tarjeta
-    alert(`Detalles del pedido #${orderId}`);
+    // Redirigir a la página de detalles del pedido
+    window.location.href = `order-details.html?orderId=${orderId}`;
 } 

@@ -341,29 +341,36 @@ async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
         apiId = bookOrBookId.id;
         numericId = bookOrBookId.numeric_id;
         bookTitle = bookOrBookId.title;
-        // console.log(`[app.js toggleWishlistItemApp fromDetails] apiId: ${apiId}, numericId: ${numericId}`);
+        console.log(`[app.js toggleWishlist fromDetails] apiId: ${apiId}, numericId: ${numericId}`);
     } else if (!fromDetailsPage && typeof bookOrBookId === 'string') {
         apiId = bookOrBookId;
         const bookFromAllBooks = allBooks.find(b => b.id === apiId);
         if (bookFromAllBooks) {
             numericId = bookFromAllBooks.numeric_id;
             bookTitle = bookFromAllBooks.title;
+            console.log(`[app.js toggleWishlist fromCard] apiId: ${apiId}, numericId: ${numericId}, book object:`, JSON.stringify(bookFromAllBooks));
         } else {
-            console.error(`[app.js toggleWishlistItemApp fromCard] Libro con api_id '${apiId}' no encontrado en allBooks.`);
-            showNotification('Error: Libro no encontrado.', 'error'); // Notificación de error
-            return; 
+            console.error(`[app.js toggleWishlist fromCard] Libro con api_id '${apiId}' no encontrado en allBooks.`);
+            showNotification('Error: Libro no encontrado.', 'error');
+            return;
         }
-        // console.log(`[app.js toggleWishlistItemApp fromCard] apiId: ${apiId}, numericId: ${numericId}`);
     } else {
-        console.error('[app.js toggleWishlistItemApp] Argumentos inválidos:', bookOrBookId, fromDetailsPage);
-        showNotification('Error: No se pudo procesar la acción.', 'error'); // Notificación de error
+        console.error('[app.js toggleWishlist] Argumentos inválidos:', bookOrBookId, fromDetailsPage);
+        showNotification('Error: No se pudo procesar la acción.', 'error');
         return;
     }
 
     if (!apiId) {
-        console.error('[app.js toggleWishlistItemApp] No se pudo determinar el apiId del libro.');
-        showNotification('Error: Identificador de libro no válido.', 'error'); // Notificación de error
+        console.error('[app.js toggleWishlist] No se pudo determinar el apiId del libro.');
+        showNotification('Error: Identificador de libro no válido.', 'error');
         return;
+    }
+    // Asegurarse de que numericId también se obtuvo si es necesario para la API
+    if (!numericId && localStorage.getItem('authToken')) {
+        console.error(`[app.js toggleWishlist] numericId no disponible para apiId: ${apiId} aunque usuario está logueado. No se puede llamar a API de wishlist.`);
+        // Considerar si mostrar un error específico o permitir solo actualización local.
+        // showNotification('Error: Falta información del libro para sincronizar con el servidor.', 'error');
+        // return; // Podrías decidir detener aquí si numericId es crítico.
     }
 
     const isInWishlist = state.wishlist.includes(apiId);
@@ -372,7 +379,7 @@ async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
     try {
         if (token) {
             if (!numericId) {
-                console.error(`[app.js toggleWishlistItemApp] Usuario autenticado pero numericId no disponible para apiId: ${apiId}. No se puede llamar a la API.`);
+                console.error(`[app.js toggleWishlist] Usuario autenticado pero numericId no disponible para apiId: ${apiId}. No se puede llamar a la API.`);
                 // Fallback a actualizar solo localmente si numericId no está, o mostrar error.
                 // Por ahora, mostramos error y no procedemos con API call si numericId es esencial.
                 showNotification('Error de datos del libro, no se pudo contactar al servidor.', 'error');
@@ -1276,24 +1283,41 @@ function renderBookCardsSlider(books) {
 }
 
 // --- NUEVAS FUNCIONES DE API PARA WISHLIST ---
-async function addToWishlistAPI(numericBookId) { 
-    console.log(`[app.js addToWishlistAPI] Placeholder: Añadir libro con ID numérico ${numericBookId} a la API.`);
-    // const token = localStorage.getItem('token');
-    // if (!token) throw new Error('Usuario no autenticado');
-    // const response = await fetchWithAuth(`/api/wishlist/${numericBookId}`, { method: 'POST' });
-    // if (!response.ok) throw new Error('Error al añadir a la wishlist en API');
-    // return await response.json(); 
-    return Promise.resolve({ message: "Libro añadido a wishlist (API)" }); // Placeholder
+async function addToWishlistAPI(numericBookId) {
+    console.log(`[app.js addToWishlistAPI] Called with numericBookId: ${numericBookId}`);
+    const bookToAdd = allBooks.find(b => b.numeric_id === numericBookId);
+    
+    if (!bookToAdd || !bookToAdd.id) {
+        console.error(`[app.js addToWishlistAPI] No se encontró libro o api_id para numericBookId: ${numericBookId}. Libro encontrado:`, JSON.stringify(bookToAdd));
+        showNotification('Error al identificar el libro para la lista de deseos.', 'error');
+        throw new Error('No se pudo identificar el libro para añadir a la lista de deseos.');
+    }
+    
+    const apiIdToSend = bookToAdd.id;
+    console.log(`[app.js addToWishlistAPI] Preparando para enviar POST a /api/wishlist con book_id (apiId): ${apiIdToSend}`);
+    
+    return fetchWithAuth(`http://localhost:3000/api/wishlist`, {
+        method: 'POST',
+        body: JSON.stringify({ book_id: apiIdToSend })
+    });
 }
 
-async function removeFromWishlistAPI(numericBookId) { 
-    console.log(`[app.js removeFromWishlistAPI] Placeholder: Quitar libro con ID numérico ${numericBookId} de la API.`);
-    // const token = localStorage.getItem('token');
-    // if (!token) throw new Error('Usuario no autenticado');
-    // const response = await fetchWithAuth(`/api/wishlist/${numericBookId}`, { method: 'DELETE' });
-    // if (!response.ok) throw new Error('Error al quitar de la wishlist en API');
-    // return await response.json(); 
-    return Promise.resolve({ message: "Libro quitado de wishlist (API)" }); // Placeholder
+async function removeFromWishlistAPI(numericBookId) {
+    console.log(`[app.js removeFromWishlistAPI] Called with numericBookId: ${numericBookId}`);
+    const bookToRemove = allBooks.find(b => b.numeric_id === numericBookId);
+
+    if (!bookToRemove || !bookToRemove.id) {
+        console.error(`[app.js removeFromWishlistAPI] No se encontró libro o api_id para numericBookId: ${numericBookId}. Libro encontrado:`, JSON.stringify(bookToRemove));
+        showNotification('Error al identificar el libro para la lista de deseos.', 'error');
+        throw new Error('No se pudo identificar el libro para quitar de la lista de deseos.');
+    }
+
+    const apiIdToSend = bookToRemove.id;
+    console.log(`[app.js removeFromWishlistAPI] Preparando para enviar DELETE a /api/wishlist/${apiIdToSend}`);
+
+    return fetchWithAuth(`http://localhost:3000/api/wishlist/${apiIdToSend}`, {
+        method: 'DELETE'
+    });
 }
 
 // NUEVA FUNCIÓN FETCHUSERCART

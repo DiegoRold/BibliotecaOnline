@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Libros - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin_styles.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 dark:bg-gray-900 text-white p-6 space-y-6 shadow-lg">
+            <div class="text-2xl font-semibold text-center">Admin Panel</div>
+            <nav class="space-y-2">
+                <a href="admin_dashboard.html" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Dashboard</a>
+                <a href="admin_manage_books.html" class="block py-2.5 px-4 rounded transition duration-200 bg-sky-500 text-white hover:bg-sky-600">Gestionar Libros</a>
+                <a href="admin_manage_users.html" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Usuarios</a>
+                <a href="#manage-orders" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Pedidos</a>
+                <a href="#settings" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Configuración</a>
+                <a href="index.html" id="admin-logout-link" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-red-700 text-red-400">Cerrar Sesión (Admin)</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <header class="mb-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-sky-700 dark:text-sky-500">Gestionar Libros</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Administra el catálogo de libros de la plataforma.</p>
+                </div>
+                <button id="add-book-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out">
+                    Añadir Nuevo Libro
+                </button>
+            </header>
+
+            <!-- Tabla de Libros -->
+            <section class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Portada</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Título</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Autor</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Precio</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Stock</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="books-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr><td colspan="7" class="text-center p-4">Cargando libros...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para Añadir/Editar Libro -->
+    <dialog id="book-form-modal" class="p-0 rounded-lg shadow-xl w-full max-w-2xl">
+        <div class="bg-white dark:bg-gray-800 rounded-lg">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 id="book-modal-title" class="text-lg font-medium text-gray-900 dark:text-white">Añadir Nuevo Libro</h3>
+                <button id="close-book-modal-btn" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <form id="book-form" class="p-6 space-y-4">
+                <input type="hidden" id="book-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="book-title" class="block text-sm font-medium">Título</label>
+                        <input type="text" id="book-title" name="title" required class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="book-author" class="block text-sm font-medium">Autor</label>
+                        <input type="text" id="book-author" name="author" required class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+                <div>
+                    <label for="book-description" class="block text-sm font-medium">Descripción</label>
+                    <textarea id="book-description" name="description" rows="3" class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="book-price" class="block text-sm font-medium">Precio (€)</label>
+                        <input type="number" id="book-price" name="price" step="0.01" required class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="book-stock" class="block text-sm font-medium">Stock</label>
+                        <input type="number" id="book-stock" name="stock" step="1" required class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                     <div>
+                        <label for="book-publication-date" class="block text-sm font-medium">Fecha Publicación</label>
+                        <input type="date" id="book-publication-date" name="publication_date" class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="book-cover-image-url" class="block text-sm font-medium">URL Portada</label>
+                        <input type="url" id="book-cover-image-url" name="cover_image_url" placeholder="https://example.com/image.jpg" class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="book-tags" class="block text-sm font-medium">Tags (JSON, ej: ["ficción", "clásico"])</label>
+                        <input type="text" id="book-tags" name="tags" placeholder='["tag1", "tag2"]' class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+                 <div>
+                    <label for="book-publisher" class="block text-sm font-medium">Editorial</label>
+                    <input type="text" id="book-publisher" name="publisher" class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <!-- Añadir más campos según la estructura de tu tabla 'libros' -->
+                <div class="flex justify-end pt-4">
+                    <button type="button" id="cancel-book-form-btn" class="mr-2 px-4 py-2 text-sm font-medium rounded-md dark:bg-gray-600 dark:hover:bg-gray-500">Cancelar</button>
+                    <button type="submit" id="save-book-btn" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md">Guardar Libro</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <!-- Reutilizar el modal de confirmación/éxito de la gestión de usuarios -->
+    <dialog id="confirmation-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h3 id="confirmation-modal-title" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
+            <p id="confirmation-modal-message" class="text-sm text-gray-600 dark:text-gray-300 mb-6">message</p>
+            <div id="confirmation-modal-buttons" class="flex justify-end space-x-3">
+                <button id="confirmation-modal-cancel-btn" type="button" class="px-4 py-2 rounded-md dark:bg-gray-600 dark:hover:bg-gray-500">Cancelar</button>
+                <button id="confirmation-modal-confirm-btn" type="button" class="px-4 py-2 text-white bg-sky-600 hover:bg-sky-700 rounded-md">Confirmar</button>
+            </div>
+            <div id="success-modal-buttons" class="flex justify-end space-x-3" style="display: none;">
+                 <button id="success-modal-ok-btn" type="button" class="px-4 py-2 text-white bg-green-600 hover:bg-green-700 rounded-md">Aceptar</button>
+            </div>
+        </div>
+    </dialog>
+
+    <script src="/js/admin_manage_books.js"></script>
+    <script src="/js/admin_logout.js"></script>
+</body>
+</html>

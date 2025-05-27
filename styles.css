@@ -7,29 +7,14 @@
     
     /* Colores de fondo */
     --bg-light: #f8f9fa;
-    --bg-dark: #1a1a1a;
     
     /* Colores de texto */
     --text-light: #2c3e50;
-    --text-dark: #ecf0f1;
     
     /* Colores de elementos */
     --card-bg-light: #ffffff;
     --card-bg-dark: #2c3e50;
     --border-color: #e0e0e0;
-}
-
-.dark {
-    --primary-color: #3498db;
-    --secondary-color: #e74c3c;
-    --accent-color: #f39c12;
-    --bg-light: #1a1a1a;
-    --bg-dark: #121212;
-    --text-light: #ecf0f1;
-    --text-dark: #bdc3c7;
-    --card-bg-light: #2c3e50;
-    --card-bg-dark: #1a1a1a;
-    --border-color: #34495e;
 }
 
 /* Transiciones suaves */
@@ -54,12 +39,6 @@
     display: block;
 }
 
-/* Estilos para el modo oscuro */
-.dark .popover {
-    background: var(--card-bg-dark);
-    border-color: var(--border-color);
-    color: var(--text-dark);
-}
 
 /* Estilos para los modales (Wishlist y Contacto) */
 dialog {
@@ -92,25 +71,6 @@ dialog::backdrop {
     /* Podríamos añadir filter aquí si hiciera falta para dark mode */
 }
 
-.dark #contact-modal .dark\:border-gray-600 {
-    border-color: var(--border-color); /* Asegurar borde con variable */
-}
-
-.dark #contact-modal .dark\:text-white {
-    color: var(--text-dark);
-}
-
-.dark #contact-modal .dark\:text-gray-300 {
-    color: var(--text-dark); 
-}
-
-.dark #contact-modal .dark\:hover\:bg-gray-700:hover {
-     background-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark #contact-modal .dark\:text-blue-400 {
-    color: #60a5fa; /* Un azul claro para enlaces en modo oscuro */
-}
 
 /* Estilos para el logo en header (se mantiene) */
 header img {
@@ -131,10 +91,6 @@ header img:hover {
     transform: scale(1.05);
 }
 
-.dark header img {
-    filter: brightness(0.9) saturate(1.2);
-}
-
 /* Estilos para el header y menús desplegables (se mantiene) */
 header {
     background-color: var(--card-bg-light); /* Fondo claro por defecto */
@@ -144,26 +100,16 @@ header {
     transition: background-color 0.3s;
 }
 
-.dark header {
-    background-color: var(--card-bg-dark); /* Fondo oscuro */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-}
-
 /* Iconos del header */
 header button svg {
     color: var(--text-light); /* Color icono claro */
     transition: color 0.3s;
 }
-.dark header button svg {
-    color: var(--text-dark); /* Color icono oscuro */
-}
 
 header button:hover {
     background-color: rgba(0, 0, 0, 0.05); /* Hover suave claro */
 }
-.dark header button:hover {
-    background-color: rgba(255, 255, 255, 0.1); /* Hover suave oscuro */
-}
+
 
 /* Ajuste para imagen de toggle de tema */
 #theme-toggle img {
@@ -171,18 +117,10 @@ header button:hover {
     transition: filter 0.3s ease;
 }
 
-.dark #theme-toggle img {
-    /* Ejemplo: reducir brillo si la imagen es clara */
-    /* filter: brightness(0.8); */
-}
 
 /* Ajuste para imagen de icono de contacto */
 #contact-icon img {
     transition: filter 0.3s ease;
-}
-.dark #contact-icon img {
-    /* Ejemplo: reducir brillo si la imagen es clara */
-    /* filter: brightness(0.8); */
 }
 
 /* Aplicar colores base al body usando variables */

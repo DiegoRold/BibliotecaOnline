@@ -15,10 +15,10 @@
             <div class="text-2xl font-semibold text-center">Admin Panel</div>
             <nav class="space-y-2">
                 <a href="admin_dashboard.html" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Dashboard</a>
-                <a href="#manage-books" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Libros</a>
+                <a href="admin_manage_books.html" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Libros</a>
                 <a href="admin_manage_users.html" class="block py-2.5 px-4 rounded transition duration-200 bg-sky-500 text-white hover:bg-sky-600">Gestionar Usuarios</a>
                 <a href="#manage-orders" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Pedidos</a>
-                <a href="#settings" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Configuración</a>
+                <a href="index.html" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 text-blue-400">Volver a la página principal</a>
                 <a href="index.html" id="admin-logout-link" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-red-700 text-red-400">Cerrar Sesión (Admin)</a>
             </nav>
         </aside>
@@ -117,6 +117,21 @@
                     <button type="submit" id="save-user-btn" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md">Guardar Usuario</button>
                 </div>
             </form>
+        </div>
+    </dialog>
+
+    <!-- Modal Genérico para Confirmación y Éxito -->
+    <dialog id="confirmation-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+            <h3 id="confirmation-modal-title" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
+            <p id="confirmation-modal-message" class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres realizar esta acción?</p>
+            <div id="confirmation-modal-buttons" class="flex justify-end space-x-3">
+                <button id="confirmation-modal-cancel-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">Cancelar</button>
+                <button id="confirmation-modal-confirm-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 dark:focus:ring-offset-gray-800">Confirmar</button>
+            </div>
+            <div id="success-modal-buttons" class="flex justify-end space-x-3" style="display: none;">
+                 <button id="success-modal-ok-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-800">Aceptar</button>
+            </div>
         </div>
     </dialog>
 

@@ -31,6 +31,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelFormBtn = document.getElementById('cancel-form-btn');
     const userForm = document.getElementById('user-form');
 
+    // Elementos del nuevo modal de confirmación/éxito
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const confirmationModalTitle = document.getElementById('confirmation-modal-title');
+    const confirmationModalMessage = document.getElementById('confirmation-modal-message');
+    const confirmationModalButtons = document.getElementById('confirmation-modal-buttons');
+    const successModalButtons = document.getElementById('success-modal-buttons');
+    const confirmationModalConfirmBtn = document.getElementById('confirmation-modal-confirm-btn');
+    const confirmationModalCancelBtn = document.getElementById('confirmation-modal-cancel-btn');
+    const successModalOkBtn = document.getElementById('success-modal-ok-btn');
+
+    // Variable para almacenar la acción a confirmar
+    let actionToConfirm = null;
+
     if (addUserBtn) {
         addUserBtn.addEventListener('click', () => {
             document.getElementById('modal-title').textContent = 'Añadir Nuevo Usuario';
@@ -61,12 +74,115 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (userForm) {
         userForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            // Aquí irá la lógica para guardar/actualizar usuario
-            alert('Formulario enviado (lógica de guardado pendiente)');
-            userFormModal.close();
-            // await loadUsers(); // Recargar usuarios después de guardar
+            const userId = document.getElementById('user-id').value;
+            const actionType = userId ? 'actualizar' : 'crear';
+            const password = document.getElementById('password').value;
+
+            if (!userId && !password) {
+                // Mostrar mensaje de error en el modal de formulario o como alerta temporal
+                alert('La contraseña es requerida para nuevos usuarios.');
+                // Podrías usar un pequeño espacio en el modal del formulario para mostrar este error
+                return;
+            }
+            
+            // Configurar y mostrar modal de confirmación
+            confirmationModalTitle.textContent = `Confirmar ${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Usuario`;
+            confirmationModalMessage.textContent = `¿Estás seguro de que quieres ${actionType} este usuario?`;
+            confirmationModalButtons.style.display = 'flex';
+            successModalButtons.style.display = 'none';
+            confirmationModalConfirmBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md'; // Reset class
+            confirmationModalConfirmBtn.textContent = 'Confirmar';
+
+            actionToConfirm = async () => {
+                const nombre = document.getElementById('nombre').value;
+                const email = document.getElementById('email').value;
+                const rol = document.getElementById('rol').value;
+                
+                const userData = { nombre, email, rol };
+                if (password) userData.password = password; // Incluir solo si se proveyó
+
+                let response;
+                if (userId) {
+                    response = await fetchData(`/api/admin/users/${userId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(userData)
+                    });
+                } else {
+                    response = await fetchData('/api/admin/users', {
+                        method: 'POST',
+                        body: JSON.stringify(userData)
+                    });
+                }
+
+                if (response !== null && (response.id || response.message || response === undefined)) { // Undefined para PUT exitoso sin cuerpo
+                    userFormModal.close();
+                    showSuccessModal(userId ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente');
+                    await loadUsers();
+                } else {
+                    showErrorModal('Ocurrió un error al guardar el usuario.');
+                }
+            };
+            confirmationModal.showModal();
         });
     }
+
+    // Manejador para el botón de confirmación del modal genérico
+    if (confirmationModalConfirmBtn) {
+        confirmationModalConfirmBtn.addEventListener('click', async () => {
+            if (typeof actionToConfirm === 'function') {
+                await actionToConfirm();
+                actionToConfirm = null; // Resetear la acción
+                // No cerramos el modal aquí, se maneja en showSuccessModal o showErrorModal
+            }
+        });
+    }
+
+    if (confirmationModalCancelBtn) {
+        confirmationModalCancelBtn.addEventListener('click', () => {
+            confirmationModal.close();
+            actionToConfirm = null; // Resetear la acción
+        });
+    }
+
+    if (successModalOkBtn) {
+        successModalOkBtn.addEventListener('click', () => {
+            confirmationModal.close();
+        });
+    }
+    
+    // Cerrar modal de confirmación si se hace clic fuera (en el backdrop)
+    if(confirmationModal){
+        confirmationModal.addEventListener('click', (event) => {
+            if (event.target === confirmationModal) {
+                confirmationModal.close();
+                actionToConfirm = null;
+            }
+        });
+    }
+
+    function showSuccessModal(message) {
+        confirmationModalTitle.textContent = 'Éxito';
+        confirmationModalMessage.textContent = message;
+        confirmationModalButtons.style.display = 'none';
+        successModalButtons.style.display = 'flex';
+        // Asegurarse de que el modal esté abierto si se llamó sin que estuviera visible
+        if (!confirmationModal.open) {
+            confirmationModal.showModal();
+        }
+    }
+
+    function showErrorModal(message) {
+        confirmationModalTitle.textContent = 'Error';
+        confirmationModalMessage.textContent = message;
+        confirmationModalButtons.style.display = 'none'; // Ocultar botones de confirmar/cancelar
+        successModalButtons.style.display = 'flex'; // Mostrar solo el botón OK
+        confirmationModalConfirmBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md'; // Opcional: Cambiar color a rojo para OK en error
+        successModalOkBtn.textContent = 'Aceptar'; // Asegurar que el botón OK sea genérico
+         if (!confirmationModal.open) {
+            confirmationModal.showModal();
+        }
+    }
+
 });
 
 async function fetchData(apiPath, options = {}) {
@@ -146,23 +262,53 @@ async function loadUsers() {
 
 function addTableEventListeners() {
     document.querySelectorAll('.edit-user-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
+        button.addEventListener('click', async (e) => {
             const userId = e.target.dataset.id;
-            // Lógica para cargar datos del usuario en el modal y mostrarlo
-            alert(`Editar usuario ID: ${userId} (lógica pendiente)`);
-            // openEditModal(userId);
+            console.log(`Editando usuario ID: ${userId}`);
+            const user = await fetchData(`/api/admin/users/${userId}`);
+            if (user) {
+                document.getElementById('modal-title').textContent = 'Editar Usuario';
+                document.getElementById('user-id').value = user.id;
+                document.getElementById('nombre').value = user.nombre;
+                document.getElementById('email').value = user.email;
+                document.getElementById('rol').value = user.rol;
+                document.getElementById('password').value = ''; // Limpiar campo de contraseña
+                document.getElementById('password').placeholder = 'Dejar en blanco para no cambiar';
+                
+                // No mostramos el formulario directamente, preparamos para la confirmación si es necesario
+                // o simplemente abrimos el formulario y la confirmación se hará al enviar.
+                const userFormModal = document.getElementById('user-form-modal');
+                userFormModal.showModal();
+            } else {
+                // Aquí podríamos usar showErrorModal si el error es crítico
+                showErrorModal('No se pudieron cargar los datos del usuario para editar.');
+            }
         });
     });
 
     document.querySelectorAll('.delete-user-btn').forEach(button => {
         button.addEventListener('click', async (e) => {
             const userId = e.target.dataset.id;
-            if (confirm(`¿Estás seguro de que quieres eliminar al usuario ID: ${userId}?`)) {
-                // Lógica para eliminar usuario
-                alert(`Eliminar usuario ID: ${userId} (lógica pendiente)`);
-                // await fetchData(`/api/admin/users/${userId}`, { method: 'DELETE' });
-                // await loadUsers(); // Recargar la lista
-            }
+            
+            confirmationModalTitle.textContent = 'Confirmar Eliminación';
+            confirmationModalMessage.textContent = `¿Estás seguro de que quieres eliminar al usuario ID: ${userId}?`;
+            confirmationModalButtons.style.display = 'flex';
+            successModalButtons.style.display = 'none';
+            confirmationModalConfirmBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md'; // Botón rojo para eliminar
+            confirmationModalConfirmBtn.textContent = 'Eliminar';
+
+            actionToConfirm = async () => {
+                console.log(`Eliminando usuario ID: ${userId}`);
+                const response = await fetchData(`/api/admin/users/${userId}`, { method: 'DELETE' });
+                if (response === null) { 
+                    showSuccessModal('Usuario eliminado correctamente.');
+                    await loadUsers(); 
+                } else {
+                    showErrorModal('Error al eliminar el usuario.');
+                }
+            };
+            const confirmationModal = document.getElementById('confirmation-modal');
+            confirmationModal.showModal();
         });
     });
 }

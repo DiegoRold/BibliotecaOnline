@@ -4,19 +4,8 @@
     --secondary-color: #2563eb;
     --accent-color: #ef4444;
     --text-light: #1f2937;
-    --text-dark: #f3f4f6;
     --bg-light: #ffffff;
-    --bg-dark: #1f2937;
     --border-color: #e5e7eb;
-}
-
-/* Estilos para el modo oscuro */
-.dark {
-    --text-light: #f3f4f6;
-    --text-dark: #1f2937;
-    --bg-light: #1f2937;
-    --bg-dark: #ffffff;
-    --border-color: #374151;
 }
 
 /* Estilos para #books-grid en books.html - ELIMINADOS o COMENTADOS 
@@ -78,12 +67,6 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* Estilos para el modo oscuro */
-.dark .filter-container {
-    background: var(--bg-dark);
-    border-color: var(--border-color);
-}
-
 /* Estilos para el scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
@@ -98,10 +81,6 @@
     border-radius: 4px;
 }
 
-.dark ::-webkit-scrollbar-track {
-    background: var(--bg-dark);
-}
-
 /* Estilos para el placeholder de las imágenes */
 .placeholder {
     background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
@@ -111,11 +90,6 @@
     font-size: 2rem;
     color: #9ca3af;
     text-transform: uppercase;
-}
-
-.dark .placeholder {
-    background: linear-gradient(45deg, #374151, #1f2937);
-    color: #6b7280;
 }
 
 /* Animaciones */
@@ -172,14 +146,6 @@ book-card {
     color: var(--text-light);
 }
 
-/* Estilos para modo oscuro en book-card usando variables CSS existentes */
-.dark .book-card {
-    border-color: var(--border-color);
-}
-
-.dark .book-card .book-author {
-    color: #a0aec0;
-}
 
 .book-card-top img.book-cover {
     width: 100%;
@@ -226,11 +192,6 @@ book-card {
     width: 20px;
     height: 20px;
     cursor: pointer;
-}
-
-.dark .book-card-bottom .wishlist-icon,
-.dark .book-card-bottom .cart-icon {
-    filter: brightness(0) invert(1);
 }
 
 .book-card-bottom .details-button {
@@ -322,12 +283,6 @@ book-card {
     border-color: var(--text-light, #1f2937);
     font-weight: bold;
     cursor: default;
-}
-
-.dark .page-number.active {
-    background-color: var(--text-dark, #f3f4f6); /* Fondo claro para el activo en modo oscuro */
-    color: var(--bg-dark, #1f2937); /* Texto oscuro para el activo en modo oscuro */
-    border-color: var(--text-dark, #f3f4f6);
 }
 
 .pagination-symbol-nav:disabled, .page-number:disabled { /* page-number no debería deshabilitarse, pero por si acaso */

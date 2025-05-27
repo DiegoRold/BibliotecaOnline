@@ -1,0 +1,51 @@
+/* Estilos personalizados para el panel de administración */
+/* Puedes añadir tus propias reglas CSS aquí en el futuro */
+
+/* Forzar visibilidad del botón Guardar Usuario en el modal de gestión de usuarios */
+/* Esto es para asegurar que las clases de Tailwind no sean anuladas incorrectamente */
+#user-form-modal #save-user-btn {
+    background-color: #0284c7; /* Corresponde a bg-sky-600 de Tailwind */
+    color: white;
+    opacity: 1;
+    display: inline-block; /* Asegurar que se muestre como bloque en línea */
+}
+
+/* Opcional: Puedes añadir aquí el estilo hover también si es necesario */
+#user-form-modal #save-user-btn:hover {
+    background-color: #0369a1; /* Corresponde a bg-sky-700 de Tailwind */
+}
+
+/* Forzar visibilidad de los botones en el modal de confirmación/éxito */
+#confirmation-modal #confirmation-modal-confirm-btn,
+#confirmation-modal #success-modal-ok-btn {
+    opacity: 1 !important;
+    display: inline-block !important; /* Asegurar que se muestren */
+}
+
+/* Estilo específico para el botón de confirmación (por si el color base se pierde) */
+#confirmation-modal #confirmation-modal-confirm-btn {
+    background-color: #0284c7; /* bg-sky-600 */
+    color: white;
+}
+#confirmation-modal #confirmation-modal-confirm-btn.bg-red-600 {
+    background-color: #dc2626 !important; /* bg-red-600, importante para anular el azul si se aplica la clase de eliminar */
+    color: white;
+}
+
+/* Estilo específico para el botón OK de éxito */
+#confirmation-modal #success-modal-ok-btn {
+    background-color: #16a34a; /* bg-green-600 */
+    color: white;
+}
+
+/* Hover states para los nuevos botones del modal de confirmación */
+#confirmation-modal #confirmation-modal-confirm-btn:hover {
+    background-color: #0369a1; /* bg-sky-700 */
+}
+#confirmation-modal #confirmation-modal-confirm-btn.bg-red-600:hover {
+    background-color: #b91c1c !important; /* bg-red-700 */
+}
+
+#confirmation-modal #success-modal-ok-btn:hover {
+    background-color: #15803d; /* bg-green-700 */
+} 

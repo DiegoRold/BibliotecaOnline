@@ -207,4 +207,105 @@ router.delete('/users/:id', async (req, res) => {
     }
 });
 
+// --- Gestión de Libros (CRUD) ---
+
+// GET /api/admin/books - Obtener todos los libros
+router.get('/books', async (req, res) => {
+    try {
+        const [books] = await pool.query('SELECT * FROM libros ORDER BY id DESC'); // o el orden que prefieras
+        res.json(books);
+    } catch (error) {
+        console.error('Error fetching books:', error);
+        res.status(500).json({ message: 'Error en el servidor al obtener libros' });
+    }
+});
+
+// GET /api/admin/books/:id - Obtener un libro por ID
+router.get('/books/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [book] = await pool.query('SELECT * FROM libros WHERE id = ?', [id]);
+        if (book.length === 0) {
+            return res.status(404).json({ message: 'Libro no encontrado' });
+        }
+        // Asegurarse de que los tags se devuelvan como array si están almacenados como JSON string
+        const resultBook = book[0];
+        if (resultBook.tags && typeof resultBook.tags === 'string') {
+            try {
+                resultBook.tags = JSON.parse(resultBook.tags);
+            } catch (e) {
+                console.error('Error parsing tags for book:', resultBook.id, e);
+                resultBook.tags = []; // o null, o dejar como string con advertencia
+            }
+        }
+        res.json(resultBook);
+    } catch (error) {
+        console.error(`Error fetching book ${req.params.id}:`, error);
+        res.status(500).json({ message: 'Error en el servidor al obtener el libro' });
+    }
+});
+
+// POST /api/admin/books - Crear un nuevo libro
+router.post('/books', async (req, res) => {
+    // Asegúrate de que los nombres de campo coincidan con tu tabla `libros` y el frontend
+    const { title, author, description, price, stock, publication_date, cover_image_url, tags, publisher } = req.body;
+    
+    // Validación básica (puedes añadir más según tus necesidades)
+    if (!title || !author || !price || stock === undefined || stock === null) {
+        return res.status(400).json({ message: 'Título, autor, precio y stock son requeridos.' });
+    }
+
+    try {
+        const tagsString = Array.isArray(tags) ? JSON.stringify(tags) : null;
+        const query = 'INSERT INTO libros (title, author, description, price, stock, publication_date, cover_image_url, tags, publisher) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        const params = [title, author, description, parseFloat(price), parseInt(stock, 10), publication_date, cover_image_url, tagsString, publisher];
+        
+        const [result] = await pool.query(query, params);
+        res.status(201).json({ id: result.insertId, ...req.body, tags: tags }); // Devolver el libro creado, con tags como array
+    } catch (error) {
+        console.error('Error creating book:', error);
+        res.status(500).json({ message: 'Error en el servidor al crear el libro' });
+    }
+});
+
+// PUT /api/admin/books/:id - Actualizar un libro
+router.put('/books/:id', async (req, res) => {
+    const { id } = req.params;
+    const { title, author, description, price, stock, publication_date, cover_image_url, tags, publisher } = req.body;
+
+    if (!title || !author || !price || stock === undefined || stock === null) {
+        return res.status(400).json({ message: 'Título, autor, precio y stock son requeridos.' });
+    }
+
+    try {
+        const tagsString = Array.isArray(tags) ? JSON.stringify(tags) : null;
+        const query = 'UPDATE libros SET title = ?, author = ?, description = ?, price = ?, stock = ?, publication_date = ?, cover_image_url = ?, tags = ?, publisher = ? WHERE id = ?';
+        const params = [title, author, description, parseFloat(price), parseInt(stock, 10), publication_date, cover_image_url, tagsString, publisher, id];
+
+        const [result] = await pool.query(query, params);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Libro no encontrado para actualizar' });
+        }
+        res.json({ message: 'Libro actualizado correctamente', id: id, ...req.body, tags: tags });
+    } catch (error) {
+        console.error(`Error updating book ${id}:`, error);
+        res.status(500).json({ message: 'Error en el servidor al actualizar el libro' });
+    }
+});
+
+// DELETE /api/admin/books/:id - Eliminar un libro
+router.delete('/books/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await pool.query('DELETE FROM libros WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Libro no encontrado para eliminar' });
+        }
+        res.status(204).send(); // No content
+    } catch (error) {
+        console.error(`Error deleting book ${id}:`, error);
+        res.status(500).json({ message: 'Error en el servidor al eliminar el libro' });
+    }
+});
+
 export default router; 

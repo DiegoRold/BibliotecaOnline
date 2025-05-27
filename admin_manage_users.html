@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Usuarios - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin_styles.css"> <!-- Estilos personalizados para el admin -->
+    <!-- Podríamos añadir aquí Font Awesome si queremos iconos para acciones (editar, eliminar) -->
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 dark:bg-gray-900 text-white p-6 space-y-6 shadow-lg">
+            <div class="text-2xl font-semibold text-center">Admin Panel</div>
+            <nav class="space-y-2">
+                <a href="admin_dashboard.html" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Dashboard</a>
+                <a href="#manage-books" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Libros</a>
+                <a href="admin_manage_users.html" class="block py-2.5 px-4 rounded transition duration-200 bg-sky-500 text-white hover:bg-sky-600">Gestionar Usuarios</a>
+                <a href="#manage-orders" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Gestionar Pedidos</a>
+                <a href="#settings" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">Configuración</a>
+                <a href="index.html" id="admin-logout-link" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-red-700 text-red-400">Cerrar Sesión (Admin)</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <header class="mb-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-sky-700 dark:text-sky-500">Gestionar Usuarios</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Administra las cuentas de los usuarios de la plataforma.</p>
+                </div>
+                <button id="add-user-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out">
+                    Añadir Usuario
+                </button>
+            </header>
+
+            <!-- Filtros y Búsqueda (Opcional, para más adelante) -->
+            <!-- 
+            <section class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" placeholder="Buscar por nombre o email..." class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                    <select class="p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                        <option value="">Filtrar por Rol</option>
+                        <option value="cliente">Cliente</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <button class="bg-sky-500 hover:bg-sky-600 text-white p-2 rounded">Buscar</button>
+                </div>
+            </section>
+            -->
+
+            <!-- Tabla de Usuarios -->
+            <section class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nombre</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rol</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha Creación</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Las filas de usuarios se insertarán aquí por JavaScript -->
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">
+                                    Cargando usuarios...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal para Añadir/Editar Usuario (se mostrará/ocultará con JS) -->
+    <dialog id="user-form-modal" class="p-0 rounded-lg shadow-xl w-full max-w-lg">
+        <div class="bg-white dark:bg-gray-800 rounded-lg">
+            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                <h3 id="modal-title" class="text-lg font-medium text-gray-900 dark:text-white">Añadir Nuevo Usuario</h3>
+                <button id="close-modal-btn" type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <span class="sr-only">Cerrar</span>
+                    <!-- Icono SVG de cierre -->
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="user-form" class="p-6 space-y-4">
+                <input type="hidden" id="user-id">
+                <div>
+                    <label for="nombre" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre Completo</label>
+                    <input type="text" name="nombre" id="nombre" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm dark:bg-gray-700">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                    <input type="email" name="email" id="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm dark:bg-gray-700">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña (dejar en blanco para no cambiar)</label>
+                    <input type="password" name="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm dark:bg-gray-700">
+                </div>
+                 <div>
+                    <label for="rol" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rol</label>
+                    <select name="rol" id="rol" required class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm dark:bg-gray-700">
+                        <option value="cliente">Cliente</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="flex justify-end pt-4">
+                    <button type="button" id="cancel-form-btn" class="mr-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md">Cancelar</button>
+                    <button type="submit" id="save-user-btn" class="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-md">Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
+
+    <script src="/js/admin_manage_users.js"></script>
+    <!-- Incluir el script de logout del admin dashboard si es necesario o manejarlo aquí -->
+     <script src="/js/admin_logout.js"></script> <!-- Asumiendo un script separado para logout -->
+
+</body>
+</html> 

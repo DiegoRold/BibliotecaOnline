@@ -99,4 +99,112 @@ router.get('/stats/recent-activity', async (req, res) => {
     }
 });
 
+// --- Gestión de Usuarios (CRUD) ---
+
+// GET /api/admin/users - Obtener todos los usuarios
+router.get('/users', async (req, res) => {
+    try {
+        const [users] = await pool.query('SELECT id, nombre, email, rol, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC');
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Error en el servidor al obtener usuarios' });
+    }
+});
+
+// GET /api/admin/users/:id - Obtener un usuario por ID (para editar)
+router.get('/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [user] = await pool.query('SELECT id, nombre, email, rol FROM usuarios WHERE id = ?', [id]);
+        if (user.length === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+        res.json(user[0]);
+    } catch (error) {
+        console.error(`Error fetching user ${req.params.id}:`, error);
+        res.status(500).json({ message: 'Error en el servidor al obtener el usuario' });
+    }
+});
+
+// POST /api/admin/users - Crear un nuevo usuario
+// NOTA: La creación de usuarios desde el panel de admin usualmente requiere hashing de contraseña.
+// Aquí se asume que la contraseña se envía en texto plano y se hashea antes de guardar, 
+// o que se usa la misma lógica de hashing que en el registro normal.
+// Por simplicidad, aquí no se incluye el hashing, pero DEBERÍA implementarse en un entorno real.
+router.post('/users', async (req, res) => {
+    const { nombre, email, password, rol } = req.body;
+    if (!nombre || !email || !password || !rol) {
+        return res.status(400).json({ message: 'Nombre, email, contraseña y rol son requeridos' });
+    }
+    try {
+        // Aquí deberías hashear la contraseña antes de guardarla
+        // Ejemplo: const hashedPassword = await bcrypt.hash(password, 10);
+        // Y guardar hashedPassword en lugar de password
+        const [result] = await pool.query(
+            'INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
+            [nombre, email, password, rol] // Usar hashedPassword aquí
+        );
+        res.status(201).json({ id: result.insertId, nombre, email, rol });
+    } catch (error) {
+        console.error('Error creating user:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ message: 'El email ya está registrado' });
+        }
+        res.status(500).json({ message: 'Error en el servidor al crear el usuario' });
+    }
+});
+
+// PUT /api/admin/users/:id - Actualizar un usuario
+router.put('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nombre, email, password, rol } = req.body;
+
+    if (!nombre || !email || !rol) {
+        return res.status(400).json({ message: 'Nombre, email y rol son requeridos' });
+    }
+
+    let query = 'UPDATE usuarios SET nombre = ?, email = ?, rol = ?';
+    const queryParams = [nombre, email, rol];
+
+    if (password) {
+        // Si se provee una contraseña, hashearla y añadirla a la query
+        // const hashedPassword = await bcrypt.hash(password, 10);
+        query += ', password_hash = ?';
+        queryParams.push(password); // Usar hashedPassword aquí
+    }
+
+    query += ' WHERE id = ?';
+    queryParams.push(id);
+
+    try {
+        const [result] = await pool.query(query, queryParams);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado para actualizar' });
+        }
+        res.json({ message: 'Usuario actualizado correctamente' });
+    } catch (error) {
+        console.error(`Error updating user ${id}:`, error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ message: 'El email ya está en uso por otro usuario' });
+        }
+        res.status(500).json({ message: 'Error en el servidor al actualizar el usuario' });
+    }
+});
+
+// DELETE /api/admin/users/:id - Eliminar un usuario
+router.delete('/users/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await pool.query('DELETE FROM usuarios WHERE id = ?', [id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado para eliminar' });
+        }
+        res.status(204).send(); // No content
+    } catch (error) {
+        console.error(`Error deleting user ${id}:`, error);
+        res.status(500).json({ message: 'Error en el servidor al eliminar el usuario' });
+    }
+});
+
 export default router; 

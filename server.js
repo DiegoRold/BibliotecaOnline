@@ -15,6 +15,7 @@ import orderRoutes from './routes/orderRoutes.js'; // Importar las rutas de pedi
 import wishlistRoutes from './routes/wishlistRoutes.js'; // Importar rutas de wishlist
 import cartRoutes from './routes/cartRoutes.js'; // Importar rutas de carrito
 import userRoutes from './routes/userRoutes.js'; // <--- AÑADIR ESTA LÍNEA
+import adminRoutes from './routes/adminRoutes.js'; // <--- AÑADIR ESTA LÍNEA PARA ADMIN
 
 // Cargar variables de entorno desde .env
 dotenv.config();
@@ -66,6 +67,9 @@ app.use('/api/cart', cartRoutes);
 
 // Usar las rutas de usuario para cualquier petición a /api (ej. /api/perfil, /api/perfil/cambiar-contrasena)
 app.use('/api', userRoutes); // <--- AÑADIR ESTA LÍNEA
+
+// Usar las rutas de administrador para cualquier petición a /api/admin
+app.use('/api/admin', adminRoutes); // <--- AÑADIR ESTA LÍNEA PARA ADMIN
 
 // (Aquí se podrían añadir otras rutas para otros recursos, ej. app.use('/api/usuarios', userRoutes);)
 

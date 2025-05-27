@@ -47,38 +47,33 @@ async function checkAdminRole() {
     }
 }
 
-async function fetchData(apiUrl) {
+async function fetchData(apiPath) {
     const token = localStorage.getItem('authToken');
-    if (!token && !apiUrl.includes('example-data')) { // No requerir token para datos de ejemplo si se usan
-        console.error('No se encontró authToken para la solicitud a API:', apiUrl);
-        // Podría redirigir a login o manejar de otra forma
-        // window.location.href = 'login.html'; 
-        // throw new Error('Token no encontrado');
-        // Por ahora, para desarrollo, si no hay token y no son datos de ejemplo, podría fallar suavemente
-    }
+    const baseUrl = 'http://localhost:3000'; // Define the base URL for the API
+    const fullApiUrl = baseUrl + apiPath;     // Construct the full URL
 
     try {
         // Descomentar y usar cuando los endpoints estén listos y protegidos
-        // const response = await fetch(apiUrl, { 
-        //     headers: {
-        //         'Authorization': `Bearer ${token}`,
-        //         'Content-Type': 'application/json'
-        //     }
-        // });
-        // if (!response.ok) {
-        //     if (response.status === 401 || response.status === 403) {
-        //         // Token inválido o no autorizado para este recurso admin
-        //         alert('Sesión expirada o no autorizado. Por favor, inicie sesión como administrador.');
-        //         localStorage.removeItem('authToken');
-        //         localStorage.removeItem('userData');
-        //         window.location.href = 'login.html';
-        //     }
-        //     throw new Error(`Error ${response.status}: ${response.statusText}`);
-        // }
-        // return await response.json();
+        const response = await fetch(fullApiUrl, { // Use the full URL
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                // Token inválido o no autorizado para este recurso admin
+                alert('Sesión expirada o no autorizado. Por favor, inicie sesión como administrador.');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                window.location.href = 'login.html';
+            }
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return await response.json();
         
-        // --- DATOS DE EJEMPLO TEMPORALES (Mantener hasta que el backend esté listo) ---
-        console.warn(`fetchData: Usando datos de ejemplo para ${apiUrl}. URL real sería: ${apiUrl}`);
+        // --- DATOS DE EJEMPLO TEMPORALES (ELIMINAR O COMENTAR ESTA SECCIÓN) ---
+        /* console.warn(`fetchData: Usando datos de ejemplo para ${apiUrl}. URL real sería: ${apiUrl}`);
         if (apiUrl.includes('total-users')) return { total: Math.floor(Math.random() * 1000) + 50 };
         if (apiUrl.includes('total-books')) return { total: Math.floor(Math.random() * 5000) + 200 };
         if (apiUrl.includes('pending-orders')) return { total: Math.floor(Math.random() * 50) };
@@ -104,11 +99,11 @@ async function fetchData(apiUrl) {
                 { timestamp: new Date().toISOString(), message: 'Libro \'Aprende JavaScript\' actualizado.' }
             ]
         };
-        return {}; 
+        return {}; */
         // --- FIN DATOS DE EJEMPLO ---
 
     } catch (error) {
-        console.error(`Error fetching data from ${apiUrl}:`, error);
+        console.error(`Error fetching data from ${fullApiUrl}:`, error); // Log fullApiUrl
         // No redirigir desde aquí directamente para no interrumpir todas las llamadas si una falla,
         // a menos que sea un error de autenticación manejado arriba.
         return null; 

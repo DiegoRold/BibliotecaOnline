@@ -70,9 +70,10 @@ async function loadBooks() {
     }
 
     const books = await fetchData('/api/admin/books'); // Endpoint que crearemos
+    console.log('Respuesta de fetchData para /api/admin/books:', JSON.stringify(books)); // LOG AÑADIDO
     booksTableBody.innerHTML = ''; 
 
-    if (books && books.length > 0) {
+    if (books && Array.isArray(books) && books.length > 0) { // Condición más robusta
         books.forEach(book => {
             const row = booksTableBody.insertRow();
             // Asegurarse de que los campos coincidan con tu tabla de libros
@@ -89,10 +90,11 @@ async function loadBooks() {
                 </td>
             `;
         });
-    } else if (books) {
+    } else if (books && Array.isArray(books) && books.length === 0) { // Condición más robusta para array vacío
         booksTableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4">No se encontraron libros.</td></tr>';
     } else {
-        booksTableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-red-500">Error al cargar libros.</td></tr>';
+        console.error('La variable books no es un array o es null/undefined:', books); // Log de error adicional
+        booksTableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-red-500">Error al cargar libros (respuesta no válida).</td></tr>';
     }
     addBookTableEventListeners();
 }

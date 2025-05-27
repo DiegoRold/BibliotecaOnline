@@ -3,6 +3,12 @@ import pool from '../config/db.js';
 // import { isAdmin } from '../middlewares/authMiddleware.js'; // Lo añadiremos después
 
 const router = express.Router();
+console.log('[adminRoutes.js] Router de admin inicializado.'); // Log temporal
+
+router.use((req, res, next) => {
+    console.log(`[adminRoutes.js] Petición recibida en adminRouter: ${req.method} ${req.url}`); // Log temporal
+    next();
+});
 
 // Endpoint para obtener el total de usuarios
 // GET /api/admin/stats/total-users
@@ -211,6 +217,7 @@ router.delete('/users/:id', async (req, res) => {
 
 // GET /api/admin/books - Obtener todos los libros
 router.get('/books', async (req, res) => {
+    console.log('[adminRoutes.js] Accediendo a la ruta GET /books'); // Log temporal
     try {
         const [books] = await pool.query('SELECT * FROM libros ORDER BY id DESC'); // o el orden que prefieras
         res.json(books);

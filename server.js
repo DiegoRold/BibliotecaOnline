@@ -69,7 +69,11 @@ app.use('/api/cart', cartRoutes);
 app.use('/api', userRoutes); // <--- AÑADIR ESTA LÍNEA
 
 // Usar las rutas de administrador para cualquier petición a /api/admin
-app.use('/api/admin', adminRoutes); // <--- AÑADIR ESTA LÍNEA PARA ADMIN
+console.log('[server.js] Registrando rutas de admin...'); // Log temporal
+app.use('/api/admin', (req, res, next) => {
+    console.log(`[server.js] Petición recibida en /api/admin: ${req.method} ${req.originalUrl}`); // Log temporal
+    next();
+}, adminRoutes); // <--- AÑADIR ESTA LÍNEA PARA ADMIN
 
 // (Aquí se podrían añadir otras rutas para otros recursos, ej. app.use('/api/usuarios', userRoutes);)
 

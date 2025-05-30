@@ -99,8 +99,21 @@
                 </div>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="book-cover-image-url" class="block text-sm font-medium">URL Portada</label>
-                        <input type="url" id="book-cover-image-url" name="cover_image_url" placeholder="https://example.com/image.jpg" class="mt-1 block w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600">
+                        <label for="book-cover-image-file" class="block text-sm font-medium">Portada del Libro</label>
+                        <input type="file" id="book-cover-image-file" name="bookCoverImage" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-sky-100 file:text-sky-700 hover:file:bg-sky-200 dark:file:bg-gray-700 dark:file:text-gray-200 dark:hover:file:bg-gray-600 cursor-pointer">
+                        <input type="hidden" id="book-cover-image-url-hidden" name="current_cover_image_url"> <!-- Para enviar la URL actual si no se cambia el archivo -->
+                        
+                        <div class="mt-2 space-y-1">
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Portada Actual:</p>
+                                <img id="current-cover-preview" src="#" alt="Vista previa de portada actual" class="mt-1 h-24 w-auto object-contain border dark:border-gray-600 hidden bg-gray-50 dark:bg-gray-700 p-1">
+                                <p id="no-current-cover" class="text-xs text-gray-400 dark:text-gray-500 mt-1 hidden">No hay portada actual.</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Nueva Portada Seleccionada (si sube una nueva):</p>
+                                <img id="new-cover-preview" src="#" alt="Vista previa de nueva portada" class="mt-1 h-24 w-auto object-contain border dark:border-gray-600 hidden bg-gray-50 dark:bg-gray-700 p-1">
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label for="book-tags" class="block text-sm font-medium">Tags (JSON, ej: ["ficción", "clásico"])</label>

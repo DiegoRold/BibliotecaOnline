@@ -15,7 +15,31 @@
     background-color: #0369a1; /* Corresponde a bg-sky-700 de Tailwind */
 }
 
-/* Forzar visibilidad de los botones en el modal de confirmación/éxito */
+/* === Estilos para el modal de formulario de LIBROS === */
+#book-form-modal #save-book-btn {
+    background-color: #0284c7; /* bg-sky-600 de Tailwind */
+    color: white !important; /* Asegurar que el texto sea visible */
+    opacity: 1 !important; /* Forzar opacidad */
+    display: inline-block !important; /* Asegurar display */
+}
+
+#book-form-modal #save-book-btn:hover {
+    background-color: #0369a1; /* bg-sky-700 de Tailwind */
+}
+
+#book-form-modal #cancel-book-form-btn { /* Asumiendo que el ID del botón cancelar es 'cancel-book-form-btn' */
+    background-color: #6b7280; /* bg-gray-500 de Tailwind (ejemplo, ajusta si usas otro color) */
+    color: white !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+}
+
+#book-form-modal #cancel-book-form-btn:hover {
+    background-color: #4b5563; /* bg-gray-600 de Tailwind (ejemplo) */
+}
+/* === Fin Estilos para el modal de formulario de LIBROS === */
+
+/* Forzar visibilidad de los botones en el modal de confirmación/éxito genérico */
 #confirmation-modal #confirmation-modal-confirm-btn,
 #confirmation-modal #success-modal-ok-btn {
     opacity: 1 !important;
@@ -48,4 +72,39 @@
 
 #confirmation-modal #success-modal-ok-btn:hover {
     background-color: #15803d; /* bg-green-700 */
-} 
+}
+
+/* === Estilos para el modal de formulario de PEDIDOS === */
+#order-details-modal #update-order-form button[type="submit"] {
+    background-color: #0284c7; /* bg-sky-600 de Tailwind */
+    color: white !important; /* Asegurar que el texto sea visible */
+    opacity: 1 !important; /* Forzar opacidad */
+    display: inline-block !important; /* Asegurar display */
+    /* Replicar padding y otros estilos si es necesario, aunque Tailwind debería manejarlos si no hay conflicto */
+    padding: 0.5rem 1rem; /* Equivalente a px-4 py-2 (text-sm hace la fuente más pequeña) */
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem; /* text-sm */
+    font-weight: 500; /* font-medium */
+    border-radius: 0.375rem; /* rounded-md */
+}
+
+#order-details-modal #update-order-form button[type="submit"]:hover {
+    background-color: #0369a1; /* bg-sky-700 de Tailwind */
+}
+
+#order-details-modal #update-order-form button#cancel-order-update-btn {
+    background-color: #6b7280; /* bg-gray-500 de Tailwind (ejemplo) */
+    color: white !important;
+    opacity: 1 !important;
+    display: inline-block !important;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem; 
+    line-height: 1.25rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+}
+
+#order-details-modal #update-order-form button#cancel-order-update-btn:hover {
+    background-color: #4b5563; /* bg-gray-600 de Tailwind (ejemplo) */
+}
+/* === Fin Estilos para el modal de formulario de PEDIDOS === */ 

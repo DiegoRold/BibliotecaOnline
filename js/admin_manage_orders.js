@@ -21,6 +21,7 @@ function initializeOrdersPage() {
 
     const filterStatus = document.getElementById('filter-status');
     if (filterStatus) {
+        filterStatus.classList.add('border-2', 'border-gray-300', 'dark:border-gray-500', 'rounded-md', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'p-2', 'bg-white', 'dark:bg-gray-700', 'dark:text-gray-200');
         filterStatus.addEventListener('change', () => loadOrders(filterStatus.value));
     }
 
@@ -140,6 +141,10 @@ function initializeOrderModalListeners() {
     }
 
     if (updateOrderForm) {
+        const statusSelect = updateOrderForm.elements['status'];
+        if (statusSelect) {
+            statusSelect.classList.add('border-2', 'border-gray-300', 'dark:border-gray-500', 'rounded-md', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'p-2', 'w-full', 'bg-white', 'dark:bg-gray-700', 'dark:text-gray-200');
+        }
         updateOrderForm.addEventListener('submit', handleUpdateOrderSubmit);
     }
 }

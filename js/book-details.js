@@ -99,36 +99,49 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (book.title) {
             const normalizedTitle = normalizeBookTitleForImage(book.title);
 
-            const tryLoadLocalImage = (extension) => {
+            const tryLoadLocalImage = (basePath, extension) => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
-                    // Guardar el src que se intentará cargar para referencia en caso de error
-                    const testSrc = `assets/books/${normalizedTitle}.${extension}`;
-                    img.onload = () => resolve(testSrc); // Resolvemos con el src que funcionó
-                    img.onerror = () => reject(extension); // Rechazamos con la extensión que falló
+                    const testSrc = `${basePath}${normalizedTitle}.${extension}`;
+                    img.onload = () => resolve(testSrc);
+                    img.onerror = () => reject({ extension, basePath });
                     img.src = testSrc;
                 });
             };
 
-            // Intentar cargar PNG primero
-            tryLoadLocalImage('png')
+            // Intentar cargar desde assets/books/ primero
+            tryLoadLocalImage('assets/books/', 'png')
                 .then(pngSrc => {
-                    coverImg.src = pngSrc; // Si PNG carga, usarlo
-                    console.log(`[book-details.js] Portada .png cargada: ${pngSrc}`);
+                    coverImg.src = pngSrc;
+                    console.log(`[book-details.js] Portada .png cargada desde assets/books/: ${pngSrc}`);
                 })
-                .catch(failedPngExt => {
-                    console.warn(`[book-details.js] No se encontró .${failedPngExt} para "${book.title}". Intentando .jpg.`);
-                    // Si PNG falla, intentar cargar JPG
-                    return tryLoadLocalImage('jpg')
+                .catch(() => {
+                    console.warn(`[book-details.js] No se encontró .png para "${book.title}" en assets/books/. Intentando .jpg.`);
+                    return tryLoadLocalImage('assets/books/', 'jpg')
                         .then(jpgSrc => {
-                            // Este .then anidado se ejecuta SOLO si tryLoadLocalImage('jpg') tuvo éxito.
                             coverImg.src = jpgSrc;
-                            console.log(`[book-details.js] Portada .jpg cargada después de fallo de .png: ${jpgSrc}`);
+                            console.log(`[book-details.js] Portada .jpg cargada desde assets/books/: ${jpgSrc}`);
                         })
-                        .catch(failedJpgExt => {
-                            // Este .catch interno se ejecuta si JPG también falla
-                            console.warn(`[book-details.js] No se encontró .${failedJpgExt} (después de intentar .png) para "${book.title}". Usando placeholder general.`);
-                            coverImg.src = placeholderMainCover; // Asegurar placeholder si ambos fallan
+                        .catch(() => {
+                            console.warn(`[book-details.js] No se encontró .jpg para "${book.title}" en assets/books/. Intentando en public/assets/books/.`);
+                            // Si falla en assets/books/, intentar en public/assets/books/
+                            return tryLoadLocalImage('public/assets/books/', 'png')
+                                .then(publicPngSrc => {
+                                    coverImg.src = publicPngSrc;
+                                    console.log(`[book-details.js] Portada .png cargada desde public/assets/books/: ${publicPngSrc}`);
+                                })
+                                .catch(() => {
+                                    console.warn(`[book-details.js] No se encontró .png para "${book.title}" en public/assets/books/. Intentando .jpg.`);
+                                    return tryLoadLocalImage('public/assets/books/', 'jpg')
+                                        .then(publicJpgSrc => {
+                                            coverImg.src = publicJpgSrc;
+                                            console.log(`[book-details.js] Portada .jpg cargada desde public/assets/books/: ${publicJpgSrc}`);
+                                        })
+                                        .catch(() => {
+                                            console.warn(`[book-details.js] No se encontró imagen en public/assets/books/ para "${book.title}" (después de intentar en assets/books/). Usando placeholder general.`);
+                                            coverImg.src = placeholderMainCover;
+                                        });
+                                });
                         });
                 });
         } else {

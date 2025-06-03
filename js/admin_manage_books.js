@@ -114,9 +114,22 @@ async function loadBooks() {
                 books.forEach(book => {
                     const row = booksTableBody.insertRow();
                     const price = typeof book.price === 'number' ? book.price.toFixed(2) + ' €' : (book.price ? parseFloat(book.price).toFixed(2) + ' €' : 'N/A');
+                    
+                    let coverSrc = 'assets/books/placeholder.png'; // Placeholder por defecto
+                    let localFilename = null;
+                    if (book.cover_image_url) {
+                        // Asumimos que cover_image_url es algo como "assets/books/nombre.jpg" o solo "nombre.jpg"
+                        localFilename = book.cover_image_url.includes('/') ? 
+                                        book.cover_image_url.substring(book.cover_image_url.lastIndexOf('/') + 1) :
+                                        book.cover_image_url;
+                        coverSrc = `assets/books/${localFilename}`; // Primer intento
+                    }
+
                     row.innerHTML = `
                         <td class="px-6 py-4 text-sm">${book.id}</td>
-                        <td class="px-6 py-4 text-sm"><img src="${book.cover_image_url ? 'http://localhost:3000/' + book.cover_image_url : 'http://localhost:3000/assets/placeholder_cover.png'}" alt="${book.title}" class="h-16 w-auto object-contain" onerror="this.onerror=null;this.src='http://localhost:3000/assets/placeholder_cover.png'"></td>
+                        <td class="px-6 py-4 text-sm">
+                            <img src="${coverSrc}" alt="${book.title || 'Portada'}" class="h-16 w-auto object-contain book-cover-img" data-filename="${localFilename || ''}">
+                        </td>
                         <td class="px-6 py-4 text-sm">${book.title}</td>
                         <td class="px-6 py-4 text-sm">${book.author || 'N/A'}</td>
                         <td class="px-6 py-4 text-sm">${price}</td>
@@ -125,6 +138,28 @@ async function loadBooks() {
                             <button class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 edit-book-btn" data-id="${book.id}">Editar</button>
                         </td>
                     `;
+
+                    const imgElement = row.querySelector('.book-cover-img');
+                    if (imgElement && localFilename) { // Solo añadir listeners si había un localFilename para intentar
+                        imgElement.onerror = function() {
+                            // El primer intento (assets/books/filename) falló.
+                            // Intentar con public/assets/books/filename
+                            console.warn(`Admin: Falló ${this.src}. Intentando public/assets/books/${localFilename}`);
+                            this.src = `public/assets/books/${localFilename}`;
+                            this.onerror = function() {
+                                // El segundo intento (public/assets/books/filename) también falló.
+                                // Usar placeholder.
+                                console.warn(`Admin: Falló ${this.src}. Usando placeholder.`);
+                                this.src = 'assets/books/placeholder.png';
+                                this.onerror = null; // Evitar bucles si el placeholder falla
+                            };
+                        };
+                    } else if (imgElement) { // Si no había localFilename, src ya es el placeholder.
+                        imgElement.onerror = function() {
+                             console.error(`Admin: Falló el placeholder ${this.src}.`);
+                             this.onerror = null; // Evitar bucles
+                        }
+                    }
                 });
             } else {
                 booksTableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4">No se encontraron libros.</td></tr>';

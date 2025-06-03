@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 // import { isAdmin } from '../middlewares/authMiddleware.js'; // Ya no se usa esta forma
 import authMiddleware, { authorize } from '../middlewares/authMiddleware.js'; // Corregido
+import { getMonthlyGrowthStats } from '../controllers/statsController.js'; // <--- AÑADIR ESTA LÍNEA
 
 console.log('[adminRoutes.js] Script cargado'); // Log al inicio del script
 
@@ -91,6 +92,10 @@ router.get('/stats/pending-orders', authMiddleware, authorize('admin'), async (r
         res.status(500).json({ message: 'Error en el servidor al obtener pedidos pendientes' });
     }
 });
+
+// Endpoint para los datos de crecimiento mensual para el gráfico principal
+// GET /api/admin/stats/monthly-growth
+router.get('/stats/monthly-growth', authMiddleware, authorize('admin'), getMonthlyGrowthStats);
 
 // Endpoint para obtener datos del gráfico de visión general
 // GET /api/admin/stats/overview-chart-data

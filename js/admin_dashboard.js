@@ -132,32 +132,40 @@ async function loadKPIs() {
 }
 
 async function loadChart() {
-    console.log('Cargando gráfico...');
-    const chartData = await fetchData('/api/admin/stats/overview-chart-data'); // URL del endpoint real
+    console.log('Cargando gráfico principal...');
+    const chartDataResponse = await fetchData('/api/admin/stats/monthly-growth'); 
     const ctx = document.getElementById('overviewChart')?.getContext('2d');
     
-    if (ctx && chartData) {
+    if (ctx && chartDataResponse && chartDataResponse.labels && chartDataResponse.datasets) {
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: chartData.labels,
-                datasets: chartData.datasets
+                labels: chartDataResponse.labels, // Usar labels del backend directamente
+                datasets: chartDataResponse.datasets // Usar datasets del backend directamente
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { 
+                            // Asegurar que solo se muestren enteros en el eje Y si los datos son conteos
+                            stepSize: 1 
+                        }
+                    }
+                },
                 plugins: {
                     legend: { position: 'top' },
-                    title: { display: true, text: 'Actividad General de la Plataforma' }
+                    title: { display: true, text: 'Crecimiento Mensual (Últimos 6 Meses)' } // Título actualizado
                 }
             }
         });
-        console.log('Gráfico cargado e inicializado.');
+        console.log('Gráfico principal cargado e inicializado con datos reales.');
     } else {
-        console.error('No se pudo cargar el gráfico: contexto no encontrado o datos no disponibles.');
+        console.error('No se pudo cargar el gráfico principal: contexto no encontrado o datos no disponibles.', chartDataResponse);
         const chartContainer = document.getElementById('overviewChart')?.parentElement;
-        if (chartContainer) chartContainer.innerHTML = '<p class="text-center text-red-500">Error al cargar datos del gráfico.</p>';
+        if (chartContainer) chartContainer.innerHTML = '<p class="text-center text-red-500">Error al cargar datos del gráfico de crecimiento.</p>';
     }
 }
 

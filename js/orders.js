@@ -131,11 +131,13 @@ function renderOrders(orders, container) {
                     <p class="text-sm text-gray-500 dark:text-gray-400">${formattedDate}</p>
                 </div>
                 <div class="flex flex-col items-end space-y-2 mt-2 sm:mt-0">
+                    ${order.estado_pedido === 'Entregado' ? `
                     <span class="px-3 py-1 text-xs font-semibold rounded-full ${estadoPagoClass}">
                         Pago: ${order.estado_pago || 'Desconocido'}
                     </span>
+                    ` : ''}
                     <span class="px-3 py-1 text-xs font-semibold rounded-full ${estadoPedidoClass}">
-                        Pedido: ${order.estado_pedido || 'Desconocido'}
+                        Pedido: ${traducirEstadoPedido(order.estado_pedido) || 'Desconocido'}
                     </span>
                 </div>
             </div>
@@ -185,6 +187,26 @@ function getEstadoPedidoClass(estado) {
             return 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100';
         default:
             return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
+    }
+}
+
+function traducirEstadoPedido(estado) {
+    if (!estado) return 'Desconocido';
+    switch (estado.toLowerCase()) {
+        case 'pending':
+            return 'Pendiente';
+        case 'processing':
+            return 'Procesando';
+        case 'shipped':
+            return 'Enviado';
+        case 'delivered':
+            return 'Entregado';
+        case 'cancelled':
+            return 'Cancelado';
+        case 'ready for pickup': // Ejemplo, si tuvieras este estado
+            return 'Listo para Recoger';
+        default:
+            return estado.charAt(0).toUpperCase() + estado.slice(1); // Capitalizar si no hay traducción específica
     }
 }
 

@@ -39,24 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentBook = null; 
 
-    // Función de ayuda para normalizar el título del libro para la URL de la imagen
-    function normalizeBookTitleForImage(title) {
-        if (!title) return 'default'; // Si no hay título, usa un nombre por defecto
-        return title.toLowerCase()
-            .replace(/[áäâà]/g, 'a')
-            .replace(/[éëêè]/g, 'e')
-            .replace(/[íïîì]/g, 'i')
-            .replace(/[óöôò]/g, 'o')
-            .replace(/[úüûù]/g, 'u')
-            .replace(/[ñ]/g, 'n')
-            .replace(/[^a-z0-9_]/g, '-') // Reemplaza caracteres no alfanuméricos (excepto _) por guiones
-            .replace(/-+/g, '-') // Reemplaza múltiples guiones por uno solo
-            .replace(/^-+|-+$/g, ''); // Elimina guiones al principio y al final
-    }
-
     async function fetchBookDetails(apiId) { // El identificador ahora es siempre el api_id
         // Ya no se necesita la lógica para determinar el tipo de ID.
-        const fetchUrl = `http://localhost:3000/api/libros/details/${apiId}`;
+        const fetchUrl = `http://localhost:3000/api/libros/${apiId}`; // URL Corregida
         console.log(`[book-details.js fetchBookDetails] Fetching from URL: ${fetchUrl}`);
 
         try {
@@ -83,74 +68,65 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log('[book-details.js renderBookDetails] Book data received:', book);
 
-        // Lógica para la imagen de portada
-        const placeholderMainCover = 'assets/books/placeholder.png'; // Placeholder general
-        coverImg.src = placeholderMainCover; // Cargar placeholder inicialmente o si todo falla
+        // Lógica para la imagen de portada REVISADA Y CON FALLBACK A PUBLIC
+        const placeholderMainCover = 'assets/books/placeholder.png'; 
         coverImg.alt = book.title || 'Portada no disponible';
-        coverImg.style.display = 'block'; // Asegurar que sea visible si se resetea
+        coverImg.style.display = 'block';
 
-        if (book.cover && (book.cover.startsWith('http://') || book.cover.startsWith('https://'))) {
-            coverImg.src = book.cover;
-            coverImg.onerror = function() {
-                console.error(`Error al cargar imagen externa: ${this.src}. Mostrando placeholder.`);
-                this.src = placeholderMainCover;
-                // No ocultar, simplemente mostrar el placeholder.
-            };
-        } else if (book.title) {
-            const normalizedTitle = normalizeBookTitleForImage(book.title);
+        let primarySrc = placeholderMainCover; // Por defecto
 
-            const tryLoadLocalImage = (basePath, extension) => {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    const testSrc = `${basePath}${normalizedTitle}.${extension}`;
-                    img.onload = () => resolve(testSrc);
-                    img.onerror = () => reject({ extension, basePath });
-                    img.src = testSrc;
-                });
-            };
-
-            // Intentar cargar desde assets/books/ primero
-            tryLoadLocalImage('assets/books/', 'png')
-                .then(pngSrc => {
-                    coverImg.src = pngSrc;
-                    console.log(`[book-details.js] Portada .png cargada desde assets/books/: ${pngSrc}`);
-                })
-                .catch(() => {
-                    console.warn(`[book-details.js] No se encontró .png para "${book.title}" en assets/books/. Intentando .jpg.`);
-                    return tryLoadLocalImage('assets/books/', 'jpg')
-                        .then(jpgSrc => {
-                            coverImg.src = jpgSrc;
-                            console.log(`[book-details.js] Portada .jpg cargada desde assets/books/: ${jpgSrc}`);
-                        })
-                        .catch(() => {
-                            console.warn(`[book-details.js] No se encontró .jpg para "${book.title}" en assets/books/. Intentando en public/assets/books/.`);
-                            // Si falla en assets/books/, intentar en public/assets/books/
-                            return tryLoadLocalImage('public/assets/books/', 'png')
-                                .then(publicPngSrc => {
-                                    coverImg.src = publicPngSrc;
-                                    console.log(`[book-details.js] Portada .png cargada desde public/assets/books/: ${publicPngSrc}`);
-                                })
-                                .catch(() => {
-                                    console.warn(`[book-details.js] No se encontró .png para "${book.title}" en public/assets/books/. Intentando .jpg.`);
-                                    return tryLoadLocalImage('public/assets/books/', 'jpg')
-                                        .then(publicJpgSrc => {
-                                            coverImg.src = publicJpgSrc;
-                                            console.log(`[book-details.js] Portada .jpg cargada desde public/assets/books/: ${publicJpgSrc}`);
-                                        })
-                                        .catch(() => {
-                                            console.warn(`[book-details.js] No se encontró imagen en public/assets/books/ para "${book.title}" (después de intentar en assets/books/). Usando placeholder general.`);
-                                            coverImg.src = placeholderMainCover;
-                                        });
-                                });
-                        });
-                });
-        } else {
-             // Si no hay book.cover URL ni book.title, se mantiene el placeholder inicial.
-             coverImg.src = placeholderMainCover;
+        if (book.cover_image_url && typeof book.cover_image_url === 'string' && book.cover_image_url.trim() !== '') {
+            primarySrc = book.cover_image_url.trim();
+            console.log(`[book-details.js] Usando cover_image_url como fuente primaria: ${primarySrc}`);
+        } else if (book.cover && (book.cover.startsWith('http://') || book.cover.startsWith('https://'))) {
+            primarySrc = book.cover.trim(); // URL Externa completa
+            console.log(`[book-details.js] Usando book.cover (URL externa): ${primarySrc}`);
         }
 
-        // El onerror genérico en coverImg para URLs externas o si los intentos locales fallan y se setea el placeholder
-        // se maneja arriba o por el hecho de que el src final será el placeholder.
+        // Función para intentar cargar una imagen y devolver una promesa
+        const loadImage = (src) => {
+            return new Promise((resolve, reject) => {
+                console.log(`[book-details.js] Intentando cargar imagen: ${src}`);
+                const img = new Image();
+                img.onload = () => resolve(src);
+                img.onerror = () => reject(src);
+                img.src = src;
+            });
+        };
+
+        loadImage(primarySrc) // Intento 1: Cargar la fuente primaria (cover_image_url o URL externa)
+            .then(loadedSrc => {
+                coverImg.src = loadedSrc;
+            })
+            .catch(failedPrimarySrc => {
+                console.warn(`[book-details.js] Falló la carga de la fuente primaria: ${failedPrimarySrc}`);
+                // Si la fuente primaria falló Y era una ruta relativa (no una URL http/https)
+                // Y no comenzaba ya con 'public/', intentamos prefijarla con 'public/'.
+                if (!primarySrc.startsWith('http') && !primarySrc.startsWith('public/')) {
+                    const secondarySrc = `public/${primarySrc.startsWith('/') ? primarySrc.substring(1) : primarySrc}`;
+                    loadImage(secondarySrc) // Intento 2: Cargar desde 'public/' + ruta original
+                        .then(loadedSecondarySrc => {
+                            coverImg.src = loadedSecondarySrc;
+                        })
+                        .catch(failedSecondarySrc => {
+                            console.warn(`[book-details.js] Falló la carga de la fuente secundaria (con public/): ${failedSecondarySrc}. Mostrando placeholder.`);
+                            coverImg.src = placeholderMainCover;
+                        });
+                } else {
+                    // Si era una URL externa o ya empezaba con public/ y falló, o no había fuente primaria, usamos placeholder.
+                    console.warn(`[book-details.js] No se intentará con 'public/' (ya era URL, o ya empezaba con public, o era placeholder). Mostrando placeholder.`);
+                    coverImg.src = placeholderMainCover;
+                }
+            });
+
+        // Asegurar que el placeholder se muestre si el src final también falla (aunque loadImage debería manejarlo)
+        coverImg.onerror = function() {
+            if (this.src !== placeholderMainCover) { // Evitar bucle si el placeholder mismo falla
+                console.error(`[book-details.js] Error final al cargar imagen: ${this.src}. Mostrando placeholder.`);
+                this.src = placeholderMainCover;
+            }
+            this.onerror = null; 
+        };
 
         titleEl.textContent = book.title || 'N/A';
         authorEl.textContent = book.author || 'N/A';

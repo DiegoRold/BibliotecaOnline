@@ -117,7 +117,18 @@ async function init() {
         renderWishlist(); 
         renderCartModal(); 
         await updateUserUI(); 
-             renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4));
+        //      renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4)); // Llamada original
+        // Nueva lógica para renderBookCardsSlider:
+        const sliderContainerForInit = document.getElementById('book-cards-slider');
+        if (sliderContainerForInit && allBooks && allBooks.length > 0) {
+            console.log('[app.js init] #book-cards-slider encontrado. Renderizando el slider de libros.');
+            renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 8)); // Aumentado a 8 para más variedad si hay espacio
+        } else if (!sliderContainerForInit) {
+            console.log('[app.js init] #book-cards-slider NO encontrado. Omitiendo renderizado del slider de libros para esta página.');
+        } else {
+            console.log('[app.js init] #book-cards-slider encontrado PERO allBooks está vacío. Omitiendo renderizado del slider.');
+        }
+
         console.log('Aplicación inicializada.');
 
     } catch (error) {

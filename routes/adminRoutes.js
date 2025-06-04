@@ -85,7 +85,7 @@ router.get('/stats/total-books', authMiddleware, authorize('admin'), async (req,
 
 router.get('/stats/pending-orders', authMiddleware, authorize('admin'), async (req, res) => {
     try {
-        const [result] = await pool.query("SELECT COUNT(*) AS total FROM pedidos WHERE estado_pedido = 'Procesando'");
+        const [result] = await pool.query("SELECT COUNT(*) AS total FROM pedidos WHERE estado_pedido = 'processing'");
         res.json({ total: result[0].total });
     } catch (error) {
         console.error('Error fetching pending orders:', error);

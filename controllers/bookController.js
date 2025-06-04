@@ -4,7 +4,7 @@ import pool from '../config/db.js';
 export const getAllBooks = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 12;
+        const limit = parseInt(req.query.limit) || 16;
         const offset = (page - 1) * limit;
 
         const countQuery = 'SELECT COUNT(*) as totalBooks FROM libros WHERE stock > 0';
@@ -14,7 +14,9 @@ export const getAllBooks = async (req, res) => {
 
         const booksQuery = `
             SELECT 
-                id AS numeric_id, api_id AS id, title, author, cover_image_url AS cover, price, stock,
+                id AS id,
+                api_id,
+                title, author, cover_image_url AS cover, price, stock,
                 rating, description, publication_date, pages, publisher, categories, isbn, tags
             FROM libros 
             WHERE stock > 0 ORDER BY title LIMIT ? OFFSET ?`;

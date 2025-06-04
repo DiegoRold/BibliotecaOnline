@@ -1,5 +1,15 @@
+let currentChartInstance = null; // Variable para mantener la instancia del gráfico actual
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Admin Dashboard script loaded.');
+
+    // Registrar el plugin ChartDataLabels globalmente
+    if (typeof ChartDataLabels !== 'undefined') {
+        Chart.register(ChartDataLabels);
+        console.log('ChartDataLabels plugin registrado globalmente.');
+    } else {
+        console.warn('ChartDataLabels plugin no encontrado. Asegúrate de que el script está cargado.');
+    }
 
     const isAdmin = await checkAdminRole(); 
     if (!isAdmin) {
@@ -10,8 +20,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     console.log('Acceso de administrador verificado. Cargando dashboard...');
     loadKPIs();
-    loadChart();
+    displayChart('userGrowth'); // Cargar el gráfico inicial de crecimiento de usuarios
     loadRecentActivity();
+
+    // Configurar listeners para los selectores de gráficos
+    const chartSelectorButtons = document.querySelectorAll('.chart-selector-btn');
+    chartSelectorButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const chartType = button.dataset.charttype;
+            displayChart(chartType);
+        });
+    });
 });
 
 async function checkAdminRole() {
@@ -131,17 +150,90 @@ async function loadKPIs() {
     console.log('KPIs cargados.');
 }
 
-async function loadChart() {
-    console.log('Cargando gráfico principal...');
-    const chartDataResponse = await fetchData('/api/admin/stats/monthly-growth'); 
-    const ctx = document.getElementById('overviewChart')?.getContext('2d');
+async function displayChart(chartType) {
+    console.log(`Solicitando cambio a gráfico: ${chartType}`);
+    const chartTitleEl = document.getElementById('chartTitle');
+    const chartDescriptionEl = document.getElementById('chartDescription');
+    const overviewChartCanvas = document.getElementById('overviewChart');
     
-    if (ctx && chartDataResponse && chartDataResponse.labels && chartDataResponse.datasets) {
-        new Chart(ctx, {
+    if (!overviewChartCanvas) {
+        console.error('Elemento canvas overviewChart no encontrado.');
+        return;
+    }
+    const ctx = overviewChartCanvas.getContext('2d');
+    if (!ctx) {
+        console.error('Contexto del canvas no encontrado para el gráfico.');
+        return;
+    }
+
+    if (currentChartInstance) {
+        currentChartInstance.destroy();
+        currentChartInstance = null;
+        console.log('Instancia de gráfico anterior destruida.');
+    }
+    
+    ctx.clearRect(0, 0, overviewChartCanvas.width, overviewChartCanvas.height);
+
+    document.querySelectorAll('.chart-selector-btn').forEach(btn => {
+        btn.classList.remove('active-chart-selector', 'bg-sky-500', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+        if (btn.dataset.charttype === chartType) {
+            btn.classList.add('active-chart-selector', 'bg-sky-500', 'text-white');
+            btn.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+        }
+    });
+
+    try {
+        switch (chartType) {
+            case 'userGrowth':
+                chartTitleEl.textContent = 'Crecimiento Mensual (Usuarios)';
+                chartDescriptionEl.textContent = 'Mostrando el crecimiento de nuevos usuarios en los últimos 6 meses.';
+                await loadUserGrowthChart(ctx);
+                break;
+            case 'topBooks':
+                chartTitleEl.textContent = 'Top 5 Libros Más Vendidos';
+                chartDescriptionEl.textContent = 'Mostrando los 5 libros con más unidades vendidas.';
+                await loadTopBooksChart(ctx);
+                break;
+            case 'salesByCategory':
+                chartTitleEl.textContent = 'Ventas por Categoría';
+                chartDescriptionEl.textContent = 'Mostrando el total de unidades vendidas por categoría.';
+                await loadSalesByCategoryChart(ctx);
+                break;
+            case 'topCustomers':
+                chartTitleEl.textContent = 'Top 5 Clientes (por Gasto)';
+                chartDescriptionEl.textContent = 'Mostrando los 5 clientes que más han gastado.';
+                await loadTopCustomersChart(ctx);
+                break;
+            default:
+                console.warn(`Tipo de gráfico desconocido: ${chartType}`);
+                chartTitleEl.textContent = 'Gráfico no disponible';
+                chartDescriptionEl.textContent = 'Seleccione un tipo de gráfico válido.';
+                showPlaceholderChart(ctx, 'Seleccione un gráfico');
+        }
+    } catch (error) {
+        console.error(`Error al cargar el gráfico ${chartType}:`, error);
+        ctx.clearRect(0, 0, overviewChartCanvas.width, overviewChartCanvas.height);
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '16px Arial';
+        ctx.fillStyle = 'red';
+        ctx.fillText(`Error al cargar: ${chartTitleEl.textContent}`, overviewChartCanvas.width / 2, overviewChartCanvas.height / 2);
+        ctx.restore();
+    }
+}
+
+async function loadUserGrowthChart(ctx) {
+    console.log('Cargando gráfico de crecimiento de usuarios...');
+    const chartDataResponse = await fetchData('/api/admin/stats/monthly-growth'); 
+    
+    if (chartDataResponse && chartDataResponse.labels && chartDataResponse.datasets) {
+        currentChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: chartDataResponse.labels, // Usar labels del backend directamente
-                datasets: chartDataResponse.datasets // Usar datasets del backend directamente
+                labels: chartDataResponse.labels,
+                datasets: chartDataResponse.datasets
             },
             options: {
                 responsive: true,
@@ -150,23 +242,250 @@ async function loadChart() {
                     y: { 
                         beginAtZero: true,
                         ticks: { 
-                            // Asegurar que solo se muestren enteros en el eje Y si los datos son conteos
                             stepSize: 1 
                         }
                     }
                 },
                 plugins: {
                     legend: { position: 'top' },
-                    title: { display: true, text: 'Crecimiento Mensual (Últimos 6 Meses)' } // Título actualizado
+                    title: { display: false } // El título ahora se maneja externamente por #chartTitle
                 }
             }
         });
-        console.log('Gráfico principal cargado e inicializado con datos reales.');
+        console.log('Gráfico de crecimiento de usuarios cargado.');
     } else {
-        console.error('No se pudo cargar el gráfico principal: contexto no encontrado o datos no disponibles.', chartDataResponse);
-        const chartContainer = document.getElementById('overviewChart')?.parentElement;
-        if (chartContainer) chartContainer.innerHTML = '<p class="text-center text-red-500">Error al cargar datos del gráfico de crecimiento.</p>';
+        console.error('No se pudo cargar el gráfico de crecimiento de usuarios: datos no disponibles o en formato incorrecto.', chartDataResponse);
+        throw new Error('Datos para gráfico de crecimiento de usuarios no válidos');
     }
+}
+
+async function loadTopBooksChart(ctx) {
+    console.log('Cargando gráfico de top libros vendidos...');
+    const chartDataResponse = await fetchData('/api/admin/stats/top-books');
+    console.log('Datos recibidos para top libros:', JSON.stringify(chartDataResponse, null, 2));
+
+    if (chartDataResponse && 
+        chartDataResponse.labels && chartDataResponse.labels.length > 0 &&
+        chartDataResponse.datasets && chartDataResponse.datasets.length > 0 && 
+        chartDataResponse.datasets[0].data && chartDataResponse.datasets[0].data.length > 0 &&
+        chartDataResponse.datasets[0].data.some(value => value > 0)) {
+        
+        currentChartInstance = new Chart(ctx, {
+            type: 'bar', 
+            data: {
+                labels: chartDataResponse.labels,
+                datasets: chartDataResponse.datasets 
+            },
+            options: {
+                indexAxis: 'y', // Para hacerlo un gráfico de barras horizontales
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0 // Mostrar números enteros en el eje X (cantidades)
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false // La leyenda del dataset no es tan útil aquí
+                    },
+                    title: {
+                        display: false, 
+                    },
+                    datalabels: { 
+                        anchor: 'end',
+                        align: 'right',
+                        formatter: (value, context) => {
+                            return value; // Mostrar el valor numérico directamente
+                        },
+                        color: '#333', // Color del texto de la etiqueta
+                        font: {
+                            weight: 'normal',
+                        },
+                        offset: 4, // Pequeño desplazamiento para que no se pegue a la barra
+                    }
+                }
+            }
+        });
+        console.log('Gráfico de top libros cargado.');
+    } else {
+        console.error('No se pudo cargar el gráfico de top libros: datos vacíos, no disponibles o en formato incorrecto.', chartDataResponse);
+        showPlaceholderChart(ctx, 'No hay datos de top libros para mostrar.');
+    }
+}
+
+async function loadSalesByCategoryChart(ctx) {
+    console.log('Cargando gráfico de ventas por categoría...');
+    const chartDataResponse = await fetchData('/api/admin/stats/sales-by-category');
+    console.log('Datos recibidos para ventas por categoría:', JSON.stringify(chartDataResponse, null, 2));
+
+    if (chartDataResponse && 
+        chartDataResponse.labels && chartDataResponse.labels.length > 0 &&
+        chartDataResponse.datasets && chartDataResponse.datasets.length > 0 && 
+        chartDataResponse.datasets[0].data && chartDataResponse.datasets[0].data.length > 0 &&
+        chartDataResponse.datasets[0].data.some(value => value > 0)) {
+        
+        currentChartInstance = new Chart(ctx, {
+            type: 'pie', 
+            data: {
+                labels: chartDataResponse.labels,
+                datasets: chartDataResponse.datasets 
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: false, 
+                    },
+                    datalabels: { 
+                        formatter: (value, context) => {
+                            // Log para depuración
+                            console.log('Datalabels formatter - value:', value, 'context datasetIndex:', context.datasetIndex, 'dataIndex:', context.dataIndex);
+                            
+                            const chart = context.chart;
+                            if (!chart || !chart.data || !chart.data.datasets || !chart.data.datasets[context.datasetIndex]) {
+                                console.warn('Datalabels formatter: chart or dataset structure not found as expected.');
+                                return 'Error';
+                            }
+                            const dataset = chart.data.datasets[context.datasetIndex];
+                            if (!dataset.data || dataset.data.length === 0) {
+                                console.warn('Datalabels formatter: dataset.data no encontrado o vacío.');
+                                return 'N/A';
+                            }
+                            const datasetData = dataset.data;
+                            
+                            // Asegurarse de que los datos son numéricos antes de sumar
+                            const sum = datasetData.reduce((a, b) => Number(a) + Number(b), 0);
+                            
+                            console.log('Datalabels formatter - datasetData:', datasetData, 'sum:', sum);
+
+                            if (sum === 0) {
+                                // Si la suma es 0, y el valor es 0, mostrar 0.0%.
+                                return (Number(value) === 0) ? '0.0%' : 'Error (sum is 0)'; 
+                            }
+                            
+                            const percentage = (Number(value) / sum * 100);
+                            console.log('Datalabels formatter - calculated percentage for value', value, 'is:', percentage);
+
+                            if (isNaN(percentage)) {
+                                console.warn('Datalabels formatter: Percentage is NaN. Value:', value, 'Sum:', sum);
+                                return 'Error NaN';
+                            }
+                            
+                            return percentage.toFixed(1) + '%';
+                        },
+                        color: '#fff',
+                        font: {
+                            weight: 'bold',
+                            size: 12,
+                        },
+                    }
+                }
+            }
+        });
+        console.log('Gráfico de ventas por categoría cargado.');
+    } else {
+        console.error('No se pudo cargar el gráfico de ventas por categoría: datos vacíos, no disponibles, en formato incorrecto o todos los valores son cero.', chartDataResponse);
+        showPlaceholderChart(ctx, 'No hay datos de ventas por categoría para mostrar.');
+    }
+}
+
+async function loadTopCustomersChart(ctx) {
+    console.log('Cargando gráfico de top clientes...');
+    const chartDataResponse = await fetchData('/api/admin/stats/top-customers');
+    console.log('Datos recibidos para top clientes:', JSON.stringify(chartDataResponse, null, 2));
+
+    if (chartDataResponse && 
+        chartDataResponse.labels && chartDataResponse.labels.length > 0 &&
+        chartDataResponse.datasets && chartDataResponse.datasets.length > 0 && 
+        chartDataResponse.datasets[0].data && chartDataResponse.datasets[0].data.length > 0 &&
+        chartDataResponse.datasets[0].data.some(value => parseFloat(value) > 0)) {
+        
+        currentChartInstance = new Chart(ctx, {
+            type: 'bar', 
+            data: {
+                labels: chartDataResponse.labels,
+                datasets: chartDataResponse.datasets.map(dataset => ({
+                    ...dataset,
+                    data: dataset.data.map(value => parseFloat(value)) // Asegurar que los datos sean numéricos
+                }))
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0, // Sin decimales para el eje X (moneda)
+                            callback: function(value) { // Formatear como moneda (ej. EUR)
+                                return value.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false 
+                    },
+                    title: {
+                        display: false, 
+                    },
+                    tooltip: { // Configuración de tooltips para mostrar moneda
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += context.parsed.x.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    datalabels: { 
+                        anchor: 'end',
+                        align: 'right',
+                        formatter: (value, context) => {
+                            // Formatear el valor como moneda para las etiquetas de datos
+                            return parseFloat(value).toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                        },
+                        color: '#333',
+                        font: {
+                            weight: 'normal',
+                        },
+                        offset: 4,
+                    }
+                }
+            }
+        });
+        console.log('Gráfico de top clientes cargado.');
+    } else {
+        console.error('No se pudo cargar el gráfico de top clientes: datos vacíos, no disponibles o en formato incorrecto.', chartDataResponse);
+        showPlaceholderChart(ctx, 'No hay datos de top clientes para mostrar.');
+    }
+}
+
+function showPlaceholderChart(ctx, message) {
+    // No es necesario destruir aquí currentChartInstance porque ya se hace en displayChart
+    // Tampoco es necesario limpiar el ctx aquí porque ya se hace en displayChart
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '16px Arial';
+    ctx.fillText(message, ctx.canvas.width / 2, ctx.canvas.height / 2);
+    ctx.restore();
+    console.log(`Mostrando placeholder: ${message}`);
 }
 
 async function loadRecentActivity() {

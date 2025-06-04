@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin_styles.css"> <!-- Estilos personalizados para el admin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script> <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> <!-- Plugin para etiquetas en gráficos -->
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
     <div class="flex h-screen">
@@ -49,19 +50,26 @@
                 </div>
             </section>
 
-            <!-- Charts and Quick Links Section -->
-            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Chart Placeholder -->
-                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Visión General (Gráfico)</h2>
+            <!-- Charts Section - Ahora ocupa todo el ancho -->
+            <section class="mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                    <div class="flex flex-wrap justify-between items-center mb-4">
+                        <h2 id="chartTitle" class="text-xl font-semibold text-gray-700 dark:text-gray-200">Crecimiento Mensual (Usuarios)</h2>
+                        <div id="chartSelectors" class="flex space-x-2 mt-2 sm:mt-0">
+                            <button data-charttype="userGrowth" class="px-3 py-1 text-xs font-medium text-white bg-sky-500 rounded hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-400 chart-selector-btn active-chart-selector">Usuarios</button>
+                            <button data-charttype="topBooks" class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 dark:text-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 chart-selector-btn">Top Libros</button>
+                            <button data-charttype="salesByCategory" class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 dark:text-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 chart-selector-btn">Ventas/Categoría</button>
+                            <button data-charttype="topCustomers" class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded hover:bg-gray-300 dark:text-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 chart-selector-btn">Top Clientes</button>
+                        </div>
+                    </div>
                     <div style="height: 300px;">
                          <canvas id="overviewChart"></canvas>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Gráfico de ejemplo. Se implementará con datos reales.</p>
+                    <p id="chartDescription" class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Mostrando el crecimiento de nuevos usuarios en los últimos 6 meses.</p>
                 </div>
             </section>
             
-            <!-- Placeholder para más secciones -->
+            <!-- Recent Activity Section -->
             <section class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                  <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Actividad Reciente</h2>
                  <div id="recent-activity-log" class="text-sm text-gray-600 dark:text-gray-400">

@@ -175,11 +175,40 @@ async function displayChart(chartType) {
     ctx.clearRect(0, 0, overviewChartCanvas.width, overviewChartCanvas.height);
 
     document.querySelectorAll('.chart-selector-btn').forEach(btn => {
-        btn.classList.remove('active-chart-selector', 'bg-sky-500', 'text-white');
-        btn.classList.add('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+        // Ensure base 'border' and 'focus:ring-2' classes are present for consistent styling
+        // The 'border' class allows border-color utilities to work.
+        // The 'focus:ring-2' class (from original HTML) sets the ring width.
+        if (!btn.classList.contains('border')) {
+            btn.classList.add('border');
+        }
+        // focus:outline-none and focus:ring-2 are in the original HTML, so they should be fine.
+
+        // Define all classes that will be dynamically managed for different states
+        const inactiveBg = ['bg-gray-200', 'dark:bg-gray-600'];
+        const inactiveText = ['text-gray-700', 'dark:text-gray-200'];
+        const inactiveBorder = ['border-transparent'];
+        const inactiveHover = ['hover:bg-gray-300', 'dark:hover:bg-gray-500']; // From original HTML
+        const inactiveFocusRingColor = ['focus:ring-gray-400']; // From original HTML
+
+        const activeMarker = ['active-chart-selector'];
+        const activeBg = ['bg-sky-500', 'dark:bg-sky-500'];
+        const activeText = ['text-white', 'dark:text-white'];
+        const activeBorder = ['border-sky-500']; // Matches active background
+        const activeHover = ['hover:bg-sky-600', 'dark:hover:bg-sky-600']; // Custom hover for active state
+        const activeFocusRingColor = ['focus:ring-sky-300']; // Custom focus ring color for active state
+
+        // Remove all potentially conflicting dynamic classes before applying the new state
+        btn.classList.remove(
+            ...inactiveBg, ...inactiveText, ...inactiveBorder, ...inactiveHover, ...inactiveFocusRingColor,
+            ...activeMarker, ...activeBg, ...activeText, ...activeBorder, ...activeHover, ...activeFocusRingColor
+        );
+
         if (btn.dataset.charttype === chartType) {
-            btn.classList.add('active-chart-selector', 'bg-sky-500', 'text-white');
-            btn.classList.remove('bg-gray-200', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-200');
+            // Set ACTIVE state
+            btn.classList.add(...activeMarker, ...activeBg, ...activeText, ...activeBorder, ...activeHover, ...activeFocusRingColor);
+        } else {
+            // Set INACTIVE state (restore original dynamic classes + defined inactive border)
+            btn.classList.add(...inactiveBg, ...inactiveText, ...inactiveBorder, ...inactiveHover, ...inactiveFocusRingColor);
         }
     });
 

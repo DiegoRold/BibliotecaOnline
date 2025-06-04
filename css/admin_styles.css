@@ -108,3 +108,23 @@
     background-color: #4b5563; /* bg-gray-600 de Tailwind (ejemplo) */
 }
 /* === Fin Estilos para el modal de formulario de PEDIDOS === */ 
+
+/* Estilos para los botones selectores de gráficos del dashboard */
+.chart-selector-btn {
+    border: 1px solid transparent !important; /* Asegurar un borde base transparente */
+    /* Considera si necesitas un padding específico aquí si el de Tailwind no es suficiente o causa problemas */
+}
+
+/* Estilos para el botón selector de gráfico ACTIVO */
+.chart-selector-btn.active-chart-selector {
+    /* Usamos los colores de Tailwind bg-sky-500 y text-white como referencia */
+    background-color: #0ea5e9 !important; /* Equivalente a bg-sky-500 */
+    color: white !important;
+    border-color: #0ea5e9 !important; /* Borde del mismo color que el fondo para que no se vea */
+}
+
+/* Si quieres un hover específico para los botones INACTIVOS (opcional) */
+/* .chart-selector-btn:not(.active-chart-selector):hover {
+    background-color: #e5e7eb !important; /* bg-gray-200 de Tailwind, modo claro */
+    /* Si usas modo oscuro, necesitarías una regla para .dark .chart-selector-btn:not(.active-chart-selector):hover */
+/* } */ 

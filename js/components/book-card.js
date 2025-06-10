@@ -44,22 +44,9 @@ class BookCard extends HTMLElement {
 
         const isOutOfStock = stock === 0;
         const baseAssetURL = 'http://localhost:3000/assets';
-        const placeholderSrc = 'assets/books/placeholder.png'; // Relativa a la raíz del sitio
+        const placeholderSrc = 'assets/books/placeholder.png'; // Ruta al placeholder
 
-        const coverAttribute = this.getAttribute('cover');
-        let initialImageSrc = placeholderSrc; // Por defecto
-        let localFilename = null;
-
-        if (coverAttribute) {
-            if (coverAttribute.startsWith('http://') || coverAttribute.startsWith('https://')) {
-                initialImageSrc = coverAttribute; // Es una URL completa
-            } else {
-                // Es un nombre de archivo local o una ruta parcial como 'assets/books/nombre.ext' o solo 'nombre.ext'
-                localFilename = coverAttribute.includes('/') ? coverAttribute.substring(coverAttribute.lastIndexOf('/') + 1) : coverAttribute;
-                initialImageSrc = `assets/books/${localFilename}`; // Primer intento para locales
-            }
-        }
-        // Si no hay coverAttribute, initialImageSrc sigue siendo placeholderSrc.
+        const coverAttribute = this.getAttribute('cover') || placeholderSrc;
 
         const wishlistIconSrc = isInWishlist ? `${baseAssetURL}/wishlist-filled.png` : `${baseAssetURL}/wishlist.png`;
         console.log(`[book-card id=${id}] render() called. Attr 'in-wishlist': ${this.getAttribute('in-wishlist')}, Parsed isInWishlist: ${isInWishlist}, Calculated wishlistIconSrc: ${wishlistIconSrc}`);
@@ -193,7 +180,7 @@ class BookCard extends HTMLElement {
                 }
             </style>
             <a href="book-details.html?id=${id}" class="card-link">
-                <img src="${initialImageSrc}" alt="${title}" class="cover-image">
+                <img src="${coverAttribute}" alt="${title}" class="cover-image">
                 <div class="book-info">
                     <h3 class="book-title" title="${title}">${title}</h3>
                     <p class="book-author" title="${author}">${author}</p>
@@ -231,33 +218,28 @@ class BookCard extends HTMLElement {
         const imgElement = this.shadowRoot.querySelector('.cover-image');
 
         if (imgElement) {
-            if (coverAttribute && (coverAttribute.startsWith('http://') || coverAttribute.startsWith('https://'))) {
-                // Caso: URL externa
-                imgElement.onerror = () => {
-                    console.warn(`[book-card id=${id}] Falló la carga de URL externa ${imgElement.src}. Usando placeholder.`);
+            imgElement.onerror = () => {
+                const currentSrc = imgElement.src;
+                // Extraer la ruta original del atributo `cover`
+                const originalPath = this.getAttribute('cover');
+
+                // Si ya estamos intentando cargar 'public/' y falla, o si la ruta original ya contenía 'public/'
+                if (currentSrc.includes('public/') || (originalPath && originalPath.startsWith('public/'))) {
+                    // Si el segundo intento (con public/) falla, o si el original ya era public y falló
+                    console.warn(`[book-card id=${id}] Falló la carga de ${currentSrc}. Usando placeholder final.`);
                     imgElement.src = placeholderSrc;
-                    imgElement.onerror = null; 
-                };
-            } else if (localFilename) {
-                // Caso: Archivo local (initialImageSrc es 'assets/books/localFilename')
-                // El onerror se activa si 'assets/books/localFilename' falla.
-                imgElement.onerror = () => {
-                    console.warn(`[book-card id=${id}] Falló la carga de ${initialImageSrc}. Intentando public/assets/books/${localFilename}.`);
-                    imgElement.src = `public/assets/books/${localFilename}`; // Segundo intento
-                    imgElement.onerror = () => {
-                        console.warn(`[book-card id=${id}] Falló la carga de public/assets/books/${localFilename}. Usando placeholder.`);
-                        imgElement.src = placeholderSrc; // Tercer intento (placeholder)
-                        imgElement.onerror = null; 
-                    };
-                };
-            } else {
-                // Caso: No hay coverAttribute, o es local pero no se pudo obtener localFilename.
-                // initialImageSrc ya es placeholderSrc. Este onerror es por si el placeholder mismo falla.
-                imgElement.onerror = () => {
-                    console.error(`[book-card id=${id}] Falló la carga del placeholder ${imgElement.src}. La imagen podría estar rota.`);
-                    imgElement.onerror = null; 
-                };
-            }
+                    imgElement.onerror = null; // Detener el bucle de reintentos
+                } else if (originalPath) {
+                    // Si el primer intento (sin public/) falla, intentamos con 'public/'
+                    const fallbackSrc = `public/${originalPath}`;
+                    console.warn(`[book-card id=${id}] Falló la carga de ${currentSrc}. Intentando con fallback: ${fallbackSrc}`);
+                    imgElement.src = fallbackSrc;
+                } else {
+                    // Si no había 'cover' y el placeholder inicial falla (muy raro)
+                    console.error(`[book-card id=${id}] No hay 'cover' y el placeholder por defecto (${placeholderSrc}) falló.`);
+                    imgElement.onerror = null;
+                }
+            };
         }
     }
 

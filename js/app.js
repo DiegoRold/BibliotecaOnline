@@ -291,7 +291,20 @@ function renderWishlist() {
             bookInfoDiv.className = 'flex items-center space-x-3';
 
             const img = document.createElement('img');
-            img.src = book.cover_image_url || book.cover || 'assets/books/placeholder.png';
+            
+            // CORRECCIÓN: Construir la ruta de la imagen correctamente para el modal de wishlist
+            const placeholder = 'public/assets/books/placeholder.png';
+            let coverSrc = placeholder;
+            const coverUrl = book.cover_image_url || book.cover;
+            if (coverUrl) {
+                if (coverUrl.startsWith('public/')) {
+                    coverSrc = coverUrl;
+                } else {
+                    coverSrc = `public/${coverUrl}`;
+                }
+            }
+            img.src = coverSrc;
+            
             img.alt = book.title;
             img.className = 'w-16 h-24 object-cover rounded';
             bookInfoDiv.appendChild(img);

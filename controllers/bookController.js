@@ -9,12 +9,15 @@ export const getAllBooks = async (req, res) => {
         if (all === 'true') {
             const query = `
                 SELECT 
-                    id AS id, api_id, title, author, cover_image_url AS cover, price, stock,
+                    id AS numeric_id, 
+                    api_id, 
+                    title, author, cover_image_url, price, stock,
                     rating, description, publication_date, pages, publisher, categories, isbn, tags
                 FROM libros 
                 WHERE stock > 0 ORDER BY title`;
             const [booksFromDB] = await pool.query(query);
-            const books = booksFromDB.map(book => ({ ...book, price: parseFloat(book.price) }));
+            // Mapeamos para asegurar que el id principal sea el api_id y el precio sea un número
+            const books = booksFromDB.map(book => ({ ...book, id: book.api_id, price: parseFloat(book.price) }));
             return res.json({ books, pagination: { totalBooks: books.length } });
         }
         
@@ -28,9 +31,9 @@ export const getAllBooks = async (req, res) => {
 
         const booksQuery = `
             SELECT 
-                id AS id,
+                id AS numeric_id,
                 api_id,
-                title, author, cover_image_url AS cover, price, stock,
+                title, author, cover_image_url, price, stock,
                 rating, description, publication_date, pages, publisher, categories, isbn, tags
             FROM libros 
             WHERE stock > 0 ORDER BY title LIMIT ? OFFSET ?`;
@@ -38,6 +41,7 @@ export const getAllBooks = async (req, res) => {
 
         const books = booksFromDB.map(book => ({
             ...book,
+            id: book.api_id, // Aseguramos que el 'id' principal para el frontend es el api_id
             price: parseFloat(book.price)
         }));
 

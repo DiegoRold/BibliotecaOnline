@@ -428,7 +428,8 @@ async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
         console.log(`[app.js toggleWishlist fromDetails] apiId: ${apiId}, numericId: ${numericId}`);
     } else if (!fromDetailsPage && typeof bookOrBookId === 'string') {
         apiId = bookOrBookId;
-        const bookFromAllBooks = allBooks.find(b => b.id.toString() === apiId.toString());
+        // CORRECCIÓN: Añadida una guarda para evitar error si un libro o su id es null.
+        const bookFromAllBooks = allBooks.find(b => b && b.id && b.id.toString() === apiId.toString());
         if (bookFromAllBooks) {
             numericId = bookFromAllBooks.numeric_id;
             bookTitle = bookFromAllBooks.title;
@@ -993,7 +994,8 @@ function setupEventListeners() {
     });
 
     document.addEventListener('add-to-cart', e => {
-        const bookDetails = allBooks.find(b => b.id.toString() === e.detail.bookId.toString());
+        // CORRECCIÓN: Añadida una guarda para evitar error si un libro o su id es null.
+        const bookDetails = allBooks.find(b => b && b.id && b.id.toString() === e.detail.bookId.toString());
         if (bookDetails) {
             addBookToCartApp(bookDetails);
         } else {

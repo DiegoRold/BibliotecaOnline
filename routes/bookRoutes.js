@@ -6,7 +6,8 @@ import {
     createBook,
     updateBook,
     deleteBook,
-    searchBooksByNameAuthorGenre
+    searchBooksByNameAuthorGenre,
+    getRandomBooks
 } from '../controllers/bookController.js';
 import authMiddleware, { authorize } from '../middlewares/authMiddleware.js';
 
@@ -19,6 +20,10 @@ router.get('/', (req, res, next) => {
     console.log(`[routes/bookRoutes.js] Petición GET recibida en ruta base ('/'). Query:`, req.query); // Log para verificar si la petición llega aquí
     next(); // Continuar al siguiente manejador (getAllBooks)
 }, getAllBooks);
+
+// --- NUEVA RUTA PARA RECOMENDACIONES ---
+// Devuelve un número limitado de libros aleatorios.
+router.get('/recommendations', getRandomBooks);
 
 router.get('/search', searchBooksByNameAuthorGenre);
 

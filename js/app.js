@@ -8,6 +8,9 @@ const state = {
 // Variable global para almacenar los libros de la API
 let allBooks = [];
 
+// --- NUEVA FUNCIÓN para unificar el renderizado y los datos ---
+let recommendedBooks = []; // Almacenará los libros de recomendaciones
+
 // --- SELECCIÓN DOM ---
 let themeToggle, wishlistModal, closeWishlist, contactIcon, contactModal, closeContactModal;
 let cartIcon, wishlistHeaderIcon, cartCountBadge;
@@ -20,7 +23,7 @@ let horarioLink, horarioModal, closeHorarioModal;
 let goToBlogBtn, goToBioBtn;
 let goToBooksBtn;
 let recommendationsGrid; // <--- NUEVO: Para la cuadrícula de recomendaciones
-let searchForm; // <--- AÑADIR ESTA LÍNEA PARA EL FORMULARIO DE BÚSQUEDA
+let searchForm; // <--- AÑADIR ESTA LÍNEA
 
 // --- Slider Dinámico de Libros ---
 let dynamicSliderElement;
@@ -104,13 +107,30 @@ async function init() {
     initializeDynamicBookSlider(); // <--- Inicializar el nuevo slider
 
     try {
-        allBooks = await fetchBooks(); 
-        console.log(`[app.js init] Fetched ${allBooks.length} books from API.`);
+        // 1. Obtener TODOS los libros primero
+        const allBooksFromApi = await fetchBooks(); 
+        console.log(`[app.js init] Fetched ${allBooksFromApi.length} books from API.`);
+        
+        // 2. Obtener los libros de recomendaciones (si es una ruta diferente)
+        recommendedBooks = await fetchRecommendedBooks();
+        console.log(`[app.js init] Fetched ${recommendedBooks.length} recommended books.`);
+
+        // 3. Unificar todos los libros en `allBooks` evitando duplicados
+        const allBooksMap = new Map();
+        allBooksFromApi.forEach(book => allBooksMap.set(book.id, book));
+        recommendedBooks.forEach(book => allBooksMap.set(book.id, book));
+        allBooks = Array.from(allBooksMap.values());
+        
+        console.log(`[app.js init] Total unique books in allBooks: ${allBooks.length}`);
+
         if (allBooks && allBooks.length > 0) {
             console.log("[app.js init] First book object from allBooks (book.id should be api_id like 'book-X'):", JSON.stringify(allBooks[0]));
         } else {
             console.log("[app.js init] allBooks is empty or not loaded correctly.");
         }
+
+        // 4. Renderizar las secciones con los datos ya cargados
+        renderRecommendations();
 
         setupEventListeners(); 
         updateCartIcon(); 
@@ -120,13 +140,13 @@ async function init() {
         //      renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 4)); // Llamada original
         // Nueva lógica para renderBookCardsSlider:
         const sliderContainerForInit = document.getElementById('book-cards-slider');
-        if (sliderContainerForInit && allBooks && allBooks.length > 0) {
+        if (sliderContainerForInit && allBooksFromApi && allBooksFromApi.length > 0) {
             console.log('[app.js init] #book-cards-slider encontrado. Renderizando el slider de libros.');
-            renderBookCardsSlider([...allBooks].sort(() => 0.5 - Math.random()).slice(0, 8)); // Aumentado a 8 para más variedad si hay espacio
+            renderBookCardsSlider([...allBooksFromApi].sort(() => 0.5 - Math.random()).slice(0, 8)); // Aumentado a 8 para más variedad si hay espacio
         } else if (!sliderContainerForInit) {
             console.log('[app.js init] #book-cards-slider NO encontrado. Omitiendo renderizado del slider de libros para esta página.');
         } else {
-            console.log('[app.js init] #book-cards-slider encontrado PERO allBooks está vacío. Omitiendo renderizado del slider.');
+            console.log('[app.js init] #book-cards-slider encontrado PERO allBooksFromApi está vacío. Omitiendo renderizado del slider.');
         }
 
         console.log('Aplicación inicializada.');
@@ -138,7 +158,8 @@ async function init() {
 
 // --- OBTENER DATOS ---
 async function fetchBooks() {
-    const apiUrl = 'http://localhost:3000/api/libros';
+    // Pedimos a la API que nos devuelva TODOS los libros, no solo una página.
+    const apiUrl = 'http://localhost:3000/api/libros?all=true';
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
@@ -166,8 +187,49 @@ async function fetchBooks() {
     }
 }
 
+async function fetchRecommendedBooks() {
+    const apiUrl = 'http://localhost:3000/api/libros/recommendations'; // Asumiendo que esta es la ruta
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data && Array.isArray(data.books)) {
+            return data.books;
+        } else if (Array.isArray(data)) {
+            return data;
+        }
+        return [];
+    } catch (error) {
+        console.error("Error fetching recommended books:", error);
+        return []; // Devolver vacío para no bloquear la app
+    }
+}
+
 // --- RENDERIZADO ---
 function applyTheme() { document.body.classList.toggle('dark', state.isDarkMode); }
+
+function renderRecommendations() {
+    if (!recommendationsGrid) {
+        console.log('[app.js renderRecommendations] recommendationsGrid not found on this page. Skipping.');
+        return;
+    }
+
+    recommendationsGrid.innerHTML = ''; // Limpiar el contenedor
+
+    if (!recommendedBooks || recommendedBooks.length === 0) {
+        console.log('[app.js renderRecommendations] No recommended books to display.');
+        recommendationsGrid.innerHTML = '<p>No hay recomendaciones disponibles en este momento.</p>';
+        return;
+    }
+
+    recommendedBooks.forEach(book => {
+        const bookCard = renderBookCard(book);
+        recommendationsGrid.appendChild(bookCard);
+    });
+    console.log('[app.js renderRecommendations] Recommendations rendered.');
+}
 
 // --- FUNCIÓN MODIFICADA: Renderizar una tarjeta de libro usando el Custom Element <book-card> ---
 function renderBookCard(book) {
@@ -302,10 +364,21 @@ function renderCartModal() {
         itemDiv.className = 'flex items-center space-x-2 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0';
         const itemTotal = item.price * item.quantity;
         totalPrice += itemTotal;
-        // Usar placeholder general para cart modal si no hay cover
-        const cartCover = item.cover ? item.cover.replace('-L.jpg', '-S.jpg') : 'assets/books/placeholder.png'; 
+        
+        // CORRECCIÓN: Construir la ruta de la imagen correctamente para el modal del carrito
+        const placeholder = 'public/assets/books/placeholder.png';
+        let coverSrc = placeholder; // Usar placeholder por defecto
+        if (item.cover) {
+            // Asegurarse de que no estamos duplicando "public/" si ya estuviera
+            if (item.cover.startsWith('public/')) {
+                coverSrc = item.cover;
+            } else {
+                coverSrc = `public/${item.cover}`;
+            }
+        }
+
         itemDiv.innerHTML = `
-            <img src="${cartCover}" alt="${item.title}" class="w-12 h-16 object-cover rounded shadow">
+            <img src="${coverSrc}" alt="${item.title}" class="w-12 h-16 object-cover rounded shadow">
             <div class="flex-grow">
                 <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">${item.title}</h4>
                 <div class="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -355,7 +428,7 @@ async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
         console.log(`[app.js toggleWishlist fromDetails] apiId: ${apiId}, numericId: ${numericId}`);
     } else if (!fromDetailsPage && typeof bookOrBookId === 'string') {
         apiId = bookOrBookId;
-        const bookFromAllBooks = allBooks.find(b => b.id === apiId);
+        const bookFromAllBooks = allBooks.find(b => b.id.toString() === apiId.toString());
         if (bookFromAllBooks) {
             numericId = bookFromAllBooks.numeric_id;
             bookTitle = bookFromAllBooks.title;
@@ -515,6 +588,14 @@ function addBookToCartApp(bookObject) {
     const quantityUserWantsToAdd = 1; // Asumimos que cada acción de "añadir al carrito" es para 1 unidad.
                                     // Si tuvieras un input de cantidad, aquí usarías ese valor.
 
+    // --- CORRECCIÓN ---
+    // Asegurarse de que el ID que se envía al backend SIEMPRE tenga el formato 'book-X'
+    let backendBookId = apiId.toString();
+    if (!backendBookId.startsWith('book-')) {
+        backendBookId = `book-${backendBookId}`;
+    }
+    // --- FIN DE LA CORRECCIÓN ---
+
     // Verificación de stock antes de cualquier acción (local y antes de API)
     if (existingItemInLocalState) {
         if (existingItemInLocalState.quantity + quantityUserWantsToAdd > stock) {
@@ -530,12 +611,21 @@ function addBookToCartApp(bookObject) {
 
     if (authToken) {
         // Usuario logueado: llamar al backend para añadir y luego resincronizar
-        console.log(`[app.js addBookToCartApp] Usuario logueado. Llamando a POST /api/cart para apiId: ${apiId}, quantity: ${quantityUserWantsToAdd}`);
+        console.log(`[app.js addBookToCartApp] Usuario logueado. Llamando a POST /api/cart para apiId: ${backendBookId}, quantity: ${quantityUserWantsToAdd}`);
         fetchWithAuth(`http://localhost:3000/api/cart`, {
             method: 'POST',
-            body: JSON.stringify({ book_id: apiId, quantity: quantityUserWantsToAdd })
+            body: JSON.stringify({ book_id: backendBookId, quantity: quantityUserWantsToAdd })
         })
-        .then(response => response.json()) // fetchWithAuth debería haber manejado errores de red/status no-OK
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) logoutUser();
+                return response.json().then(errorData => {
+                    // Lanzamos un error con el mensaje del backend para que lo capture el .catch()
+                    throw new Error(errorData.message || `Error ${response.status} del servidor.`);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             console.log('[app.js addBookToCartApp] Respuesta de POST /api/cart:', data);
             if (data.message) { // Asumiendo que el backend siempre devuelve un mensaje

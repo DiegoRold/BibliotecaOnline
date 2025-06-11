@@ -1,16 +1,30 @@
 import pool from '../config/db.js';
 
-// Obtener todos los libros (público) con paginación
+// Obtener todos los libros (público) con paginación o todos si se especifica
 export const getAllBooks = async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 16;
-        const offset = (page - 1) * limit;
+        const { page = 1, limit = 16, all = 'false' } = req.query;
+
+        // Si se solicita 'all', devolvemos todos los libros sin paginación.
+        if (all === 'true') {
+            const query = `
+                SELECT 
+                    id AS id, api_id, title, author, cover_image_url AS cover, price, stock,
+                    rating, description, publication_date, pages, publisher, categories, isbn, tags
+                FROM libros 
+                WHERE stock > 0 ORDER BY title`;
+            const [booksFromDB] = await pool.query(query);
+            const books = booksFromDB.map(book => ({ ...book, price: parseFloat(book.price) }));
+            return res.json({ books, pagination: { totalBooks: books.length } });
+        }
+        
+        // Comportamiento de paginación normal si 'all' no es 'true'
+        const offset = (parseInt(page) - 1) * parseInt(limit);
 
         const countQuery = 'SELECT COUNT(*) as totalBooks FROM libros WHERE stock > 0';
         const [countResult] = await pool.query(countQuery);
         const totalBooks = countResult[0].totalBooks;
-        const totalPages = Math.ceil(totalBooks / limit);
+        const totalPages = Math.ceil(totalBooks / parseInt(limit));
 
         const booksQuery = `
             SELECT 
@@ -20,20 +34,19 @@ export const getAllBooks = async (req, res) => {
                 rating, description, publication_date, pages, publisher, categories, isbn, tags
             FROM libros 
             WHERE stock > 0 ORDER BY title LIMIT ? OFFSET ?`;
-        const [booksFromDB] = await pool.query(booksQuery, [limit, offset]);
+        const [booksFromDB] = await pool.query(booksQuery, [parseInt(limit), offset]);
 
-        // Asegurar que el precio sea numérico
         const books = booksFromDB.map(book => ({
             ...book,
-            price: parseFloat(book.price) // Convertir a número de punto flotante
+            price: parseFloat(book.price)
         }));
 
         res.json({
             books,
-            pagination: { currentPage: page, totalPages, totalBooks, limit }
+            pagination: { currentPage: parseInt(page), totalPages, totalBooks, limit: parseInt(limit) }
         });
     } catch (error) {
-        console.error('Error en getAllBooks con paginación:', error);
+        console.error('Error en getAllBooks:', error);
         res.status(500).json({ message: 'Error interno del servidor al obtener los libros.', error: error.message });
     }
 };
@@ -209,5 +222,43 @@ export const deleteBook = async (req, res) => {
     } catch (error) {
         console.error('Error en deleteBook:', error);
         res.status(500).json({ message: 'Error interno del servidor al eliminar el libro.', error: error.message });
+    }
+};
+
+// --- NUEVA FUNCIÓN PARA OBTENER LIBROS ALEATORIOS ---
+export const getRandomBooks = async (req, res) => {
+    try {
+        // Por defecto, obtenemos 4 libros para las recomendaciones.
+        const limit = parseInt(req.query.limit) || 4; 
+
+        // Consulta para obtener libros aleatorios que tengan stock
+        const query = `
+            SELECT 
+                id AS numeric_id, api_id AS id, title, author, cover_image_url, price, stock,
+                rating, description, publication_date, pages, publisher, categories, isbn, tags
+            FROM libros 
+            WHERE stock > 0 
+            ORDER BY RAND() 
+            LIMIT ?`;
+
+        const [booksFromDB] = await pool.query(query, [limit]);
+
+        if (booksFromDB.length === 0) {
+            // Si no hay libros, devuelve un array vacío en el formato esperado.
+            return res.json({ books: [] });
+        }
+
+        // Asegurar que el precio sea numérico
+        const books = booksFromDB.map(book => ({
+            ...book,
+            price: parseFloat(book.price)
+        }));
+
+        // Devolvemos en un formato consistente con otras rutas
+        res.json({ books });
+
+    } catch (error) {
+        console.error('Error en getRandomBooks:', error);
+        res.status(500).json({ message: 'Error interno del servidor al obtener libros aleatorios.', error: error.message });
     }
 }; 

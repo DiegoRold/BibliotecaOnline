@@ -66,7 +66,8 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/cart', cartRoutes);
 
 // Usar las rutas de usuario para cualquier petición a /api (ej. /api/perfil, /api/perfil/cambiar-contrasena)
-app.use('/api', userRoutes); // <--- AÑADIR ESTA LÍNEA
+// ¡IMPORTANTE! Esta ruta más genérica debe ir DESPUÉS de otras rutas bajo /api/ como /api/cart
+app.use('/api', userRoutes);
 
 // Usar las rutas de administrador para cualquier petición a /api/admin
 console.log('[server.js] Registrando rutas de admin...'); // Log temporal

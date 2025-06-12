@@ -49,9 +49,9 @@
             <nav class="flex justify-center py-2">
                 <ul class="flex space-x-4 md:space-x-8">
                     <li><a href="index.html" class="text-gray-300 hover:text-white">Inicio</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Libros</a></li> 
-                    <li><a href="#" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
-                    <li><a href="#" class="text-gray-300 hover:text-white">Noticias</a></li>
+                    <li><a href="books.html" class="text-gray-300 hover:text-white">Libros</a></li> 
+                    <li><a href="bio.html" class="text-gray-300 hover:text-white">Quiénes somos</a></li>
+                    <li><a href="blog.html" class="text-gray-300 hover:text-white">Noticias</a></li>
                 </ul>
             </nav>
         </div>
@@ -88,6 +88,162 @@
             <p id="no-orders-message" class="text-center text-gray-500 dark:text-gray-400 hidden">No tienes pedidos realizados aún.</p>
         </div>
     </main>
+
+        <!-- Modal de "Acción Requerida" para no logueados -->
+        <dialog id="auth-required-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b dark:border-gray-600">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">¡Un momento!</h2>
+                    <button id="close-auth-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="text-center">
+                    <img src="assets/login.png" alt="Acceso requerido" class="w-20 h-20 mx-auto mb-4 filter dark:invert">
+                    <p class="text-gray-700 dark:text-gray-300 mb-6">Para guardar libros en tu carrito o en tu lista de deseos, necesitas tener una cuenta.</p>
+                    <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                        <a href="login.html" id="go-to-login-btn" class="w-full sm:w-auto block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                            Iniciar Sesión
+                        </a>
+                        <a href="register.html" id="go-to-register-btn" class="w-full sm:w-auto block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                            Registrarse
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    
+        <!-- Wishlist Modal (Lo mantenemos porque está ligado al header) -->
+        <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2>
+                    <button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Los libros de la lista de deseos se renderizarán aquí -->
+                </div>
+            </div>
+        </dialog>
+    
+        <!-- Contact Modal (Nuevo) -->
+        <dialog id="contact-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Información de Contacto</h2>
+                    <button id="close-contact-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Modal Body -->
+                <div class="space-y-5">
+                    <!-- Teléfono -->
+                    <div class="flex items-center space-x-3">
+                        <img src="assets/telefono.png" alt="Teléfono" class="w-6 h-6 flex-shrink-0">
+                        <span class="text-gray-700 dark:text-gray-300">+34 910 123 456</span>
+                    </div>
+                    <!-- Email -->
+                    <div class="flex items-center space-x-3">
+                        <img src="assets/email.png" alt="Email" class="w-6 h-6 flex-shrink-0">
+                        <a href="mailto:soportetecnico@entrehojas.com" class="text-blue-600 hover:underline dark:text-blue-400">soportetecnico@entrehojas.com</a>
+                    </div>
+                    <!-- Dirección -->
+                    <div class="flex items-start space-x-3">
+                        <img src="assets/direccion.png" alt="Dirección" class="w-6 h-6 flex-shrink-0 mt-1">
+                        <span class="text-gray-700 dark:text-gray-300">Calle de la Lectura, 42<br>28013 Madrid, España</span>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+    
+         <!-- Modal de Confirmación para Vaciar Carrito -->
+         <dialog id="confirm-empty-cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-md">
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Confirmar Acción</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">¿Estás seguro de que quieres vaciar tu carrito de compras? Esta acción no se puede deshacer.</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancel-empty-cart-btn" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800">
+                        Cancelar
+                    </button>
+                    <button id="confirm-empty-cart-action-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800">
+                        Sí, Vaciar Carrito
+                    </button>
+                </div>
+            </div>
+        </dialog>
+    
+        <!-- Book Card Component (Comentado Temporalmente) -->
+        <!-- 
+        <script>
+            class BookCard extends HTMLElement { ... } 
+            customElements.define('book-card', BookCard);
+        </script>
+        -->
+        <script src="js/components/book-card.js"></script>
+        <!-- Main Application Script -->
+        <script src="js/app.js"></script>
+    
+        <!-- Cart Modal -->
+        <dialog id="cart-modal" class="p-0 rounded-lg shadow-xl w-full max-w-sm">
+            <div class="bg-white dark:bg-gray-800 rounded-lg">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Mi Compra</h2>
+                    <button id="close-cart-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Modal Body: Cart Items -->
+                <div id="cart-items-container" class="p-4 space-y-3 max-h-80 overflow-y-auto"></div>
+    
+                <!-- Modal Footer -->
+                <div class="p-4 border-t dark:border-gray-700">
+                     <div class="flex justify-between items-center mb-3">
+                        <span class="text-lg font-semibold text-gray-800 dark:text-white">Total:</span>
+                        <span id="cart-total-price" class="text-lg font-semibold text-gray-800 dark:text-white">0.00 €</span>
+                    </div>
+                    <button id="go-to-checkout-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mb-2">
+                        Ver Mi Compra
+                    </button>
+                    <button id="empty-cart-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-md">
+                        Vaciar Carrito
+                    </button>
+                </div>
+            </div>
+        </dialog>
+    
+        <dialog id="horario-modal" class="p-0 rounded-lg shadow-xl max-w-xs w-full">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+                <div class="flex justify-between items-center mb-6 pb-3 border-b dark:border-gray-600">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Nuestro Horario</h2>
+                    <button id="close-horario-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="space-y-3 text-center">
+                    <img src="assets/reloj.png" alt="Horario" class="w-16 h-16 mx-auto mb-4 filter dark:invert">
+                    <div class="text-gray-700 dark:text-gray-300">
+                        <p class="font-semibold">Lunes - Sábado</p>
+                        <p class="mb-2 text-lg">9:30 a 21:00</p>
+                        <p class="font-semibold">Domingo y Festivos</p>
+                        <p class="text-lg">10:00 a 14:00</p>
+                    </div>
+                </div>
+            </div>
+        </dialog>
 
     <!-- Footer (reutilizado de index.html) -->
     <footer class="bg-gray-800 text-white py-8 mt-auto">

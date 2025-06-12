@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentBook = null; 
 
     async function fetchBookDetails(apiId) { // El identificador ahora es siempre el api_id
-        // Ya no se necesita la lógica para determinar el tipo de ID.
-        const fetchUrl = `http://localhost:3000/api/libros/${apiId}`; // URL Corregida
+        // CORRECCIÓN: La ruta correcta es /api/libros/details/:api_id
+        const fetchUrl = `http://localhost:3000/api/libros/details/${apiId}`; 
         console.log(`[book-details.js fetchBookDetails] Fetching from URL: ${fetchUrl}`);
 
         try {

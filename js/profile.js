@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return await response.json();
         } catch (error) {
             console.error('Error en fetchUserProfile:', error);
-            alert(`Error al cargar datos del perfil: ${error.message}`);
+            showNotification(`Error al cargar datos del perfil: ${error.message}`, 'error');
             return null;
         }
     }
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return await response.json();
         } catch (error) {
             console.error('Error en updateProfileData:', error);
-            alert(`Error al actualizar el perfil: ${error.message}`);
+            showNotification(`Error al actualizar el perfil: ${error.message}`, 'error');
             return null;
         }
     }
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return await response.json();
         } catch (error) {
             console.error('Error en changePassword:', error);
-            alert(`Error al cambiar la contraseña: ${error.message}`);
+            showNotification(`Error al cambiar la contraseña: ${error.message}`, 'error');
             return null;
         }
     }
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const result = await updateProfileData(updatedInfo);
             if (result && result.message) { // La respuesta del backend incluye 'message' y los datos actualizados
-                alert(result.message);
+                showNotification(result.message, 'success');
                 populateProfileForm(result); // Repopular con los datos devueltos por el servidor
                 toggleFormEdit(profileInfoForm, editProfileInfoBtn, saveProfileInfoBtn, false);
             } else if (result === null && (localStorage.getItem('authToken') === null)) {
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
             const result = await updateProfileData(updatedAddress);
             if (result && result.message) {
-                alert(result.message);
+                showNotification(result.message, 'success');
                 populateProfileForm(result); // Repopular con los datos devueltos por el servidor
                 toggleFormEdit(shippingAddressForm, editShippingAddressBtn, saveShippingAddressBtn, false);
             } else if (result === null && (localStorage.getItem('authToken') === null)) {
@@ -241,24 +241,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             const confirmNewPassword = confirmNewPasswordInput.value;
 
             if (!currentPassword || !newPassword || !confirmNewPassword) {
-                alert('Por favor, completa todos los campos de contraseña.');
+                showNotification('Por favor, completa todos los campos de contraseña.', 'info');
                 return;
             }
             if (newPassword !== confirmNewPassword) {
-                alert('La nueva contraseña y la confirmación no coinciden.');
+                showNotification('La nueva contraseña y la confirmación no coinciden.', 'error');
                 return;
             }
-            if (newPassword.length < 6) {
-                alert('La nueva contraseña debe tener al menos 6 caracteres.');
+            if (newPassword.length < 8) {
+                showNotification('La nueva contraseña debe tener al menos 8 caracteres.', 'info');
                 return;
             }
 
             const result = await changePassword({ currentPassword, newPassword });
             if (result && result.message) {
-                alert(result.message);
+                showNotification(result.message, 'success');
                 changePasswordForm.reset();
             } else if (result === null && (localStorage.getItem('authToken') === null)) {
-                // Ya se redirigió o hubo un error fatal.
+                // Redirección ya manejada
             }
         });
     }

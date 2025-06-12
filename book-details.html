@@ -151,7 +151,33 @@
         </div>
     </footer>
 
-    <!-- Modales (ya estaban, verificar que sean los mismos que en index.html) -->
+    <!-- Modal de "Acción Requerida" para no logueados -->
+    <dialog id="auth-required-modal" class="p-0 rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b dark:border-gray-600">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">¡Un momento!</h2>
+                <button id="close-auth-modal" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="text-center">
+                <img src="assets/login.png" alt="Acceso requerido" class="w-20 h-20 mx-auto mb-4 filter dark:invert">
+                <p class="text-gray-700 dark:text-gray-300 mb-6">Para guardar libros en tu carrito o en tu lista de deseos, necesitas tener una cuenta.</p>
+                <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <a href="login.html" id="go-to-login-btn" class="w-full sm:w-auto block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                        Iniciar Sesión
+                    </a>
+                    <a href="register.html" id="go-to-register-btn" class="w-full sm:w-auto block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                        Registrarse
+                    </a>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modales del Header -->
     <!-- Wishlist Modal -->
     <dialog id="wishlist-modal" class="wishlist-modal p-0 rounded-lg shadow-xl w-full max-w-2xl"><div class="bg-white dark:bg-gray-800 rounded-lg p-4"><div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-gray-800 dark:text-white">Mi Lista de Deseos</h2><button id="close-wishlist" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" title="Cerrar"><svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div id="wishlist-content" class="space-y-3 max-h-96 overflow-y-auto"></div></div></dialog>
     <!-- Contact Modal -->

@@ -20,6 +20,7 @@ let userIcon, userDropdown;
 let userGreeting, loginLinkMenu, registerLinkMenu, profileLinkMenu, ordersLinkMenu, logoutLinkMenu, adminLinkMenu;
 let confirmEmptyCartModal, cancelEmptyCartBtn, confirmEmptyCartActionBtn;
 let horarioLink, horarioModal, closeHorarioModal;
+let authRequiredModal, closeAuthModal; // <-- AÑADIDO
 let goToBlogBtn, goToBioBtn;
 let goToBooksBtn;
 let recommendationsGrid; // <--- NUEVO: Para la cuadrícula de recomendaciones
@@ -63,6 +64,8 @@ const IMAGES_PER_GROUP = 4;
 const TOTAL_SLIDE_CYCLES_BEFORE_RESET = 3;
 let bookSliderIntervalId = null;
 
+const API_BASE_URL = 'http://localhost:3000'; // URL base del backend
+
 // --- INICIALIZACIÓN ---
 async function init() {
     themeToggle = document.getElementById('theme-toggle');
@@ -96,6 +99,8 @@ async function init() {
     horarioLink = document.getElementById('horario-link');
     horarioModal = document.getElementById('horario-modal');
     closeHorarioModal = document.getElementById('close-horario-modal');
+    authRequiredModal = document.getElementById('auth-required-modal'); // <-- AÑADIDO
+    closeAuthModal = document.getElementById('close-auth-modal'); // <-- AÑADIDO
     goToBlogBtn = document.getElementById('go-to-blog-btn');
     goToBioBtn = document.getElementById('go-to-bio-btn');
     goToBooksBtn = document.getElementById('go-to-books-btn');
@@ -378,20 +383,20 @@ function renderCartModal() {
         const itemTotal = item.price * item.quantity;
         totalPrice += itemTotal;
         
-        // CORRECCIÓN: Construir la ruta de la imagen correctamente para el modal del carrito
+        // CORRECCIÓN FINAL: Construir la URL absoluta de la imagen
         const placeholder = 'public/assets/books/placeholder.png';
-        let coverSrc = placeholder; // Usar placeholder por defecto
+        let relativeCoverSrc = placeholder;
         if (item.cover) {
-            // Asegurarse de que no estamos duplicando "public/" si ya estuviera
             if (item.cover.startsWith('public/')) {
-                coverSrc = item.cover;
+                relativeCoverSrc = item.cover;
             } else {
-                coverSrc = `public/${item.cover}`;
+                relativeCoverSrc = `public/${item.cover}`;
             }
         }
+        const absoluteCoverSrc = `${API_BASE_URL}/${relativeCoverSrc}`;
 
         itemDiv.innerHTML = `
-            <img src="${coverSrc}" alt="${item.title}" class="w-12 h-16 object-cover rounded shadow">
+            <img src="${absoluteCoverSrc}" alt="${item.title}" class="w-12 h-16 object-cover rounded shadow">
             <div class="flex-grow">
                 <h4 class="text-sm font-medium text-gray-800 dark:text-gray-200">${item.title}</h4>
                 <div class="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400 mt-1">
@@ -432,6 +437,12 @@ function renderCartModal() {
  * @param {boolean} [fromDetailsPage=false] - True si la llamada proviene de la página de detalles del libro.
  */
 async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        if (authRequiredModal) authRequiredModal.showModal();
+        return;
+    }
+
     let apiId, numericId, bookTitle;
 
     if (fromDetailsPage && typeof bookOrBookId === 'object' && bookOrBookId !== null) {
@@ -472,24 +483,17 @@ async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
     }
 
     const isInWishlist = state.wishlist.includes(apiId);
-    const token = localStorage.getItem('authToken'); // <--- Corregido a authToken
-
+    
+    // Simplificado: toda la lógica de la API ya no necesita la guarda 'if (token)'
     try {
-        if (token) {
-            if (!numericId) {
-                console.error(`[app.js toggleWishlist] Usuario autenticado pero numericId no disponible para apiId: ${apiId}. No se puede llamar a la API.`);
-                // Fallback a actualizar solo localmente si numericId no está, o mostrar error.
-                // Por ahora, mostramos error y no procedemos con API call si numericId es esencial.
-                showNotification('Error de datos del libro, no se pudo contactar al servidor.', 'error');
-                // Considerar no continuar si la llamada a la API es crítica
+        if (!numericId) {
+            console.error(`[app.js toggleWishlist] numericId no disponible para apiId: ${apiId}. No se puede llamar a la API.`);
+            showNotification('Error de datos del libro, no se pudo contactar al servidor.', 'error');
+        } else {
+            if (isInWishlist) {
+                await removeFromWishlistAPI(numericId); 
             } else {
-                if (isInWishlist) {
-                    await removeFromWishlistAPI(numericId); 
-                    // console.log(`[API] Libro ${numericId} (${bookTitle}) quitado de wishlist de usuario.`);
-                } else {
-                    await addToWishlistAPI(numericId);
-                    // console.log(`[API] Libro ${numericId} (${bookTitle}) añadido a wishlist de usuario.`);
-                }
+                await addToWishlistAPI(numericId);
             }
         }
 
@@ -501,18 +505,18 @@ async function toggleWishlistItemApp(bookOrBookId, fromDetailsPage = false) {
             state.wishlist.push(apiId);
             message = `"${bookTitle || 'El libro'}" añadido a tu lista de deseos.`;
         }
-        localStorage.setItem('wishlist', JSON.stringify(state.wishlist));
-        // console.log(`[app.js toggleWishlistItemApp] Wishlist actualizada para ${apiId}. Nueva wishlist (local):`, state.wishlist);
+        // Ya no es necesario manejar el localStorage para la wishlist del invitado.
+        // Se sincronizará al iniciar sesión.
 
         renderWishlist();
         updateBookCardVisualState(apiId, !isInWishlist);
         window.dispatchEvent(new CustomEvent('wishlistUpdated', { detail: { bookId: apiId, isInWishlist: !isInWishlist } }));
         
-        showNotification(message, 'success'); // <--- Notificación de éxito
+        showNotification(message, 'success');
         
     } catch (error) {
         console.error('Error al actualizar la lista de deseos:', error);
-        showNotification(`Error al actualizar tu lista de deseos: ${error.message || 'Inténtalo de nuevo.'}`, 'error'); // <--- Notificación de error
+        showNotification(`Error al actualizar tu lista de deseos: ${error.message || 'Inténtalo de nuevo.'}`, 'error');
     }
 }
 window.toggleWishlistItemApp = toggleWishlistItemApp; // Exponer globalmente
@@ -587,6 +591,12 @@ function showNotification(message, type = 'success', duration = 3000) {
  * @param {object} bookObject - El objeto libro completo con todas sus propiedades (incluyendo id, numeric_id, title, price, cover, stock).
  */
 function addBookToCartApp(bookObject) {
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        if (authRequiredModal) authRequiredModal.showModal();
+        return;
+    }
+
     if (!bookObject || typeof bookObject !== 'object' || !bookObject.id) {
         console.error('[app.js addBookToCartApp] Objeto libro inválido:', bookObject);
         showNotification('Error: No se pudo añadir el libro al carrito (datos incompletos).', 'error');
@@ -596,11 +606,13 @@ function addBookToCartApp(bookObject) {
     const { id: apiId, title, price, cover, stock, numeric_id } = bookObject; 
     console.log(`[app.js addBookToCartApp] Intentando añadir: ${title} (apiId: ${apiId}, stock: ${stock})`);
 
-    const authToken = localStorage.getItem('authToken');
-    const existingItemInLocalState = state.cart.find(item => item.id === apiId);
-    const numericPrice = parseFloat(price);
-    const quantityUserWantsToAdd = 1; // Asumimos que cada acción de "añadir al carrito" es para 1 unidad.
-                                    // Si tuvieras un input de cantidad, aquí usarías ese valor.
+    // --- CORRECCIÓN ---
+    // Asegurarse de que la ruta de la portada que se guarda en el carrito es siempre la correcta.
+    let correctedCover = cover || 'assets/books/placeholder.png';
+    if (correctedCover && !correctedCover.startsWith('public/')) {
+        correctedCover = `public/${correctedCover}`;
+    }
+    // --- FIN DE LA CORRECCIÓN ---
 
     // --- CORRECCIÓN ---
     // Asegurarse de que el ID que se envía al backend SIEMPRE tenga el formato 'book-X'
@@ -611,71 +623,48 @@ function addBookToCartApp(bookObject) {
     // --- FIN DE LA CORRECCIÓN ---
 
     // Verificación de stock antes de cualquier acción (local y antes de API)
-    if (existingItemInLocalState) {
-        if (existingItemInLocalState.quantity + quantityUserWantsToAdd > stock) {
+    if (state.cart.find(item => item.id === apiId)) {
+        if (state.cart.find(item => item.id === apiId).quantity + 1 > stock) {
             showNotification(`No puedes añadir más unidades de "${title}" (stock máximo: ${stock}).`, 'warning');
             return;
         }
     } else {
-        if (quantityUserWantsToAdd > stock) {
+        if (1 > stock) {
             showNotification(`No hay suficiente stock para "${title}" (stock disponible: ${stock}).`, 'warning');
             return;
         }
     }
 
-    if (authToken) {
-        // Usuario logueado: llamar al backend para añadir y luego resincronizar
-        console.log(`[app.js addBookToCartApp] Usuario logueado. Llamando a POST /api/cart para apiId: ${backendBookId}, quantity: ${quantityUserWantsToAdd}`);
-        fetchWithAuth(`http://localhost:3000/api/cart`, {
-            method: 'POST',
-            body: JSON.stringify({ book_id: backendBookId, quantity: quantityUserWantsToAdd })
-        })
-        .then(response => {
-            if (!response.ok) {
-                if (response.status === 401) logoutUser();
-                return response.json().then(errorData => {
-                    // Lanzamos un error con el mensaje del backend para que lo capture el .catch()
-                    throw new Error(errorData.message || `Error ${response.status} del servidor.`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('[app.js addBookToCartApp] Respuesta de POST /api/cart:', data);
-            if (data.message) { // Asumiendo que el backend siempre devuelve un mensaje
-                 showNotification(data.message, 'success'); // Usar mensaje del backend
-            } else {
-                 showNotification(`"${title}" procesado en el carrito.`, 'success');
-            }
-            fetchUserCart(); // <-- CLAVE: Resincronizar con el estado del backend
-        })
-        .catch(error => {
-            console.error('Error al añadir libro al carrito (backend):', error);
-            alert(error.message || 'Error al guardar el libro en el carrito.');
-            fetchUserCart(); // Sincronizar incluso en error para asegurar consistencia
-        });
-    } else {
-        // Usuario invitado: actualizar localmente y en localStorage (lógica optimista)
-        if (existingItemInLocalState) {
-            existingItemInLocalState.quantity += quantityUserWantsToAdd;
-            console.log(`[app.js addBookToCartApp] Cantidad incrementada para ${title} (local). Nueva cantidad: ${existingItemInLocalState.quantity}`);
-        } else {
-            state.cart.push({ 
-                id: apiId, 
-                numeric_id: numeric_id, 
-                title,
-                price: !isNaN(numericPrice) ? numericPrice : 0, 
-                cover: cover || 'assets/books/placeholder.png', 
-                quantity: quantityUserWantsToAdd,
-                stock: parseInt(stock, 10)
+    console.log(`[app.js addBookToCartApp] Usuario logueado. Llamando a POST /api/cart para apiId: ${backendBookId}, quantity: ${1}`);
+    fetchWithAuth(`http://localhost:3000/api/cart`, {
+        method: 'POST',
+        body: JSON.stringify({ book_id: backendBookId, quantity: 1 })
+    })
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 401) logoutUser();
+            // El backend debería devolver los detalles del error en formato JSON
+            return response.json().then(errorData => {
+                // Lanzamos un error con el mensaje del backend para que lo capture el .catch()
+                throw new Error(errorData.message || `Error ${response.status} del servidor.`);
             });
-            console.log(`[app.js addBookToCartApp] Libro ${title} añadido al carrito (local).`);
         }
-        localStorage.setItem('cart', JSON.stringify(state.cart));
-        renderCartModal();
-        updateCartIcon();
-        showNotification(`"${title}" añadido al carrito.`, 'success');
-    }
+        return response.json();
+    })
+    .then(data => {
+        console.log('[app.js addBookToCartApp] Respuesta de POST /api/cart:', data);
+        if (data.message) { // Asumiendo que el backend siempre devuelve un mensaje
+             showNotification(data.message, 'success'); // Usar mensaje del backend
+        } else {
+             showNotification(`"${title}" procesado en el carrito.`, 'success');
+        }
+        fetchUserCart(); // <-- CLAVE: Resincronizar con el estado del backend
+    })
+    .catch(error => {
+        console.error('Error al añadir libro al carrito (backend):', error);
+        alert(error.message || 'Error al guardar el libro en el carrito.');
+        fetchUserCart(); // Sincronizar incluso en error para asegurar consistencia
+    });
 }
 window.addBookToCartApp = addBookToCartApp; // Exponer globalmente
 
@@ -891,12 +880,12 @@ async function performEmptyCartAction() {
             // Considerar si se debe hacer algo más aquí, como un reintento o mantener el estado local.
         }
     } else {
-        // Usuario invitado: limpiar localStorage
+        // Este bloque ya no debería ejecutarse en el flujo normal
+        console.warn("performEmptyCartAction llamado sin token. El carrito local se limpiará.");
         state.cart = [];
         localStorage.setItem('cart', JSON.stringify(state.cart));
         updateCartIcon();
         renderCartModal();
-        console.log('Carrito local vaciado.');
     }
 
     if (confirmEmptyCartModal && confirmEmptyCartModal.open) {
@@ -926,6 +915,7 @@ function setupEventListeners() {
     if (goToCheckoutBtn && cartModal) goToCheckoutBtn.addEventListener('click', () => { cartModal.close(); window.location.href = 'checkout.html'; });
     if (emptyCartBtn) emptyCartBtn.addEventListener('click', () => emptyCart());
     if (logoutLinkMenu) logoutLinkMenu.addEventListener('click', (e) => { e.preventDefault(); logoutUser(); }); // <--- Listener para logout
+    if (closeAuthModal) closeAuthModal.addEventListener('click', () => authRequiredModal.close()); // <-- AÑADIDO
 
     // Listener para el formulario de búsqueda del header
     if (searchForm) {
@@ -1057,7 +1047,7 @@ function setupEventListeners() {
     }
 
     // Cerrar modales si se hace clic fuera de ellos (backdrop) - ÚNICA INSTANCIA CONSOLIDADA
-    [wishlistModal, contactModal, horarioModal, cartModal, confirmEmptyCartModal].forEach(modal => {
+    [wishlistModal, contactModal, horarioModal, cartModal, confirmEmptyCartModal, authRequiredModal].forEach(modal => { // <-- AÑADIDO authRequiredModal
         if (modal) {
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) {

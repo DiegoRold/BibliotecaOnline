@@ -44,14 +44,11 @@ class BookCard extends HTMLElement {
 
         const isOutOfStock = stock === 0;
         const baseAssetURL = 'http://localhost:3000/assets';
-        const placeholderSrc = 'assets/books/placeholder.png'; // Ruta al placeholder
+        const placeholderSrc = 'public/assets/books/placeholder.png'; // CORREGIDO: Usar la ruta pública también para el placeholder
 
-        let coverAttribute = this.getAttribute('cover') || placeholderSrc;
-        // Si el cover no es una URL completa (no empieza con http), y no es el placeholder por defecto,
-        // asumimos que es una ruta relativa que necesita la base del servidor.
-        if (!coverAttribute.startsWith('http') && coverAttribute !== placeholderSrc) {
-            coverAttribute = `${baseAssetURL}/${coverAttribute.startsWith('assets/') ? coverAttribute : 'assets/books/' + coverAttribute}`;
-        }
+        // LÓGICA SIMPLIFICADA: El componente ahora confía en que la URL de 'cover' que recibe es la correcta.
+        // La responsabilidad de añadir 'public/' recae en quien crea el book-card (ej: books.js, app.js).
+        const coverAttribute = this.getAttribute('cover') || placeholderSrc;
 
         const wishlistIconSrc = isInWishlist ? `${baseAssetURL}/wishlist-filled.png` : `${baseAssetURL}/wishlist.png`;
         console.log(`[book-card id=${id}] render() called. Attr 'in-wishlist': ${this.getAttribute('in-wishlist')}, Parsed isInWishlist: ${isInWishlist}, Calculated wishlistIconSrc: ${wishlistIconSrc}`);

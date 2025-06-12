@@ -35,7 +35,7 @@ export const getUserCart = async (req, res) => {
             title: item.title,
             author: item.author,
             price: parseFloat(item.price) || 0,
-            cover: item.cover_image_url || 'assets/books/placeholder.png',
+            cover: item.cover_image_url ? `public/${item.cover_image_url}` : 'public/assets/books/placeholder.png',
             quantity: item.quantity,
             stock: parseInt(item.stock) || 0,
             year: item.publication_date ? new Date(item.publication_date).getFullYear().toString() : 'N/A',

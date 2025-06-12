@@ -84,22 +84,24 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const localPlaceholder = 'assets/books/placeholder.png';
+        const localPlaceholder = 'public/assets/books/placeholder.png';
 
         books.forEach(book => {
-                        // console.log('Datos completos del libro (books.js):', JSON.stringify(book, null, 2)); // Comentado o eliminado
-                        let finalCoverUrl = localPlaceholder;
+            let finalCoverUrl = localPlaceholder;
+            const coverUrl = book.cover || book.cover_image_url;
 
-                        if (book.title && book.title.toLowerCase().includes('cien años de soledad')) {
-                            finalCoverUrl = 'assets/books/cien-anos-de-soledad-(edicion-revisada).jpg';
-                        } else if (book.cover && typeof book.cover === 'string' && book.cover.trim() !== '') {
-                            finalCoverUrl = book.cover.trim();
-                        } else {
-                            console.log(`Libro "${book.title}" no tiene propiedad 'cover' válida o está vacía, usando placeholder: ${localPlaceholder}`);
-                            finalCoverUrl = localPlaceholder;
-                        }
+            if (coverUrl && typeof coverUrl === 'string' && coverUrl.trim() !== '') {
+                if (coverUrl.startsWith('public/')) {
+                    finalCoverUrl = coverUrl.trim();
+                } else {
+                    finalCoverUrl = `public/${coverUrl.trim()}`;
+                }
+            } else {
+                console.log(`Libro "${book.title}" no tiene propiedad 'cover' válida, usando placeholder.`);
+            }
+
             const bookCardData = {  
-                id: book.id.toString(),
+                id: book.id ? book.id.toString() : '',
                 title: book.title || '',
                 author: book.author || '',
                 cover: finalCoverUrl,

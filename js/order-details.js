@@ -151,7 +151,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const itemElement = document.createElement('div');
             itemElement.className = 'flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-md shadow';
             
-            const coverImage = item.cover_image_url || 'assets/books/placeholder.png';
+            const coverImage = item.cover_image_url 
+                ? `http://localhost:3000/public/${item.cover_image_url}` 
+                : 'assets/books/placeholder.png';
 
             itemElement.innerHTML = `
                 <img src="${coverImage}" alt="Portada de ${item.titulo_en_compra}" class="w-16 h-24 object-cover rounded mr-4 flex-shrink-0">

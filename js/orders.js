@@ -101,7 +101,7 @@ function renderOrders(orders, container) {
                         <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
                             <div class="flex items-center space-x-3">
                                 ${item.cover_image_url ? `
-                                    <img src="${item.cover_image_url}" alt="${item.titulo_en_compra}" 
+                                    <img src="http://localhost:3000/public/${item.cover_image_url}" alt="${item.titulo_en_compra}" 
                                          class="w-12 h-16 object-cover rounded shadow-sm">
                                 ` : `
                                     <div class="w-12 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">

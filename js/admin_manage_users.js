@@ -247,7 +247,6 @@ async function loadUsers() {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${new Date(user.fecha_creacion).toLocaleDateString()}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 mr-3 edit-user-btn" data-id="${user.id}">Editar</button>
-                    <button class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 delete-user-btn" data-id="${user.id}">Eliminar</button>
                 </td>
             `;
         });
@@ -283,32 +282,6 @@ function addTableEventListeners() {
                 // Aquí podríamos usar showErrorModal si el error es crítico
                 showErrorModal('No se pudieron cargar los datos del usuario para editar.');
             }
-        });
-    });
-
-    document.querySelectorAll('.delete-user-btn').forEach(button => {
-        button.addEventListener('click', async (e) => {
-            const userId = e.target.dataset.id;
-            
-            confirmationModalTitle.textContent = 'Confirmar Eliminación';
-            confirmationModalMessage.textContent = `¿Estás seguro de que quieres eliminar al usuario ID: ${userId}?`;
-            confirmationModalButtons.style.display = 'flex';
-            successModalButtons.style.display = 'none';
-            confirmationModalConfirmBtn.className = 'px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md'; // Botón rojo para eliminar
-            confirmationModalConfirmBtn.textContent = 'Eliminar';
-
-            actionToConfirm = async () => {
-                console.log(`Eliminando usuario ID: ${userId}`);
-                const response = await fetchData(`/api/admin/users/${userId}`, { method: 'DELETE' });
-                if (response === null) { 
-                    showSuccessModal('Usuario eliminado correctamente.');
-                    await loadUsers(); 
-                } else {
-                    showErrorModal('Error al eliminar el usuario.');
-                }
-            };
-            const confirmationModal = document.getElementById('confirmation-modal');
-            confirmationModal.showModal();
         });
     });
 }
